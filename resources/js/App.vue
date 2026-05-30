@@ -1,0 +1,21 @@
+<script setup lang="ts">
+import { onMounted } from 'vue';
+import { useUserStore } from './stores/user.store';
+
+const userStore = useUserStore();
+
+onMounted(() => {
+    userStore.bootstrap();
+});
+</script>
+
+<template>
+  <router-view />
+</template>
+
+<style>
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+</style>

@@ -1,0 +1,242 @@
+import api from '@/config/axios';
+
+export type AdminUserStatus = 'active' | 'blocked' | 'inactive';
+
+export type AdminUserListItem = {
+    id: number;
+    name: string | null;
+    username: string | null;
+    email: string | null;
+    phone: string | null;
+    role: string;
+    status: AdminUserStatus;
+    wallet_balance: number | null;
+    current_package: {
+        id: number;
+        name: string;
+        expires_at: string | null;
+        status: string | null;
+    } | null;
+    created_at: string | null;
+    last_login_at: string | null;
+};
+
+export type AdminUserListResponse = {
+    data: AdminUserListItem[];
+    meta: {
+        current_page: number;
+        last_page: number;
+        per_page: number;
+        total: number;
+    };
+    stats: {
+        total_users: number;
+        new_today: number;
+        active_users: number;
+        blocked_users: number;
+    };
+};
+
+export type AdminUserDetailResponse = {
+    id: number;
+    name: string | null;
+    username: string | null;
+    email: string | null;
+    phone: string | null;
+    role: string;
+    status: AdminUserStatus;
+    avatar: string | null;
+    created_at: string | null;
+    updated_at: string | null;
+    last_login_at: string | null;
+    last_login_ip: string | null;
+    wallet: {
+        id: number;
+        balance: number;
+        hold_balance: number;
+        total_recharge: number;
+        total_spent: number;
+    } | null;
+    current_package: {
+        id: number;
+        name: string;
+        price: number;
+        starts_at: string | null;
+        expires_at: string | null;
+        status: string | null;
+    } | null;
+    stats: {
+        total_recharge: number;
+        total_spent: number;
+        package_order_count: number;
+        webhook_count: number;
+        api_key_count: number;
+        account_count: number;
+    };
+    latest_login: {
+        at: string | null;
+        ip: string | null;
+    };
+};
+
+export type AdminPaginationMeta = {
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+};
+
+export type AdminUserWalletTransaction = {
+    id: number;
+    code: string;
+    user: {
+        id: number;
+        name: string;
+        email: string | null;
+        phone: string | null;
+    } | null;
+    type: string;
+    amount: number;
+    balance_before: number;
+    balance_after: number;
+    content: string | null;
+    status: string;
+    created_at: string | null;
+};
+
+export type AdminUserPackageOrder = {
+    id: number;
+    code: string;
+    user: {
+        id: number;
+        name: string;
+        email: string | null;
+        phone: string | null;
+    } | null;
+    package: {
+        id: number;
+        name: string;
+    } | null;
+    price: number;
+    duration_days: number | null;
+    started_at: string | null;
+    expired_at: string | null;
+    status: string | null;
+    created_at: string | null;
+};
+
+export type AdminUserWebhook = {
+    id: number;
+    user: {
+        id: number;
+        name: string;
+        email: string | null;
+    } | null;
+    url: string;
+    events: string[];
+    status: string;
+    last_called_at: string | null;
+    success_count: number;
+    failed_count: number;
+    created_at: string | null;
+};
+
+export type AdminUserLog = {
+    id: number;
+    action: string;
+    description: string | null;
+    ip: string | null;
+    user_agent: string | null;
+    created_at: string | null;
+};
+
+export type PaginatedAdminUserRelation<T> = {
+    data: T[];
+    meta: AdminPaginationMeta;
+};
+
+export type AdminUserListParams = {
+    search?: string;
+    status?: string;
+    role?: string;
+    date_from?: string;
+    date_to?: string;
+    per_page?: number;
+    page?: number;
+};
+
+export const adminUserService = {
+    async list(params: AdminUserListParams = {}): Promise<AdminUserListResponse> {
+        const response = await api.get('/api/admin/users', { params });
+
+        return response.data.data;
+    },
+
+    async show(userId: number | string): Promise<AdminUserDetailResponse> {
+        const response = await api.get(`/api/admin/users/${userId}`);
+
+        return response.data.data;
+    },
+
+    async walletTransactions(
+        userId: number | string,
+        params: Record<string, unknown> = {},
+    ): Promise<PaginatedAdminUserRelation<AdminUserWalletTransaction>> {
+        const response = await api.get(`/api/admin/users/${userId}/wallet-transactions`, { params });
+
+        return response.data.data;
+    },
+
+    async packageOrders(userId: number | string, params: Record<string, unknown> = {}): Promise<PaginatedAdminUserRelation<AdminUserPackageOrder>> {
+        const response = await api.get(`/api/admin/users/${userId}/package-orders`, { params });
+
+        return response.data.data;
+    },
+
+    async webhooks(userId: number | string, params: Record<string, unknown> = {}): Promise<PaginatedAdminUserRelation<AdminUserWebhook>> {
+        const response = await api.get(`/api/admin/users/${userId}/webhooks`, { params });
+
+        return response.data.data;
+    },
+
+    async logs(userId: number | string, params: Record<string, unknown> = {}): Promise<PaginatedAdminUserRelation<AdminUserLog>> {
+        const response = await api.get(`/api/admin/users/${userId}/logs`, { params });
+
+        return response.data.data;
+    },
+
+    async updateStatus(userId: number | string, status: 'active' | 'blocked'): Promise<void> {
+        await api.patch(`/api/admin/users/${userId}/status`, { status });
+    },
+
+    async adjustWallet(
+        userId: number | string,
+        payload: {
+            type: 'add' | 'subtract';
+            amount: number;
+            note?: string;
+        },
+    ): Promise<{
+        wallet: {
+            id: number;
+            balance: number;
+            hold_balance: number;
+            total_recharge: number;
+            total_spent: number;
+        };
+        transaction: {
+            id: number;
+            type: string;
+            amount: number;
+            balance_before: number;
+            balance_after: number;
+            description: string | null;
+            status: string;
+            created_at: string | null;
+        };
+    }> {
+        const response = await api.post(`/api/admin/users/${userId}/wallet-adjust`, payload);
+
+        return response.data.data;
+    },
+};
