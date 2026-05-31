@@ -105,13 +105,7 @@ class SyncBankAccountTransactionsJob implements ShouldQueue
             }
 
             foreach ($webhooks as $webhook) {
-                $events = collect($webhook->events ?? [])
-                    ->filter(fn (mixed $event): bool => is_string($event) && trim($event) !== '')
-                    ->map(fn (string $event): string => strtolower(trim($event)))
-                    ->unique()
-                    ->values();
-
-                if ($events->isEmpty()) {
+                if ($this->shouldDispatchAllTransactions($webhook->event_keyword)) {
                     DispatchWebhookJob::dispatch($webhook->id, 'bank.transaction', [
                         'source' => 'cron.bank-sync',
                         'bank_account_id' => $bankAccount->id,
@@ -121,11 +115,9 @@ class SyncBankAccountTransactionsJob implements ShouldQueue
                     continue;
                 }
 
-                foreach ($events as $eventKeyword) {
-                    if (! str_contains($description, $eventKeyword)) {
-                        continue;
-                    }
+                $eventKeyword = strtolower(trim((string) $webhook->event_keyword));
 
+                if (str_contains($description, $eventKeyword)) {
                     DispatchWebhookJob::dispatch($webhook->id, $eventKeyword, [
                         'source' => 'cron.bank-sync',
                         'bank_account_id' => $bankAccount->id,
@@ -134,5 +126,14 @@ class SyncBankAccountTransactionsJob implements ShouldQueue
                 }
             }
         }
+    }
+
+    protected function shouldDispatchAllTransactions(mixed $eventKeyword): bool
+    {
+        if ($eventKeyword === null) {
+            return true;
+        }
+
+        return is_string($eventKeyword) && trim($eventKeyword) === '';
     }
 }

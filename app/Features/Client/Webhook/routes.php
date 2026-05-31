@@ -10,6 +10,8 @@ Route::middleware(['auth:sanctum', 'active-subscription'])
         Route::get('/', [WebhookController::class, 'index'])->name('index');
         Route::get('bank/{bankAccount}', [WebhookController::class, 'byBank'])->name('bank.index');
         Route::post('bank/{bankAccount}/dispatch', [WebhookController::class, 'dispatch'])->name('bank.dispatch');
+        Route::post('bank/{bankAccount}/transactions/{bankTransaction}/dispatch', [WebhookController::class, 'dispatchTransaction'])
+            ->name('bank.transaction.dispatch');
         Route::post('bank/{bankAccount}', [WebhookController::class, 'store'])->name('bank.store');
         Route::get('{webhook}/logs', [WebhookController::class, 'logs'])->name('logs');
         Route::put('{webhook}', [WebhookController::class, 'update'])->name('update');

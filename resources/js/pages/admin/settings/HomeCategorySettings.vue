@@ -179,7 +179,7 @@ const loadData = async () => {
         loading.value = true;
 
         const [categoryRes, settingRes] = await Promise.all([
-            api.get("/admin-api/product-categories", { params: { limit: 200 } }),
+                api.get("/api/admin-api/product-categories", { params: { limit: 200 } }),
             adminSettingService.getHomeCategory(),
         ]);
 

@@ -3,7 +3,7 @@
 use App\Features\Admin\Setting\Controllers\SettingController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth', 'admin'])
+Route::middleware(['auth:sanctum', 'admin'])
     ->prefix('admin-api/settings')
     ->name('admin-api.settings.')
     ->controller(SettingController::class)

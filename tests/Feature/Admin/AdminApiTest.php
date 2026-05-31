@@ -113,7 +113,7 @@ test('admin can test webhook and create webhook log', function () {
         'name' => 'Primary webhook',
         'url' => 'https://example.com/hook',
         'secret_key' => 'secret-key',
-        'events' => ['transaction.created'],
+        'event_keyword' => 'transaction.created',
         'status' => 'active',
     ]);
 

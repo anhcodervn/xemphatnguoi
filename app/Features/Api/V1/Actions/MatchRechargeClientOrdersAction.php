@@ -13,7 +13,17 @@ class MatchRechargeClientOrdersAction
      */
     public function handle(BankAccount $bankAccount, array $transactions): int
     {
+        return $this->handleWithMatches($bankAccount, $transactions)['matched_count'];
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $transactions
+     * @return array{matched_count:int,matched_orders:array<string,RechargeClient>}
+     */
+    public function handleWithMatches(BankAccount $bankAccount, array $transactions): array
+    {
         $matchedCount = 0;
+        $matchedOrders = [];
 
         foreach ($transactions as $transaction) {
             if (($transaction['type'] ?? null) !== 'credit') {
@@ -48,9 +58,12 @@ class MatchRechargeClientOrdersAction
                 continue;
             }
 
-            DB::transaction(function () use ($matchedOrder, $transaction, &$matchedCount): void {
+            $savedOrder = null;
+
+            DB::transaction(function () use ($matchedOrder, $transaction, &$matchedCount, &$savedOrder): void {
                 /** @var RechargeClient|null $lockedOrder */
                 $lockedOrder = RechargeClient::query()
+                    ->with('apiKey')
                     ->whereKey($matchedOrder->id)
                     ->lockForUpdate()
                     ->first();
@@ -73,11 +86,19 @@ class MatchRechargeClientOrdersAction
                     ]),
                 ])->save();
 
+                $savedOrder = $lockedOrder->fresh(['apiKey']);
                 $matchedCount++;
             });
+
+            if ($savedOrder instanceof RechargeClient) {
+                $matchedOrders[$this->transactionKey($transaction)] = $savedOrder;
+            }
         }
 
-        return $matchedCount;
+        return [
+            'matched_count' => $matchedCount,
+            'matched_orders' => $matchedOrders,
+        ];
     }
 
     /**
@@ -93,5 +114,17 @@ class MatchRechargeClientOrdersAction
             && $amount > 0
             && $amount === round((float) $order->amount, 2)
             && str_contains(mb_strtolower($description), mb_strtolower((string) $order->transfer_content));
+    }
+
+    /**
+     * @param  array<string, mixed>  $transaction
+     */
+    private function transactionKey(array $transaction): string
+    {
+        if (isset($transaction['id'])) {
+            return 'id:'.(string) $transaction['id'];
+        }
+
+        return 'tx:'.(string) ($transaction['transaction_id'] ?? '');
     }
 }

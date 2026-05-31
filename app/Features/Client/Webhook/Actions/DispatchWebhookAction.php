@@ -18,7 +18,13 @@ class DispatchWebhookAction
             ->where('user_id', $user->id)
             ->where('bank_account_id', $bankAccount->id)
             ->where('status', 'active')
-            ->whereJsonContains('events', $eventKeyword)
+            ->where(function ($query) use ($eventKeyword): void {
+                $query
+                    ->where('event_keyword', $eventKeyword)
+                    ->orWhere(function ($builder): void {
+                        $builder->whereNull('event_keyword')->orWhere('event_keyword', '');
+                    });
+            })
             ->get();
 
         foreach ($webhooks as $webhook) {

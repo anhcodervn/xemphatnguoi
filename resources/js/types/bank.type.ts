@@ -43,7 +43,6 @@ export interface WebhookType {
     name: string | null;
     url: string;
     secret_key: string;
-    events: string[];
     event_keyword: string | null;
     status: 'active' | 'inactive';
     created_at: string | null;

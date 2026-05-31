@@ -75,6 +75,9 @@ Route::middleware('guest')->group(function (): void {
 
 Route::middleware('auth')->post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+if (file_exists(base_path('app/Features/Cron/routes.php'))) {
+    require base_path('app/Features/Cron/routes.php');
+}
 
 Route::middleware('auth')->get('/{any}', function () {
     return view('app');

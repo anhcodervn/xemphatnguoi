@@ -12,12 +12,12 @@ import {
 } from "@/types/setting.type";
 
 const getTab = async <T>(tab: string): Promise<SettingApiResponse<T>> => {
-    const res = await api.get(`/admin-api/settings/${tab}`);
+        const res = await api.get(`/api/admin-api/settings/${tab}`);
     return res.data.data as SettingApiResponse<T>;
 };
 
 const updateTab = async <T>(tab: string, payload: T): Promise<SettingApiResponse<T>> => {
-    const res = await api.patch(`/admin-api/settings/${tab}`, payload);
+        const res = await api.patch(`/api/admin-api/settings/${tab}`, payload);
     return res.data.data as SettingApiResponse<T>;
 };
 

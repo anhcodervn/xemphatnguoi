@@ -4,7 +4,7 @@ use App\Features\Admin\WalletTransaction\Controllers\WalletTransactionController
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth:sanctum', 'admin'])
-    ->prefix('admin/wallet-transactions')
+    ->prefix('admin-api/wallet-transactions')
     ->name('admin.wallet-transactions.')
     ->controller(WalletTransactionController::class)
     ->group(function (): void {

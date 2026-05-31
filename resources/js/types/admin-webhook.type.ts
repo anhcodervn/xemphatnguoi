@@ -8,7 +8,7 @@ export interface AdminWebhookItem {
     id: number;
     user: AdminWebhookUser | null;
     url: string;
-    events: string[];
+    event_keyword: string | null;
     status: string;
     last_called_at: string | null;
     success_count: number;

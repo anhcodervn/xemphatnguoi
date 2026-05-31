@@ -133,7 +133,7 @@ export type AdminUserWebhook = {
         email: string | null;
     } | null;
     url: string;
-    events: string[];
+    event_keyword: string | null;
     status: string;
     last_called_at: string | null;
     success_count: number;
@@ -167,13 +167,13 @@ export type AdminUserListParams = {
 
 export const adminUserService = {
     async list(params: AdminUserListParams = {}): Promise<AdminUserListResponse> {
-        const response = await api.get('/api/admin/users', { params });
+        const response = await api.get('/api/admin-api/users', { params });
 
         return response.data.data;
     },
 
     async show(userId: number | string): Promise<AdminUserDetailResponse> {
-        const response = await api.get(`/api/admin/users/${userId}`);
+        const response = await api.get(`/api/admin-api/users/${userId}`);
 
         return response.data.data;
     },
@@ -182,31 +182,31 @@ export const adminUserService = {
         userId: number | string,
         params: Record<string, unknown> = {},
     ): Promise<PaginatedAdminUserRelation<AdminUserWalletTransaction>> {
-        const response = await api.get(`/api/admin/users/${userId}/wallet-transactions`, { params });
+        const response = await api.get(`/api/admin-api/users/${userId}/wallet-transactions`, { params });
 
         return response.data.data;
     },
 
     async packageOrders(userId: number | string, params: Record<string, unknown> = {}): Promise<PaginatedAdminUserRelation<AdminUserPackageOrder>> {
-        const response = await api.get(`/api/admin/users/${userId}/package-orders`, { params });
+        const response = await api.get(`/api/admin-api/users/${userId}/package-orders`, { params });
 
         return response.data.data;
     },
 
     async webhooks(userId: number | string, params: Record<string, unknown> = {}): Promise<PaginatedAdminUserRelation<AdminUserWebhook>> {
-        const response = await api.get(`/api/admin/users/${userId}/webhooks`, { params });
+        const response = await api.get(`/api/admin-api/users/${userId}/webhooks`, { params });
 
         return response.data.data;
     },
 
     async logs(userId: number | string, params: Record<string, unknown> = {}): Promise<PaginatedAdminUserRelation<AdminUserLog>> {
-        const response = await api.get(`/api/admin/users/${userId}/logs`, { params });
+        const response = await api.get(`/api/admin-api/users/${userId}/logs`, { params });
 
         return response.data.data;
     },
 
     async updateStatus(userId: number | string, status: 'active' | 'blocked'): Promise<void> {
-        await api.patch(`/api/admin/users/${userId}/status`, { status });
+        await api.patch(`/api/admin-api/users/${userId}/status`, { status });
     },
 
     async adjustWallet(
@@ -235,7 +235,7 @@ export const adminUserService = {
             created_at: string | null;
         };
     }> {
-        const response = await api.post(`/api/admin/users/${userId}/wallet-adjust`, payload);
+        const response = await api.post(`/api/admin-api/users/${userId}/wallet-adjust`, payload);
 
         return response.data.data;
     },

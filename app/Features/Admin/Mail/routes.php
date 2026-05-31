@@ -4,7 +4,7 @@ use App\Features\Admin\Mail\Controllers\MailController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth:sanctum', 'admin'])
-    ->prefix('admin/mail')
+    ->prefix('admin-api/mail')
     ->name('admin.mail.')
     ->controller(MailController::class)
     ->group(function (): void {

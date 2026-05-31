@@ -4,7 +4,7 @@ use App\Features\Admin\Webhook\Controllers\WebhookController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth:sanctum', 'admin'])
-    ->prefix('admin/webhooks')
+    ->prefix('admin-api/webhooks')
     ->name('admin.webhooks.')
     ->controller(WebhookController::class)
     ->group(function (): void {

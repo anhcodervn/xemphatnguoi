@@ -56,7 +56,7 @@ export type AdminPackageOrderListParams = {
 
 export const adminPackageOrderService = {
     async list(params: AdminPackageOrderListParams = {}): Promise<AdminPackageOrderListResponse> {
-        const response = await api.get('/api/admin/package-orders', { params });
+        const response = await api.get('/api/admin-api/package-orders', { params });
 
         return response.data.data;
     },

@@ -38,7 +38,7 @@ test('client can list bank webhooks scoped by current user and bank account', fu
         'name' => 'Webhook ACB',
         'url' => 'https://example.com/acb',
         'secret_key' => 'secret-key-1',
-        'events' => ['payment-success'],
+        'event_keyword' => 'payment-success',
         'status' => 'active',
     ]);
 
@@ -48,7 +48,7 @@ test('client can list bank webhooks scoped by current user and bank account', fu
         'name' => 'Webhook khac the',
         'url' => 'https://example.com/other-bank',
         'secret_key' => 'secret-key-2',
-        'events' => ['other-event'],
+        'event_keyword' => 'other-event',
         'status' => 'inactive',
     ]);
 
@@ -58,7 +58,7 @@ test('client can list bank webhooks scoped by current user and bank account', fu
         'name' => 'Webhook user khac',
         'url' => 'https://example.com/other-user',
         'secret_key' => 'secret-key-3',
-        'events' => ['payment-success'],
+        'event_keyword' => 'payment-success',
         'status' => 'active',
     ]);
 
@@ -102,7 +102,7 @@ test('client can create webhook for bank account', function () {
 
     expect($webhook->user_id)->toBe($user->id)
         ->and($webhook->bank_account_id)->toBe($bankAccount->id)
-        ->and($webhook->events)->toBe(['payment-success'])
+        ->and($webhook->event_keyword)->toBe('payment-success')
         ->and($webhook->secret_key)->not->toBe('');
 });
 
@@ -123,7 +123,7 @@ test('client can update own webhook', function () {
         'name' => 'Webhook cu',
         'url' => 'https://example.com/old',
         'secret_key' => 'secret-key-old',
-        'events' => ['old-event'],
+        'event_keyword' => 'old-event',
         'status' => 'inactive',
     ]);
 
@@ -145,7 +145,7 @@ test('client can update own webhook', function () {
 
     expect($webhook->name)->toBe('Webhook moi')
         ->and($webhook->url)->toBe('https://example.com/new')
-        ->and($webhook->events)->toBe(['new-event'])
+        ->and($webhook->event_keyword)->toBe('new-event')
         ->and($webhook->status)->toBe('active');
 });
 
@@ -166,7 +166,7 @@ test('client can delete own webhook', function () {
         'name' => 'Webhook xoa',
         'url' => 'https://example.com/delete',
         'secret_key' => 'secret-key-delete',
-        'events' => ['delete-event'],
+        'event_keyword' => 'delete-event',
         'status' => 'active',
     ]);
 
@@ -208,7 +208,7 @@ test('dispatch endpoint queues only matching active webhooks for current bank ac
         'name' => 'Webhook hop le',
         'url' => 'https://example.com/matching',
         'secret_key' => 'secret-key-matching',
-        'events' => ['payment-success'],
+        'event_keyword' => 'payment-success',
         'status' => 'active',
     ]);
 
@@ -218,7 +218,7 @@ test('dispatch endpoint queues only matching active webhooks for current bank ac
         'name' => 'Webhook sai event',
         'url' => 'https://example.com/wrong-event',
         'secret_key' => 'secret-key-wrong-event',
-        'events' => ['order-failed'],
+        'event_keyword' => 'order-failed',
         'status' => 'active',
     ]);
 
@@ -228,7 +228,7 @@ test('dispatch endpoint queues only matching active webhooks for current bank ac
         'name' => 'Webhook sai the',
         'url' => 'https://example.com/wrong-bank',
         'secret_key' => 'secret-key-wrong-bank',
-        'events' => ['payment-success'],
+        'event_keyword' => 'payment-success',
         'status' => 'active',
     ]);
 
@@ -238,7 +238,7 @@ test('dispatch endpoint queues only matching active webhooks for current bank ac
         'name' => 'Webhook tat',
         'url' => 'https://example.com/inactive',
         'secret_key' => 'secret-key-inactive',
-        'events' => ['payment-success'],
+        'event_keyword' => 'payment-success',
         'status' => 'inactive',
     ]);
 
@@ -279,7 +279,7 @@ test('client can view webhook logs', function () {
         'name' => 'Webhook log',
         'url' => 'https://example.com/logs',
         'secret_key' => 'secret-key-logs',
-        'events' => ['payment-success'],
+        'event_keyword' => 'payment-success',
         'status' => 'active',
     ]);
 
@@ -320,7 +320,7 @@ test('dispatch webhook job stores execution log for successful response', functi
         'name' => 'Webhook queue',
         'url' => 'https://example.com/hook',
         'secret_key' => 'secret-key-job',
-        'events' => ['payment-success'],
+        'event_keyword' => 'payment-success',
         'status' => 'active',
     ]);
 
@@ -343,6 +343,8 @@ test('dispatch webhook job stores execution log for successful response', functi
     Http::assertSent(function ($request) use ($webhook): bool {
         return $request->url() === $webhook->url
             && $request->hasHeader('X-Webhook-Secret', $webhook->secret_key)
+            && $request['bank_id'] === $webhook->bank_account_id
+            && $request['sign'] === md5($webhook->secret_key.(string) $webhook->bank_account_id)
             && $request['event_keyword'] === 'payment-success'
             && $request['webhook_id'] === $webhook->id;
     });

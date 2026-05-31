@@ -4,7 +4,7 @@ use App\Features\Admin\PackageOrder\Controllers\PackageOrderController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth:sanctum', 'admin'])
-    ->prefix('admin/package-orders')
+    ->prefix('admin-api/package-orders')
     ->name('admin.package-orders.')
     ->controller(PackageOrderController::class)
     ->group(function (): void {

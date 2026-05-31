@@ -47,7 +47,7 @@ export type AdminWalletTransactionListParams = {
 
 export const adminWalletTransactionService = {
     async list(params: AdminWalletTransactionListParams = {}): Promise<AdminWalletTransactionListResponse> {
-        const response = await api.get('/api/admin/wallet-transactions', { params });
+        const response = await api.get('/api/admin-api/wallet-transactions', { params });
 
         return response.data.data;
     },

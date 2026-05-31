@@ -48,6 +48,14 @@ const statusBadgeClass = (status: string): string => {
     return 'border-slate-200 bg-slate-100 text-slate-600';
 };
 
+const eventKeywordLabel = (eventKeyword: string | null): string => {
+    if (!eventKeyword || eventKeyword.trim() === '') {
+        return 'Tất cả giao dịch tiền vào';
+    }
+
+    return eventKeyword;
+};
+
 const formatDateTime = (value: string | null): string => {
     if (!value) {
         return '-';
@@ -241,7 +249,7 @@ onMounted(async () => {
                                     <button class="max-w-[360px] truncate text-left font-semibold text-indigo-600 hover:underline" @click="openWebhookDetail(item.id)">
                                         {{ item.url }}
                                     </button>
-                                    <p class="mt-0.5 text-xs text-slate-500">{{ item.events.join(', ') || '-' }}</p>
+                                    <p class="mt-0.5 text-xs text-slate-500">{{ eventKeywordLabel(item.event_keyword) }}</p>
                                 </td>
                                 <td class="px-3 py-2 text-xs text-slate-600">
                                     <p class="font-semibold text-slate-800">{{ item.user?.name || '-' }}</p>
@@ -291,7 +299,7 @@ onMounted(async () => {
                     <div class="mt-3 space-y-2 rounded-[10px] border border-slate-200 bg-slate-50 p-3 text-sm">
                         <p><span class="font-semibold text-slate-700">URL:</span> {{ activeWebhook.url }}</p>
                         <p><span class="font-semibold text-slate-700">Last called:</span> {{ formatDateTime(activeWebhook.last_called_at) }}</p>
-                        <p><span class="font-semibold text-slate-700">Events:</span> {{ activeWebhook.events.join(', ') || '-' }}</p>
+                        <p><span class="font-semibold text-slate-700">Event:</span> {{ eventKeywordLabel(activeWebhook.event_keyword) }}</p>
                     </div>
 
                     <div class="mt-3 overflow-x-auto rounded-[10px] border border-slate-200">

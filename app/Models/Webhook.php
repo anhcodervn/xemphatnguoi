@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -17,16 +17,9 @@ class Webhook extends Model
         'name',
         'url',
         'secret_key',
-        'events',
+        'event_keyword',
         'status',
     ];
-
-    protected function casts(): array
-    {
-        return [
-            'events' => 'array',
-        ];
-    }
 
     public function user(): BelongsTo
     {

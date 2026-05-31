@@ -264,19 +264,19 @@
 
                     <div v-else class="overflow-hidden rounded-[10px] border border-slate-200/80 bg-white">
                         <div
-                            class="grid grid-cols-[1.35fr_0.65fr_0.8fr_0.5fr_0.45fr] gap-3 border-b border-slate-100 px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400"
+                            class="grid grid-cols-[1.25fr_0.65fr_0.8fr_0.5fr_0.7fr] gap-3 border-b border-slate-100 px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400"
                         >
                             <span>Mô tả</span>
                             <span>Số tiền</span>
                             <span>Thời gian</span>
                             <span>Loại</span>
-                            <span class="text-right">Xem</span>
+                            <span class="text-right">Thao tÃ¡c</span>
                         </div>
 
                         <div
                             v-for="transaction in transactions"
                             :key="transaction.transaction_id"
-                            class="grid grid-cols-[1.35fr_0.65fr_0.8fr_0.5fr_0.45fr] gap-3 border-b border-slate-100 px-4 py-3 last:border-b-0"
+                            class="grid grid-cols-[1.25fr_0.65fr_0.8fr_0.5fr_0.7fr] gap-3 border-b border-slate-100 px-4 py-3 last:border-b-0"
                         >
                             <div class="min-w-0">
                                 <p class="truncate text-sm font-semibold text-slate-900">
@@ -296,7 +296,21 @@
                                     {{ transactionTypeLabel(transaction.type) }}
                                 </span>
                             </div>
-                            <div class="flex justify-end">
+                            <div class="flex justify-end gap-2">
+                                <button
+                                    type="button"
+                                    class="inline-flex h-8 items-center gap-1.5 rounded-[8px] border px-2.5 text-[11px] font-semibold transition disabled:cursor-not-allowed disabled:opacity-60"
+                                    :class="
+                                        canDispatchTransactionCallback(transaction)
+                                            ? 'border-blue-200 bg-blue-50 text-blue-700 hover:border-blue-300 hover:bg-blue-100'
+                                            : 'border-slate-200 bg-slate-100 text-slate-400'
+                                    "
+                                    :disabled="!canDispatchTransactionCallback(transaction) || dispatchingTransactionId === transaction.id"
+                                    @click="dispatchTransactionCallback(transaction)"
+                                >
+                                    <Webhook class="h-3.5 w-3.5" :class="dispatchingTransactionId === transaction.id ? 'animate-pulse' : ''" />
+                                    {{ dispatchingTransactionId === transaction.id ? 'Dang gui' : 'Callback' }}
+                                </button>
                                 <button
                                     type="button"
                                     class="inline-flex h-8 w-8 items-center justify-center rounded-[8px] border border-slate-200 bg-white text-slate-500 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-700"
@@ -315,7 +329,8 @@
                             <div>
                                 <h2 class="text-base font-bold tracking-[-0.03em] text-slate-900">Webhook theo từ khóa</h2>
                                 <p class="mt-0.5 text-xs text-slate-500">
-                                    Khi event phát sinh đúng từ khóa đã cấu hình, hệ thống sẽ đưa webhook vào queue và retry tối đa 5 lần.
+                                    Để trống từ khóa nếu muốn nhận toàn bộ giao dịch tiền vào. Nếu có từ khóa, hệ thống chỉ gửi callback khi nội
+                                    dung giao dịch chứa đúng từ khóa đó.
                                 </p>
                             </div>
 
@@ -327,6 +342,26 @@
                                 <Plus class="h-3.5 w-3.5" />
                                 Thêm webhook
                             </button>
+                        </div>
+                    </div>
+
+                    <div class="mt-3 grid gap-2.5 lg:grid-cols-3">
+                        <div class="rounded-[8px] border border-slate-200 bg-slate-50 px-3 py-2.5">
+                            <p class="text-[11px] font-medium uppercase tracking-[0.08em] text-slate-400">Bank ID</p>
+                            <p class="mt-1 text-sm font-bold text-slate-900">{{ account.id }}</p>
+                            <p class="mt-1 text-[11px] text-slate-500">Gửi kèm trong body để bên nhận callback đối chiếu đúng thẻ.</p>
+                        </div>
+
+                        <div class="rounded-[8px] border border-slate-200 bg-slate-50 px-3 py-2.5">
+                            <p class="text-[11px] font-medium uppercase tracking-[0.08em] text-slate-400">Secret Header</p>
+                            <p class="mt-1 break-all text-sm font-bold text-slate-900">X-Webhook-Secret</p>
+                            <p class="mt-1 text-[11px] text-slate-500">Header này sẽ chứa secret riêng của từng webhook khi hệ thống gửi đi.</p>
+                        </div>
+
+                        <div class="rounded-[8px] border border-slate-200 bg-slate-50 px-3 py-2.5">
+                            <p class="text-[11px] font-medium uppercase tracking-[0.08em] text-slate-400">Sign</p>
+                            <p class="mt-1 break-all font-mono text-[13px] font-bold text-slate-900">md5(secret_key + bank_id)</p>
+                            <p class="mt-1 text-[11px] text-slate-500">Bên nhận callback dùng công thức này để verify payload.</p>
                         </div>
                     </div>
 
@@ -348,7 +383,7 @@
                             <Webhook class="h-5 w-5" />
                         </div>
                         <p class="mt-3 text-sm font-semibold text-slate-900">Chưa có webhook nào</p>
-                        <p class="mt-1 text-xs text-slate-500">Tạo webhook đầu tiên để hệ thống gửi callback khi phát sinh đúng từ khóa sự kiện.</p>
+                        <p class="mt-1 text-xs text-slate-500">Tạo webhook đầu tiên để hệ thống gửi callback khi có giao dịch phù hợp.</p>
                     </div>
 
                     <div v-else class="space-y-2.5">
@@ -364,9 +399,10 @@
                                     <p class="mt-1 truncate text-xs text-slate-500">{{ webhook.url }}</p>
                                     <div class="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
                                         <span class="rounded-full bg-slate-100 px-2 py-0.5 font-semibold text-slate-700">
-                                            Từ khóa: {{ webhook.event_keyword || '-' }}
+                                            Từ khóa: {{ webhookEventLabel(webhook.event_keyword) }}
                                         </span>
                                         <span class="truncate">Secret: {{ webhook.secret_key }}</span>
+                                        <span class="truncate">Sign: md5(secret_key + {{ webhook.bank_account_id }})</span>
                                     </div>
                                 </div>
 
@@ -420,7 +456,7 @@
             <template #header>
                 <div class="border-b border-slate-200 px-4 py-3 pr-12">
                     <h3 class="text-base font-semibold text-slate-900">{{ editingWebhookId ? 'Cập nhật webhook' : 'Tạo webhook mới' }}</h3>
-                    <p class="mt-1 text-sm text-slate-500">Khai báo URL nhận dữ liệu và từ khóa event dùng để kích hoạt webhook.</p>
+                    <p class="mt-1 text-sm text-slate-500">Khai báo URL nhận dữ liệu. Để trống từ khóa nếu muốn nhận toàn bộ giao dịch tiền vào.</p>
                 </div>
             </template>
 
@@ -434,6 +470,15 @@
                         placeholder="Ví dụ: Webhook đơn hàng ACB"
                     />
                 </label>
+
+                <div class="rounded-[8px] border border-blue-200 bg-blue-50 px-3 py-3 text-[11px] leading-5 text-blue-900">
+                    <p class="font-semibold">Quy cách callback</p>
+                    <div class="mt-2 space-y-1">
+                        <p>Header: <span class="font-mono">X-Webhook-Secret: &lt;secret_key&gt;</span></p>
+                        <p>Body: <span class="font-mono">bank_id = {{ account?.id ?? '---' }}</span></p>
+                        <p>Sign: <span class="font-mono">md5(secret_key + bank_id)</span></p>
+                    </div>
+                </div>
 
                 <label class="space-y-1.5">
                     <span class="text-xs font-semibold text-slate-600">URL nhận webhook</span>
@@ -451,8 +496,9 @@
                         v-model="webhookForm.event_keyword"
                         type="text"
                         class="w-full rounded-[8px] border border-slate-200 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
-                        placeholder="Ví dụ: payment-success"
+                        placeholder="Để trống để nhận toàn bộ giao dịch tiền vào"
                     />
+                    <p class="text-[11px] text-slate-500">Ví dụ: nhập `napabc` nếu chỉ muốn nhận giao dịch có chứa từ khóa đó.</p>
                 </label>
 
                 <label class="space-y-1.5">
@@ -541,7 +587,7 @@
                             <span class="text-[11px] text-slate-500">{{ formatDateTime(log.created_at) }}</span>
                         </div>
 
-                        <div class="mt-2 text-[11px] text-slate-500">Keyword: {{ log.event_keyword || '-' }}</div>
+                        <div class="mt-2 text-[11px] text-slate-500">Keyword: {{ webhookEventLabel(log.event_keyword) }}</div>
 
                         <div class="mt-3 grid gap-2 xl:grid-cols-2">
                             <div class="rounded-[8px] bg-slate-50 p-3">
@@ -693,6 +739,7 @@ const isWebhookLogsOpen = ref(false);
 const isTransactionDetailOpen = ref(false);
 const editingWebhookId = ref<number | null>(null);
 const dispatchingWebhookId = ref<number | null>(null);
+const dispatchingTransactionId = ref<number | null>(null);
 const transactionLimitOptions = [10, 20, 50, 100];
 const selectedTransactionLimit = ref(20);
 const hasBankAccess = computed(() => {
@@ -819,10 +866,22 @@ const transactionAmountClass = (type: BankTransactionType['type']): string => {
     return 'text-slate-900';
 };
 
+const canDispatchTransactionCallback = (transaction: BankTransactionType): boolean => {
+    return Boolean(transaction.id) && transaction.type === 'credit';
+};
+
 const webhookStatusBadgeClass = (status: WebhookType['status']): string => {
     return status === 'active'
         ? 'inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700'
         : 'inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700';
+};
+
+const webhookEventLabel = (eventKeyword: string | null): string => {
+    if (!eventKeyword || eventKeyword.trim() === '') {
+        return 'Tất cả giao dịch tiền vào';
+    }
+
+    return eventKeyword;
 };
 
 const webhookLogStatusClass = (statusCode: number | null): string => {
@@ -1064,7 +1123,7 @@ const dispatchWebhook = async (webhook: WebhookType): Promise<void> => {
 
     try {
         const response = await clientWebhookService.dispatch(currentBankId.value, {
-            event_keyword: webhook.event_keyword,
+            event_keyword: webhook.event_keyword ?? '',
             payload: {
                 source: 'client-bank-manager',
                 webhook_id: webhook.id,
@@ -1078,6 +1137,29 @@ const dispatchWebhook = async (webhook: WebhookType): Promise<void> => {
         handleErrorResponse(error);
     } finally {
         dispatchingWebhookId.value = null;
+    }
+};
+
+const dispatchTransactionCallback = async (transaction: BankTransactionType): Promise<void> => {
+    if (currentBankId.value === '' || !canDispatchTransactionCallback(transaction) || dispatchingTransactionId.value === transaction.id) {
+        return;
+    }
+
+    dispatchingTransactionId.value = transaction.id;
+
+    try {
+        const response = await clientWebhookService.dispatchTransaction(currentBankId.value, transaction.id);
+        const dispatchedCount = Number(response.data?.data?.dispatched_count ?? 0);
+
+        await Swal.fire(
+            dispatchedCount > 0 ? 'Đã đưa vào queue' : 'Không có webhook phù hợp',
+            response.data?.message || (dispatchedCount > 0 ? 'Webhook đã được đưa vào hàng chờ.' : 'Không tìm thấy webhook phù hợp với giao dịch này.'),
+            dispatchedCount > 0 ? 'success' : 'info',
+        );
+    } catch (error) {
+        handleErrorResponse(error);
+    } finally {
+        dispatchingTransactionId.value = null;
     }
 };
 

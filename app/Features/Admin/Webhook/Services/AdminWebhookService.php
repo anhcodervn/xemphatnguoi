@@ -125,7 +125,7 @@ class AdminWebhookService
             })
             ->when(filled($filters['user_id'] ?? null), fn (Builder $query) => $query->where('user_id', $filters['user_id']))
             ->when(filled($filters['status'] ?? null), fn (Builder $query) => $query->where('status', $filters['status']))
-            ->when(filled($filters['event'] ?? null), fn (Builder $query) => $query->whereJsonContains('events', $filters['event']))
+            ->when(filled($filters['event'] ?? null), fn (Builder $query) => $query->where('event_keyword', $filters['event']))
             ->latest('id');
     }
 

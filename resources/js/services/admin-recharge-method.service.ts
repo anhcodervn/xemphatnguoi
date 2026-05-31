@@ -56,7 +56,7 @@ const normalizeRechargeMethod = (item: RechargeMethodItem): RechargeMethodItem =
 
 export const adminRechargeMethodService = {
     async list(params: Record<string, unknown> = {}): Promise<RechargeMethodListResponse> {
-        const res = await api.get('/admin-api/recharge-methods', { params });
+        const res = await api.get('/api/admin-api/recharge-methods', { params });
         const payload = res.data.data as RechargeMethodListResponse;
 
         return {
@@ -68,17 +68,17 @@ export const adminRechargeMethodService = {
         };
     },
     async get(id: number | string): Promise<RechargeMethodItem> {
-        const res = await api.get(`/admin-api/recharge-methods/${id}`);
+        const res = await api.get(`/api/admin-api/recharge-methods/${id}`);
 
         return normalizeRechargeMethod(res.data.data as RechargeMethodItem);
     },
     async create(payload: RechargeMethodPayload) {
-        return api.post('/admin-api/recharge-methods', payload);
+        return api.post('/api/admin-api/recharge-methods', payload);
     },
     async update(id: number | string, payload: RechargeMethodPayload) {
-        return api.patch(`/admin-api/recharge-methods/${id}`, payload);
+        return api.patch(`/api/admin-api/recharge-methods/${id}`, payload);
     },
     async delete(id: number | string) {
-        return api.delete(`/admin-api/recharge-methods/${id}`);
+        return api.delete(`/api/admin-api/recharge-methods/${id}`);
     },
 };

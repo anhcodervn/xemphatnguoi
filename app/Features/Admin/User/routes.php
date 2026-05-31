@@ -4,7 +4,7 @@ use App\Features\Admin\User\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth:sanctum', 'admin'])
-    ->prefix('admin/users')
+    ->prefix('admin-api/users')
     ->name('admin.users.')
     ->controller(UserController::class)
     ->group(function (): void {

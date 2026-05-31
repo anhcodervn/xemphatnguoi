@@ -4,7 +4,7 @@ use App\Features\Admin\Feedback\Controllers\FeedbackController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth:sanctum', 'admin'])
-    ->prefix('admin/feedbacks')
+    ->prefix('admin-api/feedbacks')
     ->name('admin.feedbacks.')
     ->controller(FeedbackController::class)
     ->group(function (): void {

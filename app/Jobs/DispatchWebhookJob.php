@@ -24,8 +24,7 @@ class DispatchWebhookJob implements ShouldQueue
         public int $webhookId,
         public string $eventKeyword,
         public array $payload = [],
-    ) {
-    }
+    ) {}
 
     /**
      * @return array<int, int>
@@ -38,11 +37,14 @@ class DispatchWebhookJob implements ShouldQueue
     public function handle(): void
     {
         $webhook = Webhook::query()->findOrFail($this->webhookId);
+        $bankId = $webhook->bank_account_id !== null ? (int) $webhook->bank_account_id : null;
 
         $requestPayload = [
             'event_keyword' => $this->eventKeyword,
             'webhook_id' => $webhook->id,
+            'bank_id' => $bankId,
             'bank_account_id' => $webhook->bank_account_id,
+            'sign' => $bankId !== null ? md5($webhook->secret_key.(string) $bankId) : null,
             'payload' => $this->payload,
         ];
 

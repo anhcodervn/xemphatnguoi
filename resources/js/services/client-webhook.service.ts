@@ -15,6 +15,10 @@ export const clientWebhookService = {
         return api.post(`/api/webhook/bank/${bankAccountId}/dispatch`, payload);
     },
 
+    async dispatchTransaction(bankAccountId: string | number, transactionId: string | number) {
+        return api.post(`/api/webhook/bank/${bankAccountId}/transactions/${transactionId}/dispatch`);
+    },
+
     async update(id: string | number, payload: Record<string, unknown>) {
         return api.put(`/api/webhook/${id}`, payload);
     },

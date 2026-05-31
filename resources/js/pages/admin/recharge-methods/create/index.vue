@@ -1,11 +1,9 @@
 <script setup lang="ts">
 import { adminRechargeMethodService, type RechargeMethodPayload } from '@/services/admin-recharge-method.service';
-import { clientBankService } from '@/services/client-bank.service';
-import type { BankAccountType } from '@/types/bank.type';
 import { handleErrorResponse } from '@/utils/response';
-import { ArrowLeft, CreditCard, Landmark, LoaderCircle, Settings2 } from 'lucide-vue-next';
+import { ArrowLeft, CreditCard, Landmark, Settings2 } from 'lucide-vue-next';
 import Swal from 'sweetalert2';
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { RouterLink, useRoute, useRouter } from 'vue-router';
 
 const route = useRoute();
@@ -17,8 +15,6 @@ const textareaClass =
     'block w-full rounded-[8px] border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-[#465fff]';
 
 const processing = ref(false);
-const loadingBankAccounts = ref(false);
-const bankAccounts = ref<BankAccountType[]>([]);
 
 const form = ref<RechargeMethodPayload>({
     code: '',
@@ -42,41 +38,6 @@ const metadataInput = ref('{}');
 
 const rechargeMethodId = computed(() => route.params.recharge_method_id as string | undefined);
 const isEditing = computed(() => Boolean(rechargeMethodId.value));
-
-watch(
-    () => form.value.bank_account_ids,
-    (value) => {
-        const primaryBankAccount = bankAccounts.value.find((bankAccount) => value.includes(bankAccount.id));
-
-        if (!primaryBankAccount) {
-            return;
-        }
-
-        if (!form.value.bank_name) {
-            form.value.bank_name = primaryBankAccount.bank_name ?? '';
-        }
-
-        if (!form.value.account_number) {
-            form.value.account_number = primaryBankAccount.account_number ?? '';
-        }
-
-        if (!form.value.account_name) {
-            form.value.account_name = primaryBankAccount.account_name ?? '';
-        }
-    },
-    { deep: true },
-);
-
-const loadBankAccounts = async (): Promise<void> => {
-    try {
-        loadingBankAccounts.value = true;
-        bankAccounts.value = await clientBankService.listAccounts();
-    } catch (error) {
-        handleErrorResponse(error);
-    } finally {
-        loadingBankAccounts.value = false;
-    }
-};
 
 const loadRechargeMethod = async (): Promise<void> => {
     if (!rechargeMethodId.value) {
@@ -136,7 +97,6 @@ const submitForm = async (): Promise<void> => {
 };
 
 onMounted(async () => {
-    await loadBankAccounts();
     await loadRechargeMethod();
 });
 </script>
@@ -317,37 +277,16 @@ onMounted(async () => {
                     </article>
 
                     <article class="rounded-[10px] border border-slate-200 bg-white p-4 shadow-[0_10px_28px_rgba(15,23,42,0.045)]">
-                        <h2 class="text-base font-black tracking-tight text-slate-950">Liên kết tài khoản hệ thống</h2>
+                        <h2 class="text-base font-black tracking-tight text-slate-950">Ghi chú cấu hình</h2>
                         <p class="mt-1 text-[13px] text-slate-500">
-                            Tùy chọn phụ để đồng bộ với danh sách tài khoản ngân hàng hệ thống. Không phải thẻ của người dùng.
+                            Màn này lưu trực tiếp thông tin tài khoản nhận tiền của hệ thống vào phương thức nạp. Không lấy dữ liệu từ danh sách
+                            bank account của người dùng.
                         </p>
 
-                        <div class="mt-4 rounded-[8px] border border-slate-200 bg-slate-50 p-3.5">
-                            <div v-if="loadingBankAccounts" class="flex items-center gap-2 text-sm text-slate-500">
-                                <LoaderCircle class="h-4 w-4 animate-spin" />
-                                Đang tải danh sách tài khoản ngân hàng...
-                            </div>
-                            <div v-else-if="bankAccounts.length === 0" class="text-sm text-slate-500">Chưa có tài khoản ngân hàng hệ thống nào.</div>
-                            <div v-else class="space-y-2">
-                                <label
-                                    v-for="bankAccount in bankAccounts"
-                                    :key="bankAccount.id"
-                                    class="flex items-start gap-3 rounded-[8px] border border-slate-200 bg-white px-3 py-2.5"
-                                >
-                                    <input
-                                        v-model="form.bank_account_ids"
-                                        :value="bankAccount.id"
-                                        type="checkbox"
-                                        class="mt-0.5 h-4 w-4 rounded border-slate-300"
-                                    />
-                                    <span class="min-w-0">
-                                        <span class="block text-sm font-semibold text-slate-900">
-                                            {{ bankAccount.bank_name }} • {{ bankAccount.account_number }}
-                                        </span>
-                                        <span class="block text-[11px] text-slate-500">{{ bankAccount.account_name }}</span>
-                                    </span>
-                                </label>
-                            </div>
+                        <div class="mt-4 rounded-[8px] border border-slate-200 bg-slate-50 p-3.5 text-[13px] leading-6 text-slate-600">
+                            <p>- Điền trực tiếp ngân hàng, số tài khoản và chủ tài khoản ở phần bên trên.</p>
+                            <p>- Mỗi phương thức nạp là một cấu hình nhận tiền độc lập.</p>
+                            <p>- Nếu cần thay đổi tài khoản nhận tiền, chỉ cần cập nhật lại phương thức nạp này.</p>
                         </div>
                     </article>
 

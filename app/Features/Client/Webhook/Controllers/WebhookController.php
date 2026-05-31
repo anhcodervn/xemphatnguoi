@@ -2,6 +2,7 @@
 
 namespace App\Features\Client\Webhook\Controllers;
 
+use App\Features\Client\Webhook\Actions\DispatchTransactionWebhookAction;
 use App\Features\Client\Webhook\Actions\DispatchWebhookAction;
 use App\Features\Client\Webhook\Actions\StoreWebhookAction;
 use App\Features\Client\Webhook\Actions\UpdateWebhookAction;
@@ -9,6 +10,7 @@ use App\Features\Client\Webhook\Requests\StoreWebhookRequest;
 use App\Features\Client\Webhook\Requests\UpdateWebhookRequest;
 use App\Http\Controllers\Controller;
 use App\Models\BankAccount;
+use App\Models\BankTransaction;
 use App\Models\User;
 use App\Models\Webhook;
 use App\Models\WebhookLog;
@@ -77,16 +79,37 @@ class WebhookController extends Controller
         $this->ensureBankAccountOwnership($request, $bankAccount);
 
         $validated = $request->validate([
-            'event_keyword' => ['required', 'string', 'min:2', 'max:100'],
+            'event_keyword' => ['nullable', 'string', 'max:100'],
             'payload' => ['nullable', 'array'],
         ]);
 
         $dispatchedCount = $action->handle(
             $user,
             $bankAccount,
-            strtolower(trim($validated['event_keyword'])),
+            strtolower(trim((string) ($validated['event_keyword'] ?? ''))),
             $validated['payload'] ?? [],
         );
+
+        return response()->json([
+            'status' => true,
+            'message' => "Đã đưa {$dispatchedCount} webhook vào hàng chờ.",
+            'data' => [
+                'dispatched_count' => $dispatchedCount,
+            ],
+        ]);
+    }
+
+    public function dispatchTransaction(
+        Request $request,
+        BankAccount $bankAccount,
+        BankTransaction $bankTransaction,
+        DispatchTransactionWebhookAction $action,
+    ): JsonResponse {
+        $user = $this->authenticatedUser($request);
+        $this->ensureBankAccountOwnership($request, $bankAccount);
+        abort_if($bankTransaction->bank_account_id !== $bankAccount->id, 404);
+
+        $dispatchedCount = $action->handle($user, $bankAccount, $bankTransaction);
 
         return response()->json([
             'status' => true,
@@ -166,10 +189,9 @@ class WebhookController extends Controller
      */
     protected function serializeWebhook(Webhook $webhook): array
     {
-        $eventKeyword = collect($webhook->events)
-            ->filter(fn ($event) => is_string($event) && $event !== '')
-            ->values()
-            ->first();
+        $eventKeyword = $webhook->event_keyword !== null
+            ? trim((string) $webhook->event_keyword)
+            : null;
 
         return [
             'id' => $webhook->id,
@@ -177,7 +199,6 @@ class WebhookController extends Controller
             'name' => $webhook->name,
             'url' => $webhook->url,
             'secret_key' => $webhook->secret_key,
-            'events' => $webhook->events ?? [],
             'event_keyword' => $eventKeyword,
             'status' => $webhook->status,
             'created_at' => $webhook->created_at?->toDateTimeString(),

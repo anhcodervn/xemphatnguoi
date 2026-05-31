@@ -3,13 +3,13 @@ import type { AdminFeedbackItem, AdminFeedbackListResponse } from '@/types/admin
 
 export const adminFeedbackService = {
     async list(params: Record<string, unknown> = {}): Promise<AdminFeedbackListResponse> {
-        const response = await api.get('/api/admin/feedbacks', { params });
+        const response = await api.get('/api/admin-api/feedbacks', { params });
 
         return response.data.data as AdminFeedbackListResponse;
     },
 
     async updateStatus(id: number | string, status: 'new' | 'in_progress' | 'done'): Promise<AdminFeedbackItem> {
-        const response = await api.patch(`/api/admin/feedbacks/${id}/status`, { status });
+        const response = await api.patch(`/api/admin-api/feedbacks/${id}/status`, { status });
 
         return response.data.data.feedback as AdminFeedbackItem;
     },

@@ -27,7 +27,7 @@ class StoreWebhookRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'min:2', 'max:255'],
             'url' => ['required', 'url', 'max:255'],
-            'event_keyword' => ['required', 'string', 'min:2', 'max:100'],
+            'event_keyword' => ['nullable', 'string', 'max:100'],
             'status' => ['required', Rule::in(['active', 'inactive'])],
         ];
     }

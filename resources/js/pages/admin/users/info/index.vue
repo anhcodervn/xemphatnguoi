@@ -96,6 +96,14 @@ const formatDate = (value: string | null, includeTime = false): string => {
     }).format(new Date(value));
 };
 
+const webhookEventLabel = (eventKeyword: string | null): string => {
+    if (!eventKeyword || eventKeyword.trim() === '') {
+        return 'Tất cả giao dịch tiền vào';
+    }
+
+    return eventKeyword;
+};
+
 const initials = computed(() => {
     const source = detail.value?.name || detail.value?.username || detail.value?.email || `U${userId}`;
 
@@ -615,7 +623,7 @@ onMounted(async () => {
                                 <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                                     <div class="min-w-0">
                                         <p class="truncate text-sm font-bold text-slate-950">{{ item.url }}</p>
-                                        <p class="mt-1 text-sm text-slate-500">{{ item.events.join(', ') || 'Không có event' }}</p>
+                                        <p class="mt-1 text-sm text-slate-500">{{ webhookEventLabel(item.event_keyword) }}</p>
                                     </div>
                                     <span
                                         class="inline-flex rounded-[8px] px-2.5 py-1 text-xs font-semibold"

@@ -3,7 +3,7 @@
 use App\Features\Admin\Package\Controllers\PackageController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware('auth')
+Route::middleware(['auth:sanctum', 'admin'])
     ->prefix('admin-api/packages')
     ->name('admin-api.packages.')
     ->controller(PackageController::class)

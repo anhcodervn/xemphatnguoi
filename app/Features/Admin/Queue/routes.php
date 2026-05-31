@@ -4,7 +4,7 @@ use App\Features\Admin\Queue\Controllers\QueueController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth:sanctum', 'admin'])
-    ->prefix('admin/queues')
+    ->prefix('admin-api/queues')
     ->name('admin.queues.')
     ->controller(QueueController::class)
     ->group(function (): void {

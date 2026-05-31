@@ -115,8 +115,24 @@ if (file_exists(base_path('app/Features/Admin/PackageOrder/routes.php'))) {
     require base_path('app/Features/Admin/PackageOrder/routes.php');
 }
 
+if (file_exists(base_path('app/Features/Admin/Package/routes.php'))) {
+    require base_path('app/Features/Admin/Package/routes.php');
+}
+
+if (file_exists(base_path('app/Features/Admin/Couponts/routes.php'))) {
+    require base_path('app/Features/Admin/Couponts/routes.php');
+}
+
+if (file_exists(base_path('app/Features/Admin/Setting/routes.php'))) {
+    require base_path('app/Features/Admin/Setting/routes.php');
+}
+
 if (file_exists(base_path('app/Features/Admin/Deposit/routes.php'))) {
     require base_path('app/Features/Admin/Deposit/routes.php');
+}
+
+if (file_exists(base_path('app/Features/Admin/Recharge/routes.php'))) {
+    require base_path('app/Features/Admin/Recharge/routes.php');
 }
 
 if (file_exists(base_path('app/Features/Admin/Webhook/routes.php'))) {

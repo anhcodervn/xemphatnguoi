@@ -18,20 +18,20 @@ export type PackagePayload = {
 
 export const adminPackageService = {
     async list(params: Record<string, unknown> = {}) {
-        const res = await api.get("/admin-api/packages", { params });
+        const res = await api.get("/api/admin-api/packages", { params });
         return res.data.data;
     },
     async get(id: number | string) {
-        const res = await api.get(`/admin-api/packages/${id}`);
+        const res = await api.get(`/api/admin-api/packages/${id}`);
         return res.data.data;
     },
     async create(payload: PackagePayload) {
-        return await api.post("/admin-api/packages", payload);
+        return await api.post("/api/admin-api/packages", payload);
     },
     async update(id: number | string, payload: PackagePayload) {
-        return await api.patch(`/admin-api/packages/${id}`, payload);
+        return await api.patch(`/api/admin-api/packages/${id}`, payload);
     },
     async delete(id: number | string) {
-        return await api.delete(`/admin-api/packages/${id}`);
+        return await api.delete(`/api/admin-api/packages/${id}`);
     },
 };

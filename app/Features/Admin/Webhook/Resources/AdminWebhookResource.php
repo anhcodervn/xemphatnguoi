@@ -24,7 +24,7 @@ class AdminWebhookResource extends JsonResource
                 'email' => $this->user->email,
             ] : null,
             'url' => $this->url,
-            'events' => $this->events ?? [],
+            'event_keyword' => $this->event_keyword,
             'status' => $this->status,
             'last_called_at' => $this->logs_max_created_at,
             'success_count' => $this->success_logs_count ?? 0,

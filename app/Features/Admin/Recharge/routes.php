@@ -3,7 +3,7 @@
 use App\Features\Admin\Recharge\Controllers\RechargeMethodController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware('auth')
+Route::middleware(['auth:sanctum', 'admin'])
     ->prefix('admin-api/recharge-methods')
     ->name('admin-api.recharge-methods.')
     ->controller(RechargeMethodController::class)
