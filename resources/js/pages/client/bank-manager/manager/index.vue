@@ -270,7 +270,7 @@
                             <span>Số tiền</span>
                             <span>Thời gian</span>
                             <span>Loại</span>
-                            <span class="text-right">Thao tÃ¡c</span>
+                            <span class="text-right">Thao tác</span>
                         </div>
 
                         <div
@@ -309,7 +309,7 @@
                                     @click="dispatchTransactionCallback(transaction)"
                                 >
                                     <Webhook class="h-3.5 w-3.5" :class="dispatchingTransactionId === transaction.id ? 'animate-pulse' : ''" />
-                                    {{ dispatchingTransactionId === transaction.id ? 'Dang gui' : 'Callback' }}
+                                    {{ dispatchingTransactionId === transaction.id ? 'Đang gửi' : 'Callback' }}
                                 </button>
                                 <button
                                     type="button"

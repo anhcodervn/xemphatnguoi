@@ -39,14 +39,14 @@ class HandleApiBankVnCallbackAction
 
         if ($description === '') {
             return $this->ignoredResponse(
-                'Khong tim thay noi dung giao dich de doi soat.',
+                'Không tìm thấy nội dung giao dịch để đối soát.',
                 'missing_description',
             );
         }
 
         if ($this->callbackService->transactionIsOutgoing($payload)) {
             return $this->ignoredResponse(
-                'Giao dich tien ra duoc bo qua.',
+                'Giao dịch tiền ra được bỏ qua.',
                 'outgoing_transaction',
             );
         }
@@ -55,7 +55,7 @@ class HandleApiBankVnCallbackAction
 
         if ($callbackAmount === null) {
             return $this->ignoredResponse(
-                'Khong tim thay so tien giao dich de doi soat.',
+                'Không tìm thấy số tiền giao dịch để đối soát.',
                 'missing_amount',
             );
         }
@@ -70,7 +70,7 @@ class HandleApiBankVnCallbackAction
                 'status_code' => 200,
                 'body' => [
                     'status' => true,
-                    'message' => 'Khong co lenh nap phu hop voi noi dung va so tien giao dich.',
+                    'message' => 'Không có lệnh nạp phù hợp với nội dung và số tiền giao dịch.',
                     'data' => [
                         'ignored' => true,
                         'reason' => 'order_not_found',

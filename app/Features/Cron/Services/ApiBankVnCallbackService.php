@@ -2,8 +2,8 @@
 
 namespace App\Features\Cron\Services;
 
+use App\Jobs\SaveUserLogJob;
 use App\Models\RechargeOrder;
-use App\Models\UserLog;
 use App\Models\Wallet;
 use App\Models\WalletTransaction;
 use App\Models\Webhook;
@@ -316,13 +316,13 @@ class ApiBankVnCallbackService
                 'metadata' => $metadata,
             ])->save();
 
-            UserLog::query()->create([
-                'user_id' => (int) $lockedOrder->user_id,
-                'action' => 'recharge_order_paid',
-                'description' => sprintf('Yeu cau nap %s da duoc xac nhan qua callback webhook', $lockedOrder->order_code),
-                'ip' => $ip,
-                'user_agent' => (string) $userAgent,
-            ]);
+            SaveUserLogJob::dispatch(
+                userId: (int) $lockedOrder->user_id,
+                action: 'recharge_order_paid',
+                description: sprintf('Yeu cau nap %s da duoc xac nhan qua callback webhook', $lockedOrder->order_code),
+                ip: $ip,
+                userAgent: (string) $userAgent,
+            )->onQueue('user-logs')->afterCommit();
 
             return [
                 'status_code' => 200,

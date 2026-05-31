@@ -20,8 +20,7 @@ class SaveUserLogJob implements ShouldQueue
         public ?string $description = null,
         public ?string $ip = null,
         public ?string $userAgent = null,
-    ) {
-    }
+    ) {}
 
     public function handle(): void
     {

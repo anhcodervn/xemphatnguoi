@@ -16,6 +16,6 @@ class RecordUserLogAction
             description: $description,
             ip: $request->ip(),
             userAgent: $request->userAgent(),
-        )->onQueue('user-logs');
+        )->onQueue('user-logs')->afterCommit();
     }
 }

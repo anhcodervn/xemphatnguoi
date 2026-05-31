@@ -42,7 +42,7 @@ class RejectDepositAction
                 description: sprintf('Yêu cầu nạp %s bị từ chối', $lockedDeposit->order_code),
                 ip: null,
                 userAgent: 'system:admin-reject-deposit',
-            )->onQueue('user-logs');
+            )->onQueue('user-logs')->afterCommit();
 
             return [
                 'deposit' => $lockedDeposit->fresh(['user', 'rechargeMethod', 'bankAccount']),

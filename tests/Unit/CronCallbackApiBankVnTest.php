@@ -1,19 +1,21 @@
 <?php
 
+use App\Jobs\SaveUserLogJob;
 use App\Models\RechargeOrder;
 use App\Models\User;
-use App\Models\UserLog;
 use App\Models\Wallet;
 use App\Models\WalletTransaction;
 use App\Models\Webhook;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 uses(TestCase::class);
 
 beforeEach(function () {
+    Queue::fake();
+
     Schema::dropIfExists('webhooks');
-    Schema::dropIfExists('user_logs');
     Schema::dropIfExists('wallet_transactions');
     Schema::dropIfExists('recharge_orders');
     Schema::dropIfExists('wallets');
@@ -100,15 +102,6 @@ beforeEach(function () {
         $table->timestamps();
     });
 
-    Schema::create('user_logs', function ($table): void {
-        $table->id();
-        $table->unsignedBigInteger('user_id');
-        $table->string('action');
-        $table->text('description')->nullable();
-        $table->string('ip', 45)->nullable();
-        $table->text('user_agent')->nullable();
-        $table->timestamps();
-    });
 });
 
 function createPendingRechargeOrder(): RechargeOrder
@@ -204,8 +197,7 @@ test('callback apibankvn approves recharge order and credits wallet when order c
     expect(WalletTransaction::query()->count())->toBe(1)
         ->and(WalletTransaction::query()->first()?->reference_id)->toBe($order->id);
 
-    expect(UserLog::query()->count())->toBe(1)
-        ->and(UserLog::query()->first()?->action)->toBe('recharge_order_paid');
+    Queue::assertPushed(SaveUserLogJob::class, fn (SaveUserLogJob $job): bool => $job->userId === $order->user_id && $job->action === 'recharge_order_paid');
 });
 
 test('callback apibankvn ignores payload when description does not contain any recharge order code', function () {

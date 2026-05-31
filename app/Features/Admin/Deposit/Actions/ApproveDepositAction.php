@@ -15,8 +15,7 @@ class ApproveDepositAction
 {
     public function __construct(
         private readonly MailQueue $mailQueue,
-    ) {
-    }
+    ) {}
 
     /**
      * @return array<string, mixed>
@@ -88,7 +87,7 @@ class ApproveDepositAction
                 description: sprintf('Yêu cầu nạp %s đã được duyệt thành công', $lockedDeposit->order_code),
                 ip: null,
                 userAgent: 'system:admin-approve-deposit',
-            )->onQueue('user-logs');
+            )->onQueue('user-logs')->afterCommit();
 
             $userEmail = $lockedDeposit->user?->email;
             if (is_string($userEmail) && $userEmail !== '') {
