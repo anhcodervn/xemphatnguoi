@@ -1,8 +1,9 @@
 <?php
 
 use App\Http\Controllers\SpaController;
-use App\Http\Middleware\EnsureApiKeyPermission;
 use App\Http\Middleware\EnsureAdminUser;
+use App\Http\Middleware\EnsureApiKeyPermission;
+use App\Http\Middleware\EnsureHasActiveSubscription;
 use App\Http\Middleware\LogApiRequest;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -28,6 +29,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->statefulApi();
         $middleware->alias([
             'admin' => EnsureAdminUser::class,
+            'active-subscription' => EnsureHasActiveSubscription::class,
             'api-key.permission' => EnsureApiKeyPermission::class,
             'api-key.log' => LogApiRequest::class,
         ]);

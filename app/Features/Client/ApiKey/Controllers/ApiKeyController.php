@@ -7,6 +7,7 @@ use App\Features\Client\ApiKey\Requests\StoreApiKeyRequest;
 use App\Features\Client\ApiKey\Requests\UpdateApiKeyRequest;
 use App\Features\Client\ApiKey\Resources\ApiKeyResource;
 use App\Features\Client\ApiKey\Services\ApiKeyService;
+use App\Features\Client\Profile\Actions\RecordUserLogAction;
 use App\Http\Controllers\Controller;
 use App\Models\ApiKey;
 use App\Models\User;
@@ -18,6 +19,10 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class ApiKeyController extends Controller
 {
+    public function __construct(
+        private readonly RecordUserLogAction $recordUserLogAction,
+    ) {}
+
     public function index(ApiKeyIndexRequest $request, ApiKeyService $apiKeyService): JsonResponse
     {
         /** @var User|null $user */
@@ -34,6 +39,7 @@ class ApiKeyController extends Controller
         abort_unless($user instanceof User, 401);
 
         $result = $apiKeyService->create($user, $request->validated());
+        $this->recordUserLogAction->handle($user, 'api_key_create', 'Tạo API key mới', $request);
 
         return response()->json(ApiResponse::success(
             message: 'API key created successfully.',
@@ -54,6 +60,7 @@ class ApiKeyController extends Controller
         $this->ensureOwnership($user, $apiKey);
 
         $apiKey = $apiKeyService->update($apiKey, $request->validated());
+        $this->recordUserLogAction->handle($user, 'api_key_update', 'Cập nhật cấu hình API key', $request);
 
         return response()->json(ApiResponse::success(
             message: 'API key updated successfully.',
@@ -72,6 +79,7 @@ class ApiKeyController extends Controller
         $this->ensureOwnership($user, $apiKey);
 
         $apiKey = $apiKeyService->revoke($apiKey);
+        $this->recordUserLogAction->handle($user, 'api_key_revoke', 'Thu hồi API key', $request);
 
         return response()->json(ApiResponse::success(
             message: 'API key revoked successfully.',
@@ -90,6 +98,7 @@ class ApiKeyController extends Controller
         $this->ensureOwnership($user, $apiKey);
 
         $result = $apiKeyService->rotateSecret($apiKey);
+        $this->recordUserLogAction->handle($user, 'api_key_rotate', 'Đổi API key và API secret', $request);
 
         return response()->json(ApiResponse::success(
             message: 'API credentials rotated successfully.',
@@ -128,7 +137,7 @@ class ApiKeyController extends Controller
     private function ensureOwnership(User $user, ApiKey $apiKey): void
     {
         if ((int) $apiKey->user_id !== (int) $user->id) {
-            throw new NotFoundHttpException();
+            throw new NotFoundHttpException;
         }
     }
 }

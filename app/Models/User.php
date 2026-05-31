@@ -6,7 +6,6 @@ use App\Notifications\QueuedResetPasswordNotification;
 use Illuminate\Auth\Passwords\CanResetPassword as CanResetPasswordTrait;
 use Illuminate\Contracts\Auth\CanResetPassword;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -28,6 +27,7 @@ class User extends Authenticatable implements CanResetPassword, JWTSubject
         'phone',
         'full_name',
         'avatar',
+        'google_id',
         'password',
         'role',
         'status',
@@ -110,6 +110,11 @@ class User extends Authenticatable implements CanResetPassword, JWTSubject
     public function wallet(): HasOne
     {
         return $this->hasOne(Wallet::class)->where('type', Wallet::TYPE_MAIN);
+    }
+
+    public function bankAccounts(): HasMany
+    {
+        return $this->hasMany(BankAccount::class);
     }
 
     public function wallets(): HasMany

@@ -36,6 +36,7 @@ class WebhookController extends Controller
     public function byBank(Request $request, BankAccount $bankAccount): JsonResponse
     {
         $user = $this->authenticatedUser($request);
+        $this->ensureBankAccountOwnership($request, $bankAccount);
 
         return response()->json([
             'status' => true,
@@ -73,6 +74,7 @@ class WebhookController extends Controller
         DispatchWebhookAction $action,
     ): JsonResponse {
         $user = $this->authenticatedUser($request);
+        $this->ensureBankAccountOwnership($request, $bankAccount);
 
         $validated = $request->validate([
             'event_keyword' => ['required', 'string', 'min:2', 'max:100'],
@@ -101,6 +103,7 @@ class WebhookController extends Controller
         StoreWebhookAction $action,
     ): JsonResponse {
         $user = $this->authenticatedUser($request);
+        $this->ensureBankAccountOwnership($request, $bankAccount);
 
         $webhook = $action->handle($user, $bankAccount, $request->validated());
 
@@ -151,6 +154,11 @@ class WebhookController extends Controller
     protected function ensureWebhookOwnership(Request $request, Webhook $webhook): void
     {
         abort_if($webhook->user_id !== $this->authenticatedUser($request)->id, 404);
+    }
+
+    protected function ensureBankAccountOwnership(Request $request, BankAccount $bankAccount): void
+    {
+        abort_if($bankAccount->user_id !== $this->authenticatedUser($request)->id, 404);
     }
 
     /**

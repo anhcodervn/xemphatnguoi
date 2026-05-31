@@ -2,9 +2,9 @@
 
 namespace App\Features\Admin\Setting\Requests;
 
-use App\Exceptions\ApiException;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class UpdateSystemSettingRequest extends FormRequest
 {
@@ -14,7 +14,7 @@ class UpdateSystemSettingRequest extends FormRequest
     }
 
     /**
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, array<int, mixed>>
      */
     public function rules(): array
     {
@@ -24,6 +24,12 @@ class UpdateSystemSettingRequest extends FormRequest
             'site_description' => ['nullable', 'string', 'max:2000'],
             'site_active' => ['required', 'boolean'],
             'allow_register' => ['required', 'boolean'],
+            'logo' => ['nullable', 'string', 'max:2048'],
+            'favicon' => ['nullable', 'string', 'max:2048'],
+            'og_image' => ['nullable', 'string', 'max:2048'],
+            'color_primary' => ['nullable', 'string', 'regex:/^#([0-9a-fA-F]{6})$/'],
+            'color_accent' => ['nullable', 'string', 'regex:/^#([0-9a-fA-F]{6})$/'],
+            'color_surface' => ['nullable', 'string', 'regex:/^#([0-9a-fA-F]{6})$/'],
             'support_email' => ['nullable', 'email', 'max:190'],
             'hotline' => ['nullable', 'string', 'max:30'],
             'address' => ['nullable', 'string', 'max:500'],
@@ -43,22 +49,29 @@ class UpdateSystemSettingRequest extends FormRequest
         ];
     }
 
+    /**
+     * @return array<string, string>
+     */
     public function messages(): array
     {
         return [
             'site_name.required' => 'Vui lòng nhập tên hệ thống.',
             'support_email.email' => 'Email hỗ trợ không đúng định dạng.',
-            'recharge_syntax.required' => 'Vui lòng nhập cú pháp nạp.',
+            'recharge_syntax.required' => 'Vui lòng nhập cú pháp nạp tiền.',
+            'color_primary.regex' => 'Màu chính phải đúng mã HEX.',
+            'color_accent.regex' => 'Màu nhấn phải đúng mã HEX.',
+            'color_surface.regex' => 'Màu nền phải đúng mã HEX.',
         ];
-    }
-
-    public function attributes(): array
-    {
-        return [];
     }
 
     protected function failedValidation(Validator $validator): void
     {
-        throw new ApiException($validator->errors()->first(), 422);
+        throw new HttpResponseException(response()->json([
+            'status' => false,
+            'message' => $validator->errors()->first(),
+            'data' => [
+                'errors' => $validator->errors(),
+            ],
+        ], 422));
     }
 }

@@ -6,7 +6,6 @@ use App\Exceptions\ApiException;
 use App\Models\ApiKey;
 use App\Models\BankAccount;
 use App\Models\RechargeClient;
-use App\Models\RechargeMethod;
 use App\Models\User;
 use Illuminate\Support\Str;
 
@@ -18,6 +17,7 @@ class StoreRechargeClientOrderAction
     public function handle(User $user, ?ApiKey $apiKey, array $payload): RechargeClient
     {
         $bankAccount = BankAccount::query()
+            ->where('user_id', $user->id)
             ->where('status', 'active')
             ->find($payload['bank_id']);
 

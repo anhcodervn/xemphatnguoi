@@ -76,8 +76,13 @@ class V1Controller extends Controller
 
     public function listBankAccounts(): JsonResponse
     {
+        /** @var User|null $user */
+        $user = request()->user();
+        abort_unless($user instanceof User, 401);
+
         $bankAccounts = BankAccount::query()
             ->leftJoin('banks', 'banks.code', '=', 'bank_accounts.bank_name')
+            ->where('bank_accounts.user_id', $user->id)
             ->where('bank_accounts.status', 'active')
             ->orderByDesc('bank_accounts.updated_at')
             ->orderByDesc('bank_accounts.id')
@@ -123,7 +128,9 @@ class V1Controller extends Controller
         $user = $request->user();
         abort_unless($user instanceof User, 401);
 
-        $bankAccount = BankAccount::query()->findOrFail($request->integer('bank_id'));
+        $bankAccount = BankAccount::query()
+            ->where('user_id', $user->id)
+            ->findOrFail($request->integer('bank_id'));
         $result = $transactionBankAction->handleWithChanges(
             $bankAccount,
             $request->integer('limit', 20),
@@ -179,7 +186,7 @@ class V1Controller extends Controller
             ->first();
 
         if (! $order instanceof RechargeClient) {
-            throw new NotFoundHttpException();
+            throw new NotFoundHttpException;
         }
 
         if (

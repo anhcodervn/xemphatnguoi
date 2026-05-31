@@ -18,11 +18,11 @@
             <header class="flex items-center justify-between gap-3 py-2">
                 <a href="{{ url('/') }}" class="flex min-w-0 items-center gap-3">
                     <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-slate-950 text-sm font-bold text-white">
-                        NT
+                        A
                     </div>
                     <div class="min-w-0">
                         <div class="truncate font-['Space_Grotesk',sans-serif] text-sm font-semibold tracking-tight text-slate-950 sm:text-base">
-                            {{ config('app.name', 'NAPTIENTUDONG') }}
+                            {{ \App\Models\Setting::where('key', 'site_name')->first()->value ?? "" }}
                         </div>
                         <div class="text-[11px] uppercase tracking-[0.22em] text-sky-700">
                             @yield('eyebrow', 'Auth Portal')

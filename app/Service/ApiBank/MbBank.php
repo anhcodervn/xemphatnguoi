@@ -8,12 +8,16 @@ date_default_timezone_set('Asia/Ho_Chi_Minh');
 class MbBank
 {
     public $user = '';
+
     public $pass = '';
+
     public $deviceIdCommon_goc = '';
+
     public $URL = [];
 
-    private $apiCaptcha = "http://103.118.29.97:8277";
-    private $encodeParam = "http://103.118.29.97:2000";
+    private $apiCaptcha = 'https://captcha-mb.apibankvn.com';
+
+    private $encodeParam = 'http://103.118.29.97:2000';
 
     public function __construct($username, $password)
     {
@@ -136,9 +140,9 @@ class MbBank
 
         $rows = $this->extractTransactionRows($decodedHistory);
         $normalized = array_values(array_filter(array_map(
-            fn(array $row): array => $this->normalizeTransaction($row),
+            fn (array $row): array => $this->normalizeTransaction($row),
             $rows
-        ), fn(array $transaction): bool => ($transaction['transaction_id'] ?? '') !== ''));
+        ), fn (array $transaction): bool => ($transaction['transaction_id'] ?? '') !== ''));
 
         return [
             'status' => 'success',
@@ -153,14 +157,14 @@ class MbBank
     {
         return sprintf(
             '%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
-            mt_rand(0, 0xffff),
-            mt_rand(0, 0xffff),
-            mt_rand(0, 0xffff),
-            mt_rand(0, 0x0fff) | 0x4000,
-            mt_rand(0, 0x3fff) | 0x8000,
-            mt_rand(0, 0xffff),
-            mt_rand(0, 0xffff),
-            mt_rand(0, 0xffff)
+            mt_rand(0, 0xFFFF),
+            mt_rand(0, 0xFFFF),
+            mt_rand(0, 0xFFFF),
+            mt_rand(0, 0x0FFF) | 0x4000,
+            mt_rand(0, 0x3FFF) | 0x8000,
+            mt_rand(0, 0xFFFF),
+            mt_rand(0, 0xFFFF),
+            mt_rand(0, 0xFFFF)
         );
     }
 
@@ -184,7 +188,7 @@ class MbBank
         foreach ($candidateKeys as $key) {
             $candidate = data_get($payload, $key);
             if (is_array($candidate) && array_is_list($candidate)) {
-                return array_values(array_filter($candidate, fn(mixed $row): bool => is_array($row)));
+                return array_values(array_filter($candidate, fn (mixed $row): bool => is_array($row)));
             }
         }
 
@@ -330,9 +334,10 @@ class MbBank
 
         return is_numeric($normalized) ? (float) $normalized : 0.0;
     }
+
     public function eCaptcha($img_base64 = null)
     {
-        if (!$img_base64) {
+        if (! $img_base64) {
             $get_captcha = $this->get_captcha();
             $captchaPayload = json_decode((string) $get_captcha, true);
             $img_base64 = is_array($captchaPayload) ? ($captchaPayload['imageString'] ?? null) : null;
@@ -343,34 +348,35 @@ class MbBank
         }
 
         $captcha_domain = rtrim($this->apiCaptcha, '/');
-        $url = $captcha_domain . '/api/captcha/mbbank';
-        $dataPost = array(
-            "base64" => $img_base64
-        );
+        $url = $captcha_domain.'/api/captcha/mbbank';
+        $dataPost = [
+            'base64' => $img_base64,
+        ];
         $payload = json_encode($dataPost);
         $curl = curl_init();
-        curl_setopt_array($curl, array(
+        curl_setopt_array($curl, [
             CURLOPT_URL => $url,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_POST => true,
             CURLOPT_POSTFIELDS => $payload,
-            CURLOPT_HTTPHEADER => array(
+            CURLOPT_HTTPHEADER => [
                 'Content-Type: application/json',
-                'Content-Length: ' . strlen($payload)
-            ),
-        ));
+                'Content-Length: '.strlen($payload),
+            ],
+        ]);
 
         $response = curl_exec($curl);
         $err = curl_error($curl);
         curl_close($curl);
         if ($err) {
-            return "cURL Error #:" . $err;
+            return 'cURL Error #:'.$err;
         } else {
             $result = json_decode($response, true);
             if (isset($result['status']) && $result['status'] == 'success') {
                 return $result['captcha'];
             }
-            return "Error: " . $response;
+
+            return 'Error: '.$response;
         }
     }
 
@@ -378,6 +384,7 @@ class MbBank
     {
         return round(microtime(true) * 1000);
     }
+
     public function login($captcha)
     {
 
@@ -403,7 +410,7 @@ class MbBank
 
         $curl = curl_init();
 
-        curl_setopt_array($curl, array(
+        curl_setopt_array($curl, [
             CURLOPT_URL => 'https://online.mbbank.com.vn/api/retail_web/internetbanking/v2.0/doLogin',
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_ENCODING => '',
@@ -412,8 +419,8 @@ class MbBank
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
             CURLOPT_CUSTOMREQUEST => 'POST',
-            CURLOPT_POSTFIELDS => '{"dataEnc":"' . $encrypt . '"}',
-            CURLOPT_HTTPHEADER => array(
+            CURLOPT_POSTFIELDS => '{"dataEnc":"'.$encrypt.'"}',
+            CURLOPT_HTTPHEADER => [
                 'accept: application/json, text/plain, */*',
                 'accept-language: vi,en-US;q=0.9,en;q=0.8,fr-FR;q=0.7,fr;q=0.6',
                 'app: MB_WEB',
@@ -431,14 +438,13 @@ class MbBank
                 'sec-fetch-dest: empty',
                 'sec-fetch-mode: cors',
                 'sec-fetch-site: same-origin',
-                'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36'
-            ),
-        ));
+                'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36',
+            ],
+        ]);
 
         $response = curl_exec($curl);
 
         curl_close($curl);
-
 
         return json_decode($response, true);
     }
@@ -448,7 +454,7 @@ class MbBank
         $requiredFields = ['username', 'password', 'captcha', 'deviceId'];
 
         foreach ($requiredFields as $field) {
-            if (!isset($data[$field]) || $data[$field] === '') {
+            if (! isset($data[$field]) || $data[$field] === '') {
                 return [
                     'success' => false,
                     'message' => "Missing required field: {$field}",
@@ -467,7 +473,7 @@ class MbBank
         $curl = curl_init();
 
         curl_setopt_array($curl, [
-            CURLOPT_URL => $baseUrl . '/encode?' . $query,
+            CURLOPT_URL => $baseUrl.'/encode?'.$query,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_ENCODING => '',
             CURLOPT_MAXREDIRS => 10,
@@ -489,7 +495,7 @@ class MbBank
         if ($error) {
             return [
                 'success' => false,
-                'message' => 'cURL Error #: ' . $error,
+                'message' => 'cURL Error #: '.$error,
             ];
         }
 
@@ -503,7 +509,7 @@ class MbBank
 
         $decoded = json_decode((string) $response, true);
 
-        if (!is_array($decoded)) {
+        if (! is_array($decoded)) {
             return [
                 'success' => false,
                 'message' => 'Invalid encrypt response',
@@ -528,8 +534,8 @@ class MbBank
     {
         $curl = curl_init();
 
-        curl_setopt_array($curl, array(
-            CURLOPT_URL => 'http://103.78.2.65:7222/mb/encrypt-data',//http://103.78.2.65:7222/mb/encrypt-data
+        curl_setopt_array($curl, [
+            CURLOPT_URL => 'http://103.78.2.65:7222/mb/encrypt-data', // http://103.78.2.65:7222/mb/encrypt-data
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_ENCODING => '',
             CURLOPT_MAXREDIRS => 10,
@@ -538,10 +544,10 @@ class MbBank
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
             CURLOPT_CUSTOMREQUEST => 'POST',
             CURLOPT_POSTFIELDS => json_encode($data),
-            CURLOPT_HTTPHEADER => array(
-                'Content-Type: application/json'
-            ),
-        ));
+            CURLOPT_HTTPHEADER => [
+                'Content-Type: application/json',
+            ],
+        ]);
 
         $response = curl_exec($curl);
         $error = curl_error($curl);
@@ -550,7 +556,7 @@ class MbBank
 
         if ($error) {
             return [
-                'message' => 'cURL Error #:' . $error,
+                'message' => 'cURL Error #:'.$error,
             ];
         }
 
@@ -565,12 +571,13 @@ class MbBank
 
         return $decoded;
     }
+
     public function get_captcha()
     {
 
         $curl = curl_init();
 
-        curl_setopt_array($curl, array(
+        curl_setopt_array($curl, [
             CURLOPT_URL => 'https://online.mbbank.com.vn/api/retail-internetbankingms/getCaptchaImage',
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_ENCODING => '',
@@ -579,8 +586,8 @@ class MbBank
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
             CURLOPT_CUSTOMREQUEST => 'POST',
-            CURLOPT_POSTFIELDS => '{"refNo":"2025111607522690","deviceIdCommon":"' . $this->deviceIdCommon_goc . '","sessionId":""}',
-            CURLOPT_HTTPHEADER => array(
+            CURLOPT_POSTFIELDS => '{"refNo":"2025111607522690","deviceIdCommon":"'.$this->deviceIdCommon_goc.'","sessionId":""}',
+            CURLOPT_HTTPHEADER => [
                 'accept: application/json, text/plain, */*',
                 'accept-language: vi,en-US;q=0.9,en;q=0.8,fr-FR;q=0.7,fr;q=0.6',
                 'app: MB_WEB',
@@ -598,22 +605,24 @@ class MbBank
                 'sec-fetch-dest: empty',
                 'sec-fetch-mode: cors',
                 'sec-fetch-site: same-origin',
-                'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36'
-            ),
-        ));
+                'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36',
+            ],
+        ]);
 
         $response = curl_exec($curl);
 
         curl_close($curl);
+
         return $response;
     }
+
     public function get_lsgd($user, $session_id, $deviceId, $account, $day)
     {
-        $today = new \DateTime();
-        $today->modify("+1 day");
+        $today = new \DateTime;
+        $today->modify('+1 day');
 
         $curl = curl_init();
-        curl_setopt_array($curl, array(
+        curl_setopt_array($curl, [
             CURLOPT_URL => 'https://online.mbbank.com.vn/api/retail-transactionms/transactionms/get-account-transaction-history',
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_ENCODING => '',
@@ -623,15 +632,15 @@ class MbBank
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
             CURLOPT_CUSTOMREQUEST => 'POST',
             CURLOPT_POSTFIELDS => '{
-            "toDate" : "' . date("d/m/Y") . '",
-            "accountNo" : "' . $account . '",
-            "sessionId" : "' . $session_id . '",
-            "fromDate" : "' . date("d/m/Y", strtotime("$day days ago")) . '",
-            "refNo" : "' . $user . '-' . date('YmdHis') . '",
-            "deviceIdCommon" : "' . $deviceId . '"
+            "toDate" : "'.date('d/m/Y').'",
+            "accountNo" : "'.$account.'",
+            "sessionId" : "'.$session_id.'",
+            "fromDate" : "'.date('d/m/Y', strtotime("$day days ago")).'",
+            "refNo" : "'.$user.'-'.date('YmdHis').'",
+            "deviceIdCommon" : "'.$deviceId.'"
           }',
-            CURLOPT_HTTPHEADER => array(
-                'Deviceid: ' . $deviceId . '',
+            CURLOPT_HTTPHEADER => [
+                'Deviceid: '.$deviceId.'',
                 'sec-ch-ua: "Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
                 'sec-ch-ua-mobile: ?0',
                 'Authorization: Basic RU1CUkVUQUlMV0VCOlNEMjM0ZGZnMzQlI0BGR0AzNHNmc2RmNDU4NDNm',
@@ -641,20 +650,22 @@ class MbBank
                 'Accept: application/json, text/plain, */*',
                 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
                 'Referer: https://online.mbbank.com.vn/information-account/source-account',
-                'X-Request-Id: ' . $user . '-' . date('YmdHis') . '',
-            ),
-        ));
+                'X-Request-Id: '.$user.'-'.date('YmdHis').'',
+            ],
+        ]);
 
         $response = curl_exec($curl);
 
         curl_close($curl);
+
         return $response;
     }
+
     public function get_lsgd_1($user, $session_id, $deviceId, $account, $start_date, $end_date)
     {
-        $start_date = date("d/m/Y", strtotime($start_date));
-        $end_date = date("d/m/Y", strtotime($end_date));
-        $refNo = $user . '-' . date('YmdHis');
+        $start_date = date('d/m/Y', strtotime($start_date));
+        $end_date = date('d/m/Y', strtotime($end_date));
+        $refNo = $user.'-'.date('YmdHis');
 
         // dd([
         //     "toDate" => $end_date,
@@ -667,7 +678,7 @@ class MbBank
 
         $curl = curl_init();
 
-        curl_setopt_array($curl, array(
+        curl_setopt_array($curl, [
             CURLOPT_URL => 'https://online.mbbank.com.vn/api/retail-transactionms/transactionms/get-account-transaction-history',
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_ENCODING => '',
@@ -677,34 +688,34 @@ class MbBank
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
             CURLOPT_CUSTOMREQUEST => 'POST',
             CURLOPT_POSTFIELDS => json_encode([
-                "toDate" => $end_date,
-                "accountNo" => $account,
-                "sessionId" => $session_id,
-                "fromDate" => $start_date,
-                "refNo" => $refNo,
-                "deviceIdCommon" => $deviceId
+                'toDate' => $end_date,
+                'accountNo' => $account,
+                'sessionId' => $session_id,
+                'fromDate' => $start_date,
+                'refNo' => $refNo,
+                'deviceIdCommon' => $deviceId,
             ]),
-            CURLOPT_HTTPHEADER => array(
+            CURLOPT_HTTPHEADER => [
                 'accept: application/json, text/plain, */*',
                 'accept-language: vi,en-US;q=0.9,en;q=0.8,fr-FR;q=0.7,fr;q=0.6',
                 'app: MB_WEB',
                 'authorization: Basic RU1CUkVUQUlMV0VCOlNEMjM0ZGZnMzQlI0BGR0AzNHNmc2RmNDU4NDNm',
                 'content-type: application/json; charset=UTF-8',
-                'deviceid: ' . $deviceId,
+                'deviceid: '.$deviceId,
                 'elastic-apm-traceparent: 00-690e238f5a479be690001e5257478972-4b8184bf0f444db1-01',
                 'origin: https://online.mbbank.com.vn',
                 'priority: u=1, i',
                 'referer: https://online.mbbank.com.vn/information-account/source-account',
-                'refNo: ' . $refNo,
+                'refNo: '.$refNo,
                 'sec-ch-ua: "Chromium";v="140", "Not=A?Brand";v="24", "Google Chrome";v="140"',
                 'sec-ch-ua-mobile: ?0',
                 'sec-ch-ua-platform: "Windows"',
                 'sec-fetch-dest: empty',
                 'sec-fetch-mode: cors',
                 'sec-fetch-site: same-origin',
-                'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36'
-            ),
-        ));
+                'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36',
+            ],
+        ]);
 
         $response = curl_exec($curl);
         // dd($response);
@@ -712,15 +723,16 @@ class MbBank
 
         return $response;
     }
+
     public function get_lsgd_2($user, $session_id, $deviceId, $account, $day)
     {
         date_default_timezone_set('Asia/Ho_Chi_Minh');
-        $today = new \DateTime();
-        $today->modify("+1 day");
+        $today = new \DateTime;
+        $today->modify('+1 day');
 
         $curl = curl_init();
 
-        curl_setopt_array($curl, array(
+        curl_setopt_array($curl, [
             CURLOPT_URL => 'https://online.mbbank.com.vn/api/retail-transactionms/transactionms/get-account-transaction-history',
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_ENCODING => '',
@@ -730,14 +742,14 @@ class MbBank
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
             CURLOPT_CUSTOMREQUEST => 'POST',
             CURLOPT_POSTFIELDS => '{
-            "toDate" : "' . date("d/m/Y") . '",
-            "accountNo" : "' . $account . '",
-            "sessionId" : "' . $session_id . '",
-            "fromDate" : "' . date("d/m/Y", strtotime("$day days ago")) . '",
-            "refNo" : "' . $user . '-' . date('YmdHis') . '",
-            "deviceIdCommon" : "' . $deviceId . '"
+            "toDate" : "'.date('d/m/Y').'",
+            "accountNo" : "'.$account.'",
+            "sessionId" : "'.$session_id.'",
+            "fromDate" : "'.date('d/m/Y', strtotime("$day days ago")).'",
+            "refNo" : "'.$user.'-'.date('YmdHis').'",
+            "deviceIdCommon" : "'.$deviceId.'"
           }',
-            CURLOPT_HTTPHEADER => array(
+            CURLOPT_HTTPHEADER => [
                 'accept: application/json, text/plain, */*',
                 'accept-language: vi,en-US;q=0.9,en;q=0.8,fr-FR;q=0.7,fr;q=0.6',
                 'app: MB_WEB',
@@ -755,73 +767,78 @@ class MbBank
                 'sec-fetch-dest: empty',
                 'sec-fetch-mode: cors',
                 'sec-fetch-site: same-origin',
-                'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36'
-            ),
-        ));
+                'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36',
+            ],
+        ]);
 
         $response = curl_exec($curl);
 
         curl_close($curl);
+
         return $response;
     }
+
     public function get_balance($session_id, $deviceId)
     {
         $refNo = $this->generateRefNo2($this->user);
-        $header = array(
+        $header = [
             'accept: application/json, text/plain, */*',
             'accept-language: vi-VN,vi;q=0.9,fr-FR;q=0.8,fr;q=0.7,en-US;q=0.6,en;q=0.5',
             'app: MB_WEB',
             'authorization: Basic RU1CUkVUQUlMV0VCOlNEMjM0ZGZnMzQlI0BGR0AzNHNmc2RmNDU4NDNm',
             'content-type: application/json; charset=UTF-8',
-            'deviceid: ' . $deviceId,
+            'deviceid: '.$deviceId,
             'elastic-apm-traceparent: 00-2297f87ef45beb4234545809143e2fbe-1d26e459b80cfe1d-01',
             'origin: https://online.mbbank.com.vn',
             'priority: u=1, i',
             'referer: https://online.mbbank.com.vn/',
-            'refno: ' . $refNo,
+            'refno: '.$refNo,
             'sec-fetch-dest: empty',
             'sec-fetch-mode: cors',
             'sec-fetch-site: same-origin',
             'user-agent: Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1',
-            'x-request-id: ' . $refNo,
-        );
+            'x-request-id: '.$refNo,
+        ];
         $Action = 'https://online.mbbank.com.vn/api/retail-accountms/accountms/getBalance';
         $Data = json_encode([
-            "sessionId" => $session_id,
-            "refNo" => $refNo,
-            "deviceIdCommon" => $deviceId
+            'sessionId' => $session_id,
+            'refNo' => $refNo,
+            'deviceIdCommon' => $deviceId,
         ]);
         $result = $this->CURL2($Action, $header, $Data);
+
         return $result;
     }
+
     public function CURL2($Action, $header, $data)
     {
         $curl = curl_init();
-        $opt = array(
+        $opt = [
             CURLOPT_URL => $Action,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_POST => empty($data) ? false : true,
             CURLOPT_POSTFIELDS => $data,
             CURLOPT_CUSTOMREQUEST => empty($data) ? 'GET' : 'POST',
             CURLOPT_HTTPHEADER => $header,
-            CURLOPT_ENCODING => "",
+            CURLOPT_ENCODING => '',
             CURLOPT_HEADER => false,
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_2,
             CURLOPT_TIMEOUT => 5,
-        );
+        ];
         curl_setopt_array($curl, $opt);
         $body = curl_exec($curl);
 
         return $body;
     }
+
     public function generateRefNo2($phoneNumber)
     {
         // Part 1: Fixed phone number
         $part1 = $phoneNumber;
 
         // Part 2: Current timestamp with milliseconds (YYYYMMDDHHMMSSMS)
-        $dateTime = new \DateTime();
-        $timestamp = $dateTime->format('YmdHis') . substr($dateTime->format('u'), 0, 2); // YearMonthDayHourMinuteSecond + 2-digit milliseconds
+        $dateTime = new \DateTime;
+        $timestamp = $dateTime->format('YmdHis').substr($dateTime->format('u'), 0, 2); // YearMonthDayHourMinuteSecond + 2-digit milliseconds
 
         // Part 3: Random 5-digit number (e.g., 00000 to 99999)
         $part3 = str_pad(rand(0, 99999), 5, '0', STR_PAD_LEFT);
@@ -834,7 +851,7 @@ class MbBank
 
     public function generateImei()
     {
-        return $this->generateRandomString(8) . '-' . $this->generateRandomString(4) . '-' . $this->generateRandomString(4) . '-' . $this->generateRandomString(4) . '-' . $this->get_time_request();
+        return $this->generateRandomString(8).'-'.$this->generateRandomString(4).'-'.$this->generateRandomString(4).'-'.$this->generateRandomString(4).'-'.$this->get_time_request();
     }
 
     public function generateRandomString($length = 20)
@@ -845,17 +862,21 @@ class MbBank
         for ($i = 0; $i < $length; $i++) {
             $randomString .= $characters[rand(0, $charactersLength - 1)];
         }
+
         return $randomString;
     }
+
     public function get_TOKEN()
     {
         return $this->generateRandomString(39);
     }
+
     public function get_time_request()
     {
         $d = getdate();
-        $today = $d['hours'] . $d['minutes'] . $d['seconds'];
-        $day = date('Y') . date('m') . date('d');
-        return $day . $today;
+        $today = $d['hours'].$d['minutes'].$d['seconds'];
+        $day = date('Y').date('m').date('d');
+
+        return $day.$today;
     }
 }

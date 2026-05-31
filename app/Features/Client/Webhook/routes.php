@@ -3,7 +3,7 @@
 use App\Features\Client\Webhook\Controllers\WebhookController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware('auth:sanctum')
+Route::middleware(['auth:sanctum', 'active-subscription'])
     ->prefix('webhook')
     ->name('client/webhook.')
     ->group(function (): void {

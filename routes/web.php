@@ -24,13 +24,13 @@ Route::get('/', function (SettingStore $settingStore) {
         'youtube' => '',
         'meta_title' => '',
         'meta_description' => '',
+        'logo' => '',
+        'favicon' => '',
+        'og_image' => '',
     ];
 
     return view('pages.landing.index', [
-        'systemSettings' => [
-            ...$defaults,
-            ...$settingStore->getArray('system', []),
-        ],
+        'systemSettings' => $settingStore->getMany($defaults),
     ]);
 });
 
@@ -47,6 +47,8 @@ Route::middleware('guest')->group(function (): void {
         Route::post('/login', [AuthController::class, 'login'])->name('auth.login.submit');
         Route::post('/register', [AuthController::class, 'register'])->name('auth.register.submit');
         Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->name('auth.forgot-password.submit');
+        Route::get('/google/redirect', [AuthController::class, 'redirectToGoogle'])->name('auth.google.redirect');
+        Route::get('/google/callback', [AuthController::class, 'handleGoogleCallback'])->name('auth.google.callback');
     });
 
     Route::get('/login', function () {
@@ -103,10 +105,6 @@ if (file_exists(base_path('app/Features/Client/Webhook/routes.php'))) {
 
 if (file_exists(base_path('app/Features/Client/Recharge/routes.php'))) {
     require base_path('app/Features/Client/Recharge/routes.php');
-}
-
-if (file_exists(base_path('app/Features/Client/Notifications/routes.php'))) {
-    require base_path('app/Features/Client/Notifications/routes.php');
 }
 
 if (file_exists(base_path('app/Features/Api/V1/routes.php'))) {

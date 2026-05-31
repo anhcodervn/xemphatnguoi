@@ -9,6 +9,12 @@ export interface SystemSettingType {
     site_description: string;
     site_active: boolean;
     allow_register: boolean;
+    logo: string;
+    favicon: string;
+    og_image: string;
+    color_primary?: string;
+    color_accent?: string;
+    color_surface?: string;
     support_email: string;
     hotline: string;
     address: string;
@@ -40,6 +46,7 @@ export interface GeneralSettingType {
 export interface BrandingSettingType {
     logo: string;
     favicon: string;
+    og_image: string;
     color_primary: string;
     color_accent: string;
     color_surface: string;

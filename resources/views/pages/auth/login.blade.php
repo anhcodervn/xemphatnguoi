@@ -11,6 +11,17 @@
 @push('scripts')
     <script>
         (() => {
+            const googleErrorMessage = @json(session('auth_google_error'));
+
+            if (googleErrorMessage) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Không thể đăng nhập bằng Google',
+                    text: googleErrorMessage,
+                    confirmButtonText: 'Đóng',
+                });
+            }
+
             const form = document.getElementById('formLogin');
 
             if (!form) {

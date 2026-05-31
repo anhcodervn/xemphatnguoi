@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Jobs\SyncBankAccountTransactionsJob;
 use App\Models\Bank;
 use App\Models\BankAccount;
+use App\Support\Enums\SubscriptionStatus;
 use Illuminate\Console\Command;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
@@ -53,6 +54,7 @@ class SyncBankTransactionsCommand extends Command
                 $accounts = $this->accountsForBank($bank->code, $limitPerMinute);
                 if ($accounts->isEmpty()) {
                     $this->line("[$bank->code] no active bank accounts to dispatch.");
+
                     continue;
                 }
 
@@ -102,6 +104,11 @@ class SyncBankTransactionsCommand extends Command
         return BankAccount::query()
             ->where('bank_name', $bankCode)
             ->where('status', 'active')
+            ->whereHas('user.userSubscriptions', function ($query): void {
+                $query
+                    ->where('status', SubscriptionStatus::Active)
+                    ->where('expires_at', '>', now());
+            })
             ->orderByRaw('last_sync_at IS NULL DESC')
             ->orderBy('last_sync_at')
             ->orderBy('id')

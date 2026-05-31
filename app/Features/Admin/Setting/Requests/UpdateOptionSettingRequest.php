@@ -2,9 +2,9 @@
 
 namespace App\Features\Admin\Setting\Requests;
 
-use App\Exceptions\ApiException;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class UpdateOptionSettingRequest extends FormRequest
 {
@@ -14,7 +14,7 @@ class UpdateOptionSettingRequest extends FormRequest
     }
 
     /**
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, array<int, mixed>>
      */
     public function rules(): array
     {
@@ -26,11 +26,9 @@ class UpdateOptionSettingRequest extends FormRequest
         ];
     }
 
-    public function messages(): array
-    {
-        return [];
-    }
-
+    /**
+     * @return array<string, string>
+     */
     public function attributes(): array
     {
         return [
@@ -43,6 +41,12 @@ class UpdateOptionSettingRequest extends FormRequest
 
     protected function failedValidation(Validator $validator): void
     {
-        throw new ApiException($validator->errors()->first(), 422);
+        throw new HttpResponseException(response()->json([
+            'status' => false,
+            'message' => $validator->errors()->first(),
+            'data' => [
+                'errors' => $validator->errors(),
+            ],
+        ], 422));
     }
 }

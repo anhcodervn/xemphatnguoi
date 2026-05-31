@@ -3,7 +3,7 @@
 use App\Features\Client\Bank\Controllers\BankController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware('auth:sanctum')
+Route::middleware(['auth:sanctum', 'active-subscription'])
     ->prefix('bank')
     ->name('client/bank.')
     ->group(function (): void {

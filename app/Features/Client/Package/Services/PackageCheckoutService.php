@@ -29,7 +29,7 @@ class PackageCheckoutService
     ) {}
 
     /**
-     * @param array{coupon_code?:mixed} $payload
+     * @param  array{coupon_code?:mixed}  $payload
      */
     public function quote(User $user, Package $package, array $payload = []): PackageQuoteData
     {
@@ -43,9 +43,18 @@ class PackageCheckoutService
             ->latest('expires_at')
             ->first();
 
+        $latestSubscription = $user->userSubscriptions()
+            ->latest('expires_at')
+            ->latest('id')
+            ->first();
+
         if ($activeSubscription instanceof UserSubscription && $activeSubscription->package_id === $package->id) {
             throw new ApiException('Bạn đang sử dụng gói này. Vui lòng chờ hết hạn hoặc chọn gói khác.', 422);
         }
+
+        $sourceSubscription = $activeSubscription instanceof UserSubscription
+            ? $activeSubscription
+            : $latestSubscription;
 
         $price = (float) $package->price;
         $couponCode = $this->normalizeCouponCode($payload['coupon_code'] ?? null);
@@ -63,8 +72,8 @@ class PackageCheckoutService
 
         return new PackageQuoteData(
             package: $package,
-            sourceSubscription: $activeSubscription,
-            quoteType: $activeSubscription instanceof UserSubscription ? 'upgrade' : 'new_purchase',
+            sourceSubscription: $sourceSubscription,
+            quoteType: $this->resolveQuoteType($package, $activeSubscription, $sourceSubscription),
             price: $price,
             discountAmount: $discountAmount,
             creditAmount: $creditAmount,
@@ -75,7 +84,7 @@ class PackageCheckoutService
     }
 
     /**
-     * @param array{coupon_code?:mixed,payment_method?:mixed} $payload
+     * @param  array{coupon_code?:mixed,payment_method?:mixed}  $payload
      */
     public function createOrder(User $user, Package $package, array $payload = []): PackageOrder
     {
@@ -157,7 +166,7 @@ class PackageCheckoutService
                     amount: (float) $lockedOrder->final_amount,
                     referenceType: PackageOrder::class,
                     referenceId: $lockedOrder->id,
-                    description: sprintf('Thanh toán đơn hàng gói %s', $lockedOrder->order_code),
+                    description: $this->walletTransactionDescription($lockedOrder),
                 );
             }
 
@@ -326,5 +335,36 @@ class PackageCheckoutService
         }
 
         return null;
+    }
+
+    private function resolveQuoteType(
+        Package $package,
+        ?UserSubscription $activeSubscription,
+        ?UserSubscription $sourceSubscription,
+    ): string {
+        if ($activeSubscription instanceof UserSubscription) {
+            return 'upgrade';
+        }
+
+        if ($sourceSubscription instanceof UserSubscription && $sourceSubscription->package_id === $package->id) {
+            return 'renewal';
+        }
+
+        return 'new_purchase';
+    }
+
+    private function walletTransactionDescription(PackageOrder $packageOrder): string
+    {
+        $sourceSubscription = $packageOrder->sourceSubscription;
+
+        if ($sourceSubscription instanceof UserSubscription) {
+            if ($sourceSubscription->package_id === $packageOrder->package_id) {
+                return sprintf('Gia hạn gói qua đơn hàng %s', $packageOrder->order_code);
+            }
+
+            return sprintf('Nâng cấp gói qua đơn hàng %s', $packageOrder->order_code);
+        }
+
+        return sprintf('Mua mới gói qua đơn hàng %s', $packageOrder->order_code);
     }
 }

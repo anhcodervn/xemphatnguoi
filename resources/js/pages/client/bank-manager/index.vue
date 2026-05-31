@@ -1,5 +1,8 @@
 <template>
     <div class="space-y-3 pb-3">
+        <PackageRequiredState v-if="!hasBankAccess" />
+
+        <template v-else>
         <section
             class="flex flex-col gap-2.5 rounded-[10px] border border-white/70 bg-white/75 px-4 py-3 shadow-[0_14px_36px_-28px_rgba(15,23,42,0.16)] backdrop-blur xl:flex-row xl:items-center xl:justify-between"
         >
@@ -209,12 +212,15 @@
                 </div>
             </aside>
         </section>
+        </template>
     </div>
 </template>
 
 <script setup lang="ts">
 import { clientBankService } from '@/services/client-bank.service';
+import { useUserStore } from '@/stores/user.store';
 import type { BankAccountType } from '@/types/bank.type';
+import PackageRequiredState from './components/PackageRequiredState.vue';
 import {
     Bell,
     CalendarClock,
@@ -240,6 +246,21 @@ import { RouterLink } from 'vue-router';
 const search = ref('');
 const cards = ref<BankAccountType[]>([]);
 const isLoadingCards = ref(false);
+const userStore = useUserStore();
+
+const hasBankAccess = computed(() => {
+    const subscription = userStore.user?.user_subscriptions;
+
+    if (!subscription || subscription.status !== 'active') {
+        return false;
+    }
+
+    if (!subscription.expires_at) {
+        return true;
+    }
+
+    return new Date(subscription.expires_at).getTime() > Date.now();
+});
 
 const filteredCards = computed(() => {
     const keyword = search.value.trim().toLowerCase();
@@ -398,6 +419,14 @@ const formatDateTime = (value: string | null): string => {
 };
 
 onMounted(async () => {
+    if (!userStore.user) {
+        await userStore.bootstrap({ silent: true });
+    }
+
+    if (!hasBankAccess.value) {
+        return;
+    }
+
     await loadCards();
 });
 </script>

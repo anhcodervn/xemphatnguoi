@@ -4,7 +4,9 @@ namespace App\Jobs;
 
 use App\Features\Api\V1\Actions\MatchRechargeClientOrdersAction;
 use App\Features\Client\Bank\Actions\TransactionBankAction;
+use App\Features\Client\Package\Services\PackageService;
 use App\Models\BankAccount;
+use App\Models\User;
 use App\Models\Webhook;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -21,12 +23,12 @@ class SyncBankAccountTransactionsJob implements ShouldQueue
     public function __construct(
         public int $bankAccountId,
         public int $transactionLimit = 20,
-    ) {
-    }
+    ) {}
 
     public function handle(
         TransactionBankAction $action,
         MatchRechargeClientOrdersAction $matchRechargeClientOrdersAction,
+        PackageService $packageService,
     ): void {
         $bankAccount = BankAccount::query()->find($this->bankAccountId);
 
@@ -35,6 +37,16 @@ class SyncBankAccountTransactionsJob implements ShouldQueue
         }
 
         if ($bankAccount->status !== 'active') {
+            return;
+        }
+
+        $owner = $bankAccount->user;
+
+        if (! $owner instanceof User) {
+            return;
+        }
+
+        if ($packageService->getActiveSubscription($owner) === null) {
             return;
         }
 

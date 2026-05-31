@@ -43,6 +43,9 @@ Route::prefix('')->group(function (): void {
             'youtube' => '',
             'meta_title' => '',
             'meta_description' => '',
+            'logo' => '',
+            'favicon' => '',
+            'og_image' => '',
             'robots' => 'index,follow',
             'gtm_id' => '',
             'meta_pixel_id' => '',
@@ -53,10 +56,7 @@ Route::prefix('')->group(function (): void {
             'refund_policy' => [],
         ];
 
-        $settings = [
-            ...$defaults,
-            ...$settingStore->getArray('system', []),
-        ];
+        $settings = $settingStore->getMany($defaults);
 
         return response()->json([
             'status' => true,

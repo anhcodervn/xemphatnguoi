@@ -36,8 +36,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
-import { useRoute } from "vue-router";
+import { computed } from 'vue';
+import { useRoute } from 'vue-router';
 
 interface BreadcrumbItem {
     label: string;
@@ -55,61 +55,75 @@ const props = withDefaults(
         homeLabel?: string;
     }>(),
     {
-        title: "",
-        description: "",
+        title: '',
+        description: '',
         items: () => [],
-        homeLabel: "Dashboard",
+        homeLabel: 'Dashboard',
     },
 );
 
 const routeLabelMap: Record<string, string> = {
-    "master.home": "Dashboard",
-    "master.users": "Người dùng",
-    "master.users.lists": "Danh sách người dùng",
-    "master.users.info": "Thông tin người dùng",
-    "master.products": "Sản phẩm",
-    "master.products.lists": "Danh sách sản phẩm",
-    "master.products.info-product": "Thông tin sản phẩm",
-    "master.products.item-product": "Gói sản phẩm",
-    "master.product-categories": "Danh mục sản phẩm",
-    "master.product-categories.lists": "Danh sách danh mục",
-    "master.product-categories.info": "Thông tin danh mục",
-    "master.discounts": "Giảm giá",
-    "master.discounts.flash-sales": "Flash sale",
-    "master.discounts.flash-sales.lists": "Danh sách flash sale",
-    "master.discounts.flash-sales.info": "Thông tin flash sale",
-    "master.discounts.coupons": "Mã giảm giá",
-    "master.discounts.coupons.lists": "Danh sách mã giảm giá",
-    "master.discounts.coupons.info": "Thông tin mã giảm giá",
-    "master.settings": "Cài đặt website",
-    "master.settings.common": "Cấu hình chung",
-    "master.settings.common.general": "Tổng quan",
-    "master.settings.common.branding": "Nhận diện",
-    "master.settings.common.home-category": "Danh mục trang chủ",
-    "master.settings.common.slider-images": "Slider nổi bật",
-    "master.settings.common.contact": "Liên hệ",
-    "master.settings.common.seo": "SEO và tracking",
-    "master.settings.options": "Cấu hình option",
+    'admin.dashboard': 'Dashboard',
+    'admin.users.index': 'Người dùng',
+    'admin.users.show': 'Chi tiết người dùng',
+    'admin.users.wallet-transaction': 'Lịch sử dòng tiền',
+    'admin.users.wallet-transaction.show': 'Lịch sử dòng tiền',
+    'admin.packages.index': 'Gói thuê',
+    'admin.packages.create': 'Tạo gói',
+    'admin.packages.edit': 'Cập nhật gói',
+    'admin.packages.orders': 'Gói đã bán',
+    'admin.couponts.index': 'Mã giảm giá',
+    'admin.couponts.create': 'Tạo mã giảm giá',
+    'admin.couponts.edit': 'Cập nhật mã giảm giá',
+    'admin.couponts.history': 'Lịch sử coupon',
+    'admin.notifications.index': 'Thông báo',
+    'admin.notifications.create': 'Tạo thông báo',
+    'admin.notifications.edit': 'Cập nhật thông báo',
+    'admin.notifications.history': 'Lịch sử thông báo',
+    'admin.mail.index': 'Gửi mail',
+    'admin.queues.index': 'Quản lý queue',
+    'admin.webhooks.index': 'Quản lý webhook',
+    'admin.feedbacks.index': 'Liên hệ và góp ý',
+    'admin.recharge-methods.index': 'Phương thức nạp',
+    'admin.recharge-methods.create': 'Tạo phương thức nạp',
+    'admin.recharge-methods.edit': 'Cập nhật phương thức nạp',
+    'admin.settings.system': 'Cấu hình hệ thống',
+    'client.home': 'Trang chủ',
+    'client.profile': 'Hồ sơ tài khoản',
+    'client.recharge': 'Nạp tiền',
+    'client.package': 'Nâng cấp gói',
+    'client.contact': 'Liên hệ và góp ý',
+    'client.api-docs': 'Tài liệu API',
 };
 
+const homeRoute = computed<string>(() => {
+    const name = route.name?.toString() ?? '';
+
+    if (name.startsWith('admin.')) {
+        return '/admin';
+    }
+
+    return '/';
+});
+
 const autoItems = computed<BreadcrumbItem[]>(() => {
-    const matchedRoutes = route.matched.filter((item) => item.name && item.name !== "master");
+    const matchedRoutes = route.matched.filter((item) => item.name);
 
     const items = matchedRoutes.map((item, index) => {
-        const name = item.name?.toString() || "";
+        const name = item.name?.toString() || '';
         const label =
             routeLabelMap[name] ||
             item.meta?.title?.toString() ||
             name
-                .split(".")
+                .split('.')
                 .pop()
-                ?.replace(/-/g, " ")
+                ?.replace(/-/g, ' ')
                 .replace(/\b\w/g, (char) => char.toUpperCase()) ||
-            "Trang";
+            'Trang';
 
         return {
             label,
-            to: item.path.includes(":") ? undefined : item.path,
+            to: item.path.includes(':') ? undefined : item.path,
             active: index === matchedRoutes.length - 1,
         };
     });
@@ -117,7 +131,7 @@ const autoItems = computed<BreadcrumbItem[]>(() => {
     return [
         {
             label: props.homeLabel,
-            to: "/master",
+            to: homeRoute.value,
             active: items.length === 0,
         },
         ...items,

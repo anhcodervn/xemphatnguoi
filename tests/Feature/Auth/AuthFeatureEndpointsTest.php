@@ -1,10 +1,14 @@
 <?php
 
+use App\Jobs\SaveUserLogJob;
 use App\Models\User;
 use App\Models\Wallet;
+use Illuminate\Support\Facades\Queue;
 use Laravel\Sanctum\PersonalAccessToken;
 
 test('users can log in through the auth web submit endpoint', function () {
+    Queue::fake();
+
     $user = User::factory()->create([
         'username' => 'loginuser',
         'email' => 'login@example.com',
@@ -27,6 +31,8 @@ test('users can log in through the auth web submit endpoint', function () {
 
     $this->assertAuthenticatedAs($user);
     $this->get('/')->assertOk();
+
+    Queue::assertPushed(SaveUserLogJob::class, fn (SaveUserLogJob $job): bool => $job->userId === $user->id && $job->action === 'login');
 });
 
 test('session authenticated users can retrieve the current user through api user', function () {
@@ -51,6 +57,8 @@ test('session authenticated users can retrieve the current user through api user
 });
 
 test('users can log in through the auth api endpoint and receive a sanctum token', function () {
+    Queue::fake();
+
     $user = User::factory()->create([
         'username' => 'api_login_user',
         'email' => 'api-login@example.com',
@@ -75,6 +83,8 @@ test('users can log in through the auth api endpoint and receive a sanctum token
 
     expect(PersonalAccessToken::query()->count())->toBe(1)
         ->and($response->json('access_token'))->not->toBeEmpty();
+
+    Queue::assertPushed(SaveUserLogJob::class, fn (SaveUserLogJob $job): bool => $job->userId === $user->id && $job->action === 'api_login');
 });
 
 test('login rejects invalid credentials under the shared login field', function () {
@@ -115,6 +125,8 @@ test('forgot password demo returns a preview reset url for known users', functio
 });
 
 test('users can register through the auth web submit endpoint', function () {
+    Queue::fake();
+
     $response = $this->postJson(route('auth.register.submit'), [
         'name' => 'Blade User',
         'username' => 'bladeuser',
@@ -139,4 +151,6 @@ test('users can register through the auth web submit endpoint', function () {
         ->and(Wallet::where('user_id', $user?->id)->exists())->toBeTrue()
         ->and($response->json('user.wallet.type'))->toBe('main')
         ->and($response->json('user.wallet.balance'))->toBe('0.00');
+
+    Queue::assertPushed(SaveUserLogJob::class, fn (SaveUserLogJob $job): bool => $job->userId === $user?->id && $job->action === 'register');
 });

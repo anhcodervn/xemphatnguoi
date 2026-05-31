@@ -8,6 +8,7 @@ use App\Features\Client\Bank\Requests\SaveBankRequest;
 use App\Http\Controllers\Controller;
 use App\Models\Bank;
 use App\Models\BankAccount;
+use App\Models\User;
 use App\Utils\EncodeBank;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -38,8 +39,11 @@ class BankController extends Controller
 
     public function accounts(): JsonResponse
     {
+        $user = $this->authenticatedUser(request());
+
         $accounts = BankAccount::query()
             ->leftJoin('banks', 'banks.code', '=', 'bank_accounts.bank_name')
+            ->where('bank_accounts.user_id', $user->id)
             ->orderByDesc('bank_accounts.updated_at')
             ->orderByDesc('bank_accounts.id')
             ->select([
@@ -83,16 +87,18 @@ class BankController extends Controller
 
     public function showAccount(BankAccount $bankAccount): JsonResponse
     {
+        $this->ensureBankAccountOwnership(request(), $bankAccount);
+
         return response()->json([
             'status' => true,
             'data' => $this->serializeBankAccountWithBankMeta($bankAccount),
         ]);
     }
 
-    public function transactions(Request $request, 
-    BankAccount $bankAccount, 
-    TransactionBankAction $action): JsonResponse
+    public function transactions(Request $request, BankAccount $bankAccount, TransactionBankAction $action): JsonResponse
     {
+        $this->ensureBankAccountOwnership($request, $bankAccount);
+
         $validated = $request->validate([
             'limit' => ['nullable', 'integer', 'min:1', 'max:100'],
             'force_refresh' => ['nullable', 'boolean'],
@@ -111,7 +117,7 @@ class BankController extends Controller
 
     public function saveBank(SaveBankRequest $request, SaveBankAction $action): JsonResponse
     {
-        $bankAccount = $action->handle($request->validated());
+        $bankAccount = $action->handle($this->authenticatedUser($request), $request->validated());
 
         return response()->json([
             'status' => true,
@@ -124,7 +130,9 @@ class BankController extends Controller
 
     public function updateBank(BankAccount $bankAccount, SaveBankRequest $request, SaveBankAction $action): JsonResponse
     {
-        $updatedBankAccount = $action->handle($request->validated(), $bankAccount);
+        $this->ensureBankAccountOwnership($request, $bankAccount);
+
+        $updatedBankAccount = $action->handle($this->authenticatedUser($request), $request->validated(), $bankAccount);
 
         return response()->json([
             'status' => true,
@@ -135,12 +143,28 @@ class BankController extends Controller
 
     public function destroyAccount(BankAccount $bankAccount): JsonResponse
     {
+        $this->ensureBankAccountOwnership(request(), $bankAccount);
+
         $bankAccount->delete();
 
         return response()->json([
             'status' => true,
             'message' => 'Xóa liên kết thẻ thành công.',
         ]);
+    }
+
+    protected function authenticatedUser(Request $request): User
+    {
+        $user = $request->user();
+
+        abort_unless($user instanceof User, 401);
+
+        return $user;
+    }
+
+    protected function ensureBankAccountOwnership(Request $request, BankAccount $bankAccount): void
+    {
+        abort_if($bankAccount->user_id !== $this->authenticatedUser($request)->id, 404);
     }
 
     /**

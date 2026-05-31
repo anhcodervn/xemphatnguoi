@@ -1,5 +1,8 @@
 <template>
     <div class="space-y-3 pb-3">
+        <PackageRequiredState v-if="!hasBankAccess" />
+
+        <template v-else>
         <section class="rounded-[10px] border border-white/70 bg-white/75 px-4 py-3 shadow-[0_14px_36px_-28px_rgba(15,23,42,0.16)] backdrop-blur">
             <RouterLink
                 :to="{ name: 'client.bank-manager' }"
@@ -632,6 +635,7 @@
                 </div>
             </template>
         </Modal>
+        </template>
     </div>
 </template>
 
@@ -639,6 +643,7 @@
 import Modal from '@/components/shared/Modal/index.vue';
 import { clientBankService } from '@/services/client-bank.service';
 import { clientWebhookService } from '@/services/client-webhook.service';
+import { useUserStore } from '@/stores/user.store';
 import type { BankAccountType, BankTransactionType, WebhookLogType, WebhookType } from '@/types/bank.type';
 import { handleErrorResponse } from '@/utils/response';
 import {
@@ -660,12 +665,14 @@ import {
 import Swal from 'sweetalert2';
 import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { RouterLink, useRoute, useRouter } from 'vue-router';
+import PackageRequiredState from '../components/PackageRequiredState.vue';
 
 type TabKey = 'info' | 'transactions' | 'webhooks';
 type WebhookStatus = 'active' | 'inactive';
 
 const route = useRoute();
 const router = useRouter();
+const userStore = useUserStore();
 
 const currentBankId = computed(() => String(route.params.bank_id ?? ''));
 const activeTab = ref<TabKey>('info');
@@ -688,6 +695,19 @@ const editingWebhookId = ref<number | null>(null);
 const dispatchingWebhookId = ref<number | null>(null);
 const transactionLimitOptions = [10, 20, 50, 100];
 const selectedTransactionLimit = ref(20);
+const hasBankAccess = computed(() => {
+    const subscription = userStore.user?.user_subscriptions;
+
+    if (!subscription || subscription.status !== 'active') {
+        return false;
+    }
+
+    if (!subscription.expires_at) {
+        return true;
+    }
+
+    return new Date(subscription.expires_at).getTime() > Date.now();
+});
 
 const tabs: Array<{
     key: TabKey;
@@ -1135,6 +1155,14 @@ watch(selectedTransactionLimit, async () => {
 });
 
 onMounted(async () => {
+    if (!userStore.user) {
+        await userStore.bootstrap({ silent: true });
+    }
+
+    if (!hasBankAccess.value) {
+        return;
+    }
+
     await loadAccount();
 });
 </script>

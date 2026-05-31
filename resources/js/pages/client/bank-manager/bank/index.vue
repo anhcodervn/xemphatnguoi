@@ -1,5 +1,8 @@
 <template>
     <div class="space-y-3 pb-3">
+        <PackageRequiredState v-if="!hasBankAccess" />
+
+        <template v-else>
         <section class="rounded-[10px] border border-white/70 bg-white/75 px-4 py-3 shadow-[0_14px_36px_-28px_rgba(15,23,42,0.16)] backdrop-blur">
             <RouterLink
                 :to="{ name: 'client.bank-manager' }"
@@ -286,12 +289,14 @@
                 </div>
             </aside>
         </section>
+        </template>
     </div>
 </template>
 
 <script setup lang="ts">
 import api from '@/config/axios';
 import { clientBankService } from '@/services/client-bank.service';
+import { useUserStore } from '@/stores/user.store';
 import type { BankAccountType, BankType } from '@/types/bank.type';
 import { handleErrorResponse } from '@/utils/response';
 import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from '@headlessui/vue';
@@ -299,6 +304,7 @@ import { ArrowLeft, Check, ChevronsUpDown, KeyRound, Landmark, Save, ShieldCheck
 import Swal from 'sweetalert2';
 import { computed, onMounted, reactive, ref } from 'vue';
 import { RouterLink, useRoute, useRouter } from 'vue-router';
+import PackageRequiredState from '../components/PackageRequiredState.vue';
 
 type BankFormShape = {
     bank_code: string;
@@ -310,6 +316,7 @@ type BankFormShape = {
 
 const route = useRoute();
 const router = useRouter();
+const userStore = useUserStore();
 
 const isEditMode = computed(() => typeof route.params.bank_id === 'string' && route.params.bank_id !== '');
 const currentBankId = computed(() => String(route.params.bank_id ?? ''));
@@ -330,6 +337,20 @@ const banks = ref<BankType[]>([]);
 const isLoadingBanks = ref(false);
 const isLoadingAccount = ref(false);
 const processing = ref(false);
+
+const hasBankAccess = computed(() => {
+    const subscription = userStore.user?.user_subscriptions;
+
+    if (!subscription || subscription.status !== 'active') {
+        return false;
+    }
+
+    if (!subscription.expires_at) {
+        return true;
+    }
+
+    return new Date(subscription.expires_at).getTime() > Date.now();
+});
 
 const pageTitle = computed(() => (isEditMode.value ? 'Chỉnh sửa thông tin bank' : 'Thêm thông tin bank'));
 const pageDescription = computed(() =>
@@ -464,6 +485,14 @@ const submitForm = async (): Promise<void> => {
 };
 
 onMounted(async () => {
+    if (!userStore.user) {
+        await userStore.bootstrap({ silent: true });
+    }
+
+    if (!hasBankAccess.value) {
+        return;
+    }
+
     await loadBanks();
     await loadAccount();
 });

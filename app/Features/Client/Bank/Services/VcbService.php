@@ -5,6 +5,7 @@ namespace App\Features\Client\Bank\Services;
 use App\Exceptions\ApiException;
 use App\Models\BankAccount;
 use App\Models\BankTransaction;
+use App\Models\User;
 use App\Service\ApiBank\vietCombank;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
@@ -21,12 +22,13 @@ class VcbService
      *     account_number: string
      * }  $data
      */
-    public function saveBank(array $data, ?BankAccount $bankAccount = null): BankAccount
+    public function saveBank(User $user, array $data, ?BankAccount $bankAccount = null): BankAccount
     {
-        return DB::transaction(function () use ($data, $bankAccount): BankAccount {
-            $targetBankAccount = $bankAccount ?? new BankAccount();
+        return DB::transaction(function () use ($user, $data, $bankAccount): BankAccount {
+            $targetBankAccount = $bankAccount ?? new BankAccount;
 
             $targetBankAccount->forceFill([
+                'user_id' => $user->id,
                 'bank_name' => 'vcb',
                 'account_name' => $data['display_name'],
                 'account_number' => $data['account_number'],
@@ -111,6 +113,7 @@ class VcbService
             $fromDate = now()->subDays(7)->format('d/m/Y');
             $toDate = now()->format('d/m/Y');
             $history = $client->getTransactionHistory($fromDate, $toDate, (string) $bankAccount->account_number, $rows);
+
             // dd($history);
             return [
                 'status' => 'success',
@@ -209,6 +212,7 @@ class VcbService
             (string) $bankAccount->username,
             (string) $bankAccount->password,
             (string) $bankAccount->account_number,
+            $bankAccount,
         );
     }
 

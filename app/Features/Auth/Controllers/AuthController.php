@@ -6,6 +6,7 @@ use App\Exceptions\ApiException;
 use App\Features\Auth\Requests\ForgotPasswordRequest;
 use App\Features\Auth\Requests\LoginRequest;
 use App\Features\Auth\Requests\RegisterRequest;
+use App\Features\Auth\Services\GoogleAuthService;
 use App\Features\Client\Package\Services\PackageService;
 use App\Features\Client\Profile\Actions\RecordUserLogAction;
 use App\Features\Client\Wallet\Services\WalletService;
@@ -19,6 +20,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Str;
+use Throwable;
 
 class AuthController extends Controller
 {
@@ -27,8 +30,8 @@ class AuthController extends Controller
         private readonly PackageService $packageService,
         private readonly RecordUserLogAction $recordUserLogAction,
         private readonly MailQueue $mailQueue,
-    ) {
-    }
+        private readonly GoogleAuthService $googleAuthService,
+    ) {}
 
     public function index(): JsonResponse
     {
@@ -140,6 +143,100 @@ class AuthController extends Controller
             'status' => true,
             'message' => 'Nếu email tồn tại trong hệ thống, liên kết đặt lại mật khẩu đã được gửi.',
         ]);
+    }
+
+    public function redirectToGoogle(Request $request): RedirectResponse
+    {
+        if (! $this->googleAuthService->isConfigured()) {
+            return redirect()
+                ->route('auth.login')
+                ->with('auth_google_error', 'Đăng nhập Google chưa được cấu hình.');
+        }
+
+        $state = $this->googleAuthService->generateState();
+        $request->session()->put('google_oauth_state', $state);
+
+        return redirect()->away($this->googleAuthService->authorizationUrl($state));
+    }
+
+    public function handleGoogleCallback(Request $request): RedirectResponse
+    {
+        $expectedState = $request->session()->pull('google_oauth_state');
+        $receivedState = $request->string('state')->toString();
+
+        if (
+            ! is_string($expectedState)
+            || $expectedState === ''
+            || $receivedState === ''
+            || ! hash_equals($expectedState, $receivedState)
+        ) {
+            return redirect()
+                ->route('auth.login')
+                ->with('auth_google_error', 'Phiên đăng nhập Google không hợp lệ. Vui lòng thử lại.');
+        }
+
+        if ($request->filled('error')) {
+            return redirect()
+                ->route('auth.login')
+                ->with('auth_google_error', 'Bạn đã hủy hoặc từ chối đăng nhập bằng Google.');
+        }
+
+        $code = $request->string('code')->toString();
+
+        if ($code === '') {
+            return redirect()
+                ->route('auth.login')
+                ->with('auth_google_error', 'Google không trả về mã xác thực hợp lệ.');
+        }
+
+        try {
+            $googleUser = $this->googleAuthService->fetchUser($code);
+
+            $user = User::query()
+                ->where('google_id', $googleUser['id'])
+                ->orWhere('email', $googleUser['email'])
+                ->first();
+
+            if ($user instanceof User) {
+                if ($user->status !== 'active') {
+                    return redirect()
+                        ->route('auth.login')
+                        ->with('auth_google_error', 'Tài khoản của bạn hiện không thể đăng nhập.');
+                }
+
+                $user->forceFill([
+                    'google_id' => $googleUser['id'],
+                    'email' => $googleUser['email'],
+                    'full_name' => $googleUser['name'],
+                    'avatar' => $googleUser['avatar'],
+                    'email_verified_at' => $googleUser['email_verified'] ? ($user->email_verified_at ?: now()) : $user->email_verified_at,
+                ])->save();
+            } else {
+                $user = User::query()->create([
+                    'username' => Str::of($googleUser['email'])->before('@')->slug('')->value() ?: null,
+                    'email' => $googleUser['email'],
+                    'full_name' => $googleUser['name'],
+                    'avatar' => $googleUser['avatar'],
+                    'google_id' => $googleUser['id'],
+                    'email_verified_at' => $googleUser['email_verified'] ? now() : null,
+                    'password' => Str::random(64),
+                    'status' => 'active',
+                    'role' => 'user',
+                ]);
+            }
+
+            Auth::guard('web')->login($user, true);
+            $request->session()->regenerate();
+
+            $this->touchLastLogin($user, $request);
+            $this->recordUserLogAction->handle($user, 'google_login', 'Đăng nhập bằng Google', $request);
+
+            return redirect('/');
+        } catch (Throwable $exception) {
+            return redirect()
+                ->route('auth.login')
+                ->with('auth_google_error', $exception->getMessage() ?: 'Không thể đăng nhập bằng Google.');
+        }
     }
 
     public function logout(Request $request): JsonResponse|RedirectResponse

@@ -4,6 +4,7 @@ namespace App\Features\Api\V1\Requests;
 
 use App\Models\BankAccount;
 use App\Utils\ApiResponse;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
@@ -17,7 +18,7 @@ class StoreRechargeClientOrderRequest extends FormRequest
     }
 
     /**
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -25,7 +26,11 @@ class StoreRechargeClientOrderRequest extends FormRequest
             'bank_id' => [
                 'required',
                 'integer',
-                Rule::exists(BankAccount::class, 'id')->where('status', 'active'),
+                Rule::exists(BankAccount::class, 'id')->where(function ($query): void {
+                    $query
+                        ->where('status', 'active')
+                        ->where('user_id', $this->user()?->id);
+                }),
             ],
             'amount' => ['required', 'numeric', 'min:10000', 'max:50000000'],
             'client_order_code' => ['nullable', 'string', 'max:100'],

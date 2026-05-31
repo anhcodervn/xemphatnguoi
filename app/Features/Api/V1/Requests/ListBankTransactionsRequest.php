@@ -4,6 +4,7 @@ namespace App\Features\Api\V1\Requests;
 
 use App\Models\BankAccount;
 use App\Utils\ApiResponse;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
@@ -17,12 +18,18 @@ class ListBankTransactionsRequest extends FormRequest
     }
 
     /**
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
         return [
-            'bank_id' => ['required', 'integer', Rule::exists(BankAccount::class, 'id')],
+            'bank_id' => [
+                'required',
+                'integer',
+                Rule::exists(BankAccount::class, 'id')->where(function ($query): void {
+                    $query->where('user_id', $this->user()?->id);
+                }),
+            ],
             'limit' => ['nullable', 'integer', 'min:1', 'max:100'],
             'force_refresh' => ['nullable', 'boolean'],
         ];
@@ -33,7 +40,7 @@ class ListBankTransactionsRequest extends FormRequest
         return [
             'bank_id.required' => 'Tài khoản ngân hàng là bắt buộc.',
             'bank_id.exists' => 'Tài khoản ngân hàng không hợp lệ.',
-            'force_refresh.boolean' => "Trường force_refresh phải là true or false (1 hoặc 0 cũng được)"
+            'force_refresh.boolean' => 'Trường force_refresh phải là true or false (1 hoặc 0 cũng được)',
         ];
     }
 

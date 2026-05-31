@@ -7,6 +7,7 @@ use App\Features\Client\Bank\Services\MbService;
 use App\Features\Client\Bank\Services\VcbService;
 use App\Models\Bank;
 use App\Models\BankAccount;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
 class SaveBankAction
@@ -15,8 +16,7 @@ class SaveBankAction
         protected AcbService $acbService,
         protected VcbService $vcbService,
         protected MbService $mbService,
-    ) {
-    }
+    ) {}
 
     /**
      * @param  array{
@@ -27,7 +27,7 @@ class SaveBankAction
      *     account_number: string
      * }  $payload
      */
-    public function handle(array $payload, ?BankAccount $bankAccount = null): BankAccount
+    public function handle(User $user, array $payload, ?BankAccount $bankAccount = null): BankAccount
     {
         $bank = Bank::query()
             ->where('code', $payload['bank_code'])
@@ -37,20 +37,22 @@ class SaveBankAction
             ]);
 
         if ($bank->code === 'acb') {
-            return $this->acbService->saveBank($payload, $bankAccount);
+            return $this->acbService->saveBank($user, $payload, $bankAccount);
         } elseif ($bank->code === 'vcb') {
-            return $this->vcbService->saveBank($payload, $bankAccount);
+            return $this->vcbService->saveBank($user, $payload, $bankAccount);
         } elseif ($bank->code === 'mb') {
-            return $this->mbService->saveBank($payload, $bankAccount);
+            return $this->mbService->saveBank($user, $payload, $bankAccount);
         } else {
-            return DB::transaction(function () use ($bank, $payload, $bankAccount): BankAccount {
+            return DB::transaction(function () use ($bank, $user, $payload, $bankAccount): BankAccount {
                 $targetBankAccount = $bankAccount
                     ?? BankAccount::query()->firstOrNew([
+                        'user_id' => $user->id,
                         'bank_name' => $bank->code,
                         'account_number' => $payload['account_number'],
                     ]);
 
                 $targetBankAccount->forceFill([
+                    'user_id' => $user->id,
                     'bank_name' => $bank->code,
                     'account_name' => $payload['display_name'],
                     'account_number' => $payload['account_number'],
