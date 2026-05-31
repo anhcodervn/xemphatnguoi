@@ -75,38 +75,7 @@ Route::middleware('guest')->group(function (): void {
 
 Route::middleware('auth')->post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-if (file_exists(base_path('app/Features/Admin/Package/routes.php'))) {
-    require base_path('app/Features/Admin/Package/routes.php');
-}
-
-if (file_exists(base_path('app/Features/Admin/Recharge/routes.php'))) {
-    require base_path('app/Features/Admin/Recharge/routes.php');
-}
-
-if (file_exists(base_path('app/Features/Admin/Couponts/routes.php'))) {
-    require base_path('app/Features/Admin/Couponts/routes.php');
-}
-
-if (file_exists(base_path('app/Features/Admin/Setting/routes.php'))) {
-    require base_path('app/Features/Admin/Setting/routes.php');
-}
 
 Route::middleware('auth')->get('/{any}', function () {
     return view('app');
 })->where('any', '.*');
-
-if (file_exists(base_path('app/Features/Client/Bank/routes.php'))) {
-    require base_path('app/Features/Client/Bank/routes.php');
-}
-
-if (file_exists(base_path('app/Features/Client/Webhook/routes.php'))) {
-    require base_path('app/Features/Client/Webhook/routes.php');
-}
-
-if (file_exists(base_path('app/Features/Client/Recharge/routes.php'))) {
-    require base_path('app/Features/Client/Recharge/routes.php');
-}
-
-if (file_exists(base_path('app/Features/Api/V1/routes.php'))) {
-    require base_path('app/Features/Api/V1/routes.php');
-}
