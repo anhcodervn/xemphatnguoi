@@ -1,13 +1,17 @@
 <script setup lang="ts">
 import { adminRechargeMethodService, type RechargeMethodPayload } from '@/services/admin-recharge-method.service';
+import type { VietQrBank, VietQrBankListResponse } from '@/types/vietqr.type';
 import { handleErrorResponse } from '@/utils/response';
-import { ArrowLeft, CreditCard, Landmark, Settings2 } from 'lucide-vue-next';
+import { ArrowLeft, Check, ChevronDown, CreditCard, Landmark, Link as LinkIcon, Search, Settings2 } from 'lucide-vue-next';
 import Swal from 'sweetalert2';
-import { computed, onMounted, ref } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 import { RouterLink, useRoute, useRouter } from 'vue-router';
 
 const route = useRoute();
 const router = useRouter();
+
+const defaultQrTemplate =
+    'https://img.vietqr.io/image/{METHOD_CODE_UPPER}-{ACCOUNT_NUMBER}-compact.png?addInfo={ORDER_CODE}&amount={AMOUNT}';
 
 const inputClass =
     'block h-10 w-full rounded-[8px] border border-slate-300 px-3 text-sm text-slate-900 outline-none transition focus:border-[#465fff]';
@@ -15,6 +19,13 @@ const textareaClass =
     'block w-full rounded-[8px] border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-[#465fff]';
 
 const processing = ref(false);
+const isLoadingBanks = ref(false);
+const isBankDropdownOpen = ref(false);
+const bankSearchQuery = ref('');
+const metadataInput = ref('{}');
+const qrTemplateInput = ref(defaultQrTemplate);
+const bankSearchWrapper = ref<HTMLElement | null>(null);
+const listBankSelect = ref<VietQrBank[]>([]);
 
 const form = ref<RechargeMethodPayload>({
     code: '',
@@ -34,13 +45,107 @@ const form = ref<RechargeMethodPayload>({
     metadata: {},
 });
 
-const metadataInput = ref('{}');
-
 const rechargeMethodId = computed(() => route.params.recharge_method_id as string | undefined);
 const isEditing = computed(() => Boolean(rechargeMethodId.value));
+const filteredBankSelect = computed(() => {
+    const keyword = bankSearchQuery.value.trim().toLowerCase();
+
+    if (!keyword) {
+        return listBankSelect.value;
+    }
+
+    return listBankSelect.value.filter((item) => {
+        return (
+            item.shortName.toLowerCase().includes(keyword) ||
+            item.short_name.toLowerCase().includes(keyword) ||
+            item.bin.toLowerCase().includes(keyword) ||
+            item.code.toLowerCase().includes(keyword) ||
+            item.name.toLowerCase().includes(keyword)
+        );
+    });
+});
+
+const qrTemplatePreview = computed(() => {
+    const template = qrTemplateInput.value.trim() || defaultQrTemplate;
+    const methodCode = (form.value.code || 'vcb').trim();
+    const orderCode = 'DEP240601ABC123';
+    const amount = Number.isFinite(Number(form.value.min_amount)) ? String(Math.max(0, Number(form.value.min_amount))) : '100000';
+
+    return template
+        .replaceAll('{METHOD_CODE}', methodCode.toLowerCase())
+        .replaceAll('{METHOD_CODE_UPPER}', methodCode.toUpperCase())
+        .replaceAll('{ACCOUNT_NUMBER}', form.value.account_number?.trim() || '0123456789')
+        .replaceAll('{ORDER_CODE}', encodeURIComponent(orderCode))
+        .replaceAll('{TRANSFER_CONTENT}', encodeURIComponent(orderCode))
+        .replaceAll('{AMOUNT}', amount);
+});
+
+const syncMetadataInput = (): void => {
+    const metadata = { ...(form.value.metadata ?? {}) } as Record<string, unknown>;
+    const qrTemplate = typeof metadata.qr_template === 'string' && metadata.qr_template.trim() !== '' ? metadata.qr_template.trim() : '';
+
+    qrTemplateInput.value = qrTemplate || defaultQrTemplate;
+    delete metadata.qr_template;
+    metadataInput.value = JSON.stringify(metadata, null, 2);
+};
+
+const applyMetadataPayload = (): Record<string, unknown> => {
+    const metadata = metadataInput.value.trim() ? (JSON.parse(metadataInput.value) as Record<string, unknown>) : {};
+    const qrTemplate = qrTemplateInput.value.trim();
+
+    if (qrTemplate !== '') {
+        metadata.qr_template = qrTemplate;
+    }
+
+    return metadata;
+};
+
+const selectBank = (item: VietQrBank): void => {
+    const bankDisplayName = item.shortName || item.short_name || item.name;
+
+    form.value.code = item.code;
+    form.value.name = bankDisplayName;
+    form.value.bank_name = bankDisplayName;
+    form.value.metadata = {
+        ...(form.value.metadata ?? {}),
+        vietqr_id: item.id,
+        vietqr_code: item.code,
+        vietqr_bin: item.bin,
+        vietqr_name: item.name,
+        transfer_supported: item.transferSupported,
+        lookup_supported: item.lookupSupported,
+        swift_code: item.swift_code,
+    };
+
+    bankSearchQuery.value = `${bankDisplayName} (${item.bin})`;
+    isBankDropdownOpen.value = false;
+    syncMetadataInput();
+};
+
+const openBankDropdown = async (): Promise<void> => {
+    isBankDropdownOpen.value = true;
+    await nextTick();
+};
+
+const closeBankDropdown = (): void => {
+    isBankDropdownOpen.value = false;
+};
+
+const handleClickOutsideBankDropdown = (event: MouseEvent): void => {
+    if (!bankSearchWrapper.value) {
+        return;
+    }
+
+    const target = event.target;
+
+    if (target instanceof Node && !bankSearchWrapper.value.contains(target)) {
+        closeBankDropdown();
+    }
+};
 
 const loadRechargeMethod = async (): Promise<void> => {
     if (!rechargeMethodId.value) {
+        syncMetadataInput();
         return;
     }
 
@@ -65,7 +170,8 @@ const loadRechargeMethod = async (): Promise<void> => {
             metadata: data.metadata ?? {},
         };
 
-        metadataInput.value = JSON.stringify(form.value.metadata, null, 2);
+        bankSearchQuery.value = form.value.bank_name || form.value.name;
+        syncMetadataInput();
     } catch (error) {
         handleErrorResponse(error);
         await router.push('/admin/recharge-methods');
@@ -74,9 +180,9 @@ const loadRechargeMethod = async (): Promise<void> => {
 
 const submitForm = async (): Promise<void> => {
     try {
-        form.value.metadata = metadataInput.value.trim() ? JSON.parse(metadataInput.value) : {};
+        form.value.metadata = applyMetadataPayload();
     } catch {
-        await Swal.fire('Metadata không hợp lệ', 'Vui lòng nhập JSON hợp lệ cho metadata.', 'warning');
+        await Swal.fire('Metadata không hợp lệ', 'Vui lòng nhập JSON hợp lệ cho metadata nâng cao.', 'warning');
         return;
     }
 
@@ -96,8 +202,37 @@ const submitForm = async (): Promise<void> => {
     }
 };
 
+const fetchListBank = async (): Promise<void> => {
+    try {
+        isLoadingBanks.value = true;
+
+        const response = await fetch('https://api.vietqr.io/v2/banks');
+        const payload = (await response.json()) as VietQrBankListResponse;
+
+        if (!response.ok) {
+            throw new Error(payload.desc || 'Không thể tải danh sách ngân hàng.');
+        }
+
+        listBankSelect.value = Array.isArray(payload.data) ? payload.data : [];
+
+        if (form.value.bank_name) {
+            bankSearchQuery.value = form.value.bank_name;
+        }
+    } catch (error) {
+        console.error('Không thể tải danh sách ngân hàng VietQR.', error);
+        await Swal.fire('Không tải được danh sách ngân hàng', 'Vui lòng thử lại sau.', 'warning');
+    } finally {
+        isLoadingBanks.value = false;
+    }
+};
+
 onMounted(async () => {
-    await loadRechargeMethod();
+    document.addEventListener('click', handleClickOutsideBankDropdown);
+    await Promise.all([fetchListBank(), loadRechargeMethod()]);
+});
+
+onBeforeUnmount(() => {
+    document.removeEventListener('click', handleClickOutsideBankDropdown);
 });
 </script>
 
@@ -113,7 +248,7 @@ onMounted(async () => {
                         {{ isEditing ? 'Cập nhật thẻ nhận tiền' : 'Tạo thẻ nhận tiền' }}
                     </h1>
                     <p class="mt-1.5 max-w-2xl text-[13px] leading-5 text-slate-500">
-                        Màn này chỉ cấu hình thông tin tài khoản nhận tiền của hệ thống. Không có dữ liệu thẻ gắn riêng cho từng người dùng.
+                        Cấu hình phương thức nạp, tài khoản nhận tiền và mẫu QR VietQR để frontend tự tạo mã thanh toán cho từng đơn nạp.
                     </p>
                 </div>
 
@@ -144,12 +279,12 @@ onMounted(async () => {
                         <div class="mt-4 grid gap-4 md:grid-cols-2">
                             <div class="space-y-1.5">
                                 <label class="text-sm font-semibold text-slate-700" for="method-code">Mã phương thức</label>
-                                <input id="method-code" v-model="form.code" type="text" :class="inputClass" placeholder="vietcombank-manual" />
+                                <input id="method-code" v-model="form.code" type="text" :class="inputClass" placeholder="vcb" />
                             </div>
 
                             <div class="space-y-1.5">
                                 <label class="text-sm font-semibold text-slate-700" for="method-name">Tên hiển thị</label>
-                                <input id="method-name" v-model="form.name" type="text" :class="inputClass" placeholder="Chuyển khoản Vietcombank" />
+                                <input id="method-name" v-model="form.name" type="text" :class="inputClass" placeholder="Vietcombank" />
                             </div>
 
                             <div class="space-y-1.5">
@@ -186,15 +321,62 @@ onMounted(async () => {
                             <div>
                                 <h2 class="text-base font-black tracking-tight text-slate-950">Thông tin tài khoản nhận tiền</h2>
                                 <p class="text-[13px] text-slate-500">
-                                    Đây là phần chính của màn quản trị: ngân hàng, số tài khoản và chủ tài khoản.
+                                    Khi chọn ngân hàng, mã phương thức và tên hiển thị sẽ tự cập nhật theo dữ liệu VietQR.
                                 </p>
                             </div>
                         </div>
 
                         <div class="mt-4 grid gap-4 md:grid-cols-2">
-                            <div class="space-y-1.5">
+                            <div ref="bankSearchWrapper" class="space-y-1.5">
                                 <label class="text-sm font-semibold text-slate-700" for="method-bank-name">Ngân hàng</label>
-                                <input id="method-bank-name" v-model="form.bank_name" type="text" :class="inputClass" placeholder="Vietcombank" />
+                                <div class="relative">
+                                    <div class="relative">
+                                        <Search class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                                        <input
+                                            id="method-bank-name"
+                                            v-model="bankSearchQuery"
+                                            type="text"
+                                            :class="`${inputClass} pl-9 pr-9`"
+                                            :placeholder="isLoadingBanks ? 'Đang tải danh sách ngân hàng...' : 'Tìm theo tên, mã hoặc BIN'"
+                                            :disabled="isLoadingBanks"
+                                            autocomplete="off"
+                                            @focus="openBankDropdown"
+                                            @input="isBankDropdownOpen = true"
+                                        />
+                                        <button
+                                            type="button"
+                                            class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition hover:text-slate-600"
+                                            @click="isBankDropdownOpen = !isBankDropdownOpen"
+                                        >
+                                            <ChevronDown class="h-4 w-4" />
+                                        </button>
+                                    </div>
+
+                                    <div
+                                        v-if="isBankDropdownOpen"
+                                        class="absolute z-20 mt-2 max-h-72 w-full overflow-hidden rounded-[10px] border border-slate-200 bg-white shadow-[0_18px_45px_rgba(15,23,42,0.12)]"
+                                    >
+                                        <div v-if="isLoadingBanks" class="px-3 py-3 text-sm text-slate-500">Đang tải danh sách ngân hàng...</div>
+                                        <div v-else-if="filteredBankSelect.length === 0" class="px-3 py-3 text-sm text-slate-500">
+                                            Không tìm thấy ngân hàng phù hợp.
+                                        </div>
+                                        <ul v-else class="max-h-72 overflow-y-auto py-1">
+                                            <li v-for="item in filteredBankSelect" :key="item.bin">
+                                                <button
+                                                    type="button"
+                                                    class="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left text-sm text-slate-700 transition hover:bg-slate-50"
+                                                    @click="selectBank(item)"
+                                                >
+                                                    <div class="min-w-0">
+                                                        <p class="truncate font-semibold text-slate-900">{{ item.shortName }} ({{ item.bin }})</p>
+                                                        <p class="truncate text-xs text-slate-500">{{ item.name }}</p>
+                                                    </div>
+                                                    <Check v-if="form.code === item.code" class="h-4 w-4 shrink-0 text-[#465fff]" />
+                                                </button>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
                             </div>
 
                             <div class="space-y-1.5">
@@ -217,6 +399,52 @@ onMounted(async () => {
                                     :class="inputClass"
                                     placeholder="NGUYEN VAN A"
                                 />
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="rounded-[10px] border border-slate-200 bg-white p-4 shadow-[0_10px_28px_rgba(15,23,42,0.045)]">
+                        <div class="flex items-center gap-2.5">
+                            <div class="flex h-9 w-9 items-center justify-center rounded-[9px] bg-cyan-50 text-cyan-600">
+                                <LinkIcon class="h-4.5 w-4.5" />
+                            </div>
+                            <div>
+                                <h2 class="text-base font-black tracking-tight text-slate-950">QR VietQR theo template</h2>
+                                <p class="text-[13px] text-slate-500">
+                                    Frontend sẽ lấy template này để sinh QR động theo đơn nạp. Nếu để trống, hệ thống dùng mẫu mặc định.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 space-y-4">
+                            <div class="space-y-1.5">
+                                <label class="text-sm font-semibold text-slate-700" for="method-qr-template">QR template URL</label>
+                                <textarea
+                                    id="method-qr-template"
+                                    v-model="qrTemplateInput"
+                                    rows="3"
+                                    :class="textareaClass"
+                                    :placeholder="defaultQrTemplate"
+                                />
+                            </div>
+
+                            <div class="rounded-[8px] border border-slate-200 bg-slate-50 p-3.5 text-[13px] leading-6 text-slate-600">
+                                <p class="font-semibold text-slate-900">Placeholder có thể dùng</p>
+                                <div class="mt-2 grid gap-2 sm:grid-cols-2">
+                                    <p><code>{METHOD_CODE}</code>: mã phương thức viết thường</p>
+                                    <p><code>{METHOD_CODE_UPPER}</code>: mã phương thức viết hoa</p>
+                                    <p><code>{ACCOUNT_NUMBER}</code>: số tài khoản nhận tiền</p>
+                                    <p><code>{ORDER_CODE}</code>: mã đơn nạp</p>
+                                    <p><code>{TRANSFER_CONTENT}</code>: nội dung chuyển khoản</p>
+                                    <p><code>{AMOUNT}</code>: số tiền nạp</p>
+                                </div>
+                            </div>
+
+                            <div class="space-y-1.5">
+                                <label class="text-sm font-semibold text-slate-700">Preview URL</label>
+                                <div class="overflow-x-auto rounded-[8px] border border-slate-200 bg-slate-950 px-3 py-2.5 font-mono text-xs leading-6 text-slate-200">
+                                    {{ qrTemplatePreview }}
+                                </div>
                             </div>
                         </div>
                     </article>
@@ -279,28 +507,21 @@ onMounted(async () => {
                     <article class="rounded-[10px] border border-slate-200 bg-white p-4 shadow-[0_10px_28px_rgba(15,23,42,0.045)]">
                         <h2 class="text-base font-black tracking-tight text-slate-950">Ghi chú cấu hình</h2>
                         <p class="mt-1 text-[13px] text-slate-500">
-                            Màn này lưu trực tiếp thông tin tài khoản nhận tiền của hệ thống vào phương thức nạp. Không lấy dữ liệu từ danh sách
-                            bank account của người dùng.
+                            Dữ liệu tài khoản nhận tiền được lưu trực tiếp trên phương thức nạp. Không lấy từ bank account của người dùng.
                         </p>
 
                         <div class="mt-4 rounded-[8px] border border-slate-200 bg-slate-50 p-3.5 text-[13px] leading-6 text-slate-600">
-                            <p>- Điền trực tiếp ngân hàng, số tài khoản và chủ tài khoản ở phần bên trên.</p>
+                            <p>- Chọn ngân hàng để tự điền mã phương thức và tên hiển thị.</p>
+                            <p>- Có thể thay QR template mà không cần sửa code frontend.</p>
                             <p>- Mỗi phương thức nạp là một cấu hình nhận tiền độc lập.</p>
-                            <p>- Nếu cần thay đổi tài khoản nhận tiền, chỉ cần cập nhật lại phương thức nạp này.</p>
                         </div>
                     </article>
 
                     <article class="rounded-[10px] border border-slate-200 bg-white p-4 shadow-[0_10px_28px_rgba(15,23,42,0.045)]">
                         <h2 class="text-base font-black tracking-tight text-slate-950">Metadata nâng cao</h2>
-                        <p class="mt-1 text-[13px] text-slate-500">Chỉ dùng khi backend cần thêm cờ cấu hình hoặc dữ liệu phụ.</p>
+                        <p class="mt-1 text-[13px] text-slate-500">Dùng cho các cờ cấu hình hoặc dữ liệu phụ ngoài QR template.</p>
                         <div class="mt-4">
-                            <textarea
-                                id="method-metadata"
-                                v-model="metadataInput"
-                                rows="7"
-                                :class="textareaClass"
-                                placeholder='{"channel":"manual"}'
-                            />
+                            <textarea id="method-metadata" v-model="metadataInput" rows="8" :class="textareaClass" placeholder='{"channel":"manual"}' />
                         </div>
                     </article>
                 </div>

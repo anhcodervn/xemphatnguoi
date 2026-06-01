@@ -167,6 +167,14 @@ if (file_exists(base_path('app/Features/Admin/Bank/routes.php'))) {
     require base_path('app/Features/Admin/Bank/routes.php');
 }
 
+if (file_exists(base_path('app/Features/Admin/ApiKey/routes.php'))) {
+    require base_path('app/Features/Admin/ApiKey/routes.php');
+}
+
+if (file_exists(base_path('app/Features/Admin/ApiLog/routes.php'))) {
+    require base_path('app/Features/Admin/ApiLog/routes.php');
+}
+
 if (file_exists(base_path('app/Features/Client/ApiKey/routes.php'))) {
     require base_path('app/Features/Client/ApiKey/routes.php');
 }

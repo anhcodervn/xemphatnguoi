@@ -167,6 +167,36 @@ export default {
             ],
         },
         {
+            path: 'banks',
+            children: [
+                {
+                    path: '',
+                    name: 'admin.banks.index',
+                    component: () => import('@/pages/admin/banks/list/index.vue'),
+                },
+                {
+                    path: 'create',
+                    name: 'admin.banks.create',
+                    component: () => import('@/pages/admin/banks/create/index.vue'),
+                },
+                {
+                    path: ':bank_id(\\d+)/edit',
+                    name: 'admin.banks.edit',
+                    component: () => import('@/pages/admin/banks/create/index.vue'),
+                },
+            ],
+        },
+        {
+            path: 'api-keys',
+            name: 'admin.api-keys.index',
+            component: () => import('@/pages/admin/api-keys/index.vue'),
+        },
+        {
+            path: 'api-logs',
+            name: 'admin.api-logs.index',
+            component: () => import('@/pages/admin/api-logs/index.vue'),
+        },
+        {
             path: 'setting',
             redirect: { name: 'admin.settings.system' },
         },

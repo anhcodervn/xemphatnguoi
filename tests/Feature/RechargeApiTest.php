@@ -52,10 +52,12 @@ test('client can create recharge order', function () {
 
     Sanctum::actingAs($user);
 
-    $this->postJson('/api/recharge/orders', [
+    $response = $this->postJson('/api/recharge/orders', [
         'method' => 'banking',
         'amount' => 500000,
-    ])
+    ]);
+
+    $response
         ->assertSuccessful()
         ->assertJsonPath('status', true)
         ->assertJsonPath('message', 'Tạo yêu cầu nạp tiền thành công.')
@@ -68,11 +70,25 @@ test('client can create recharge order', function () {
 
     $order = RechargeOrder::query()->firstOrFail();
 
+    $response->assertJsonPath(
+        'data.metadata.qr_url',
+        sprintf(
+            'https://img.vietqr.io/image/BANKING-1029384756-compact.png?addInfo=%s&amount=500000',
+            urlencode($order->order_code),
+        ),
+    );
+
     expect($order->user_id)->toBe($user->id)
         ->and($order->bank_name)->toBe('Vietcombank')
         ->and($order->account_number)->toBe('1029384756')
         ->and($order->account_name)->toBe('CONG TY TNHH CLIENT PANEL')
-        ->and($order->transfer_content)->toStartWith('NAP-BANKING-');
+        ->and($order->transfer_content)->toBe($order->order_code)
+        ->and(data_get($order->metadata, 'qr_url'))->toBe(
+            sprintf(
+                'https://img.vietqr.io/image/BANKING-1029384756-compact.png?addInfo=%s&amount=500000',
+                urlencode($order->order_code),
+            ),
+        );
 });
 
 test('client recharge order uses linked bank account when method has multiple bank accounts', function () {
@@ -117,10 +133,12 @@ test('client recharge order uses linked bank account when method has multiple ba
 
     Sanctum::actingAs($user);
 
-    $this->postJson('/api/recharge/orders', [
+    $response = $this->postJson('/api/recharge/orders', [
         'method' => 'bank-transfer',
         'amount' => 500000,
-    ])
+    ]);
+
+    $response
         ->assertSuccessful()
         ->assertJsonPath('status', true)
         ->assertJsonPath('data.method', 'bank-transfer')
@@ -131,12 +149,26 @@ test('client recharge order uses linked bank account when method has multiple ba
 
     $order = RechargeOrder::query()->firstOrFail();
 
+    $response->assertJsonPath(
+        'data.metadata.qr_url',
+        sprintf(
+            'https://img.vietqr.io/image/BANK-TRANSFER-111122223333-compact.png?addInfo=%s&amount=500000',
+            urlencode($order->order_code),
+        ),
+    );
+
     expect($order->recharge_method_id)->toBe($method->id)
         ->and($order->bank_account_id)->toBe($firstBankAccount->id)
         ->and($order->bank_name)->toBe('ACB')
         ->and($order->account_number)->toBe('111122223333')
         ->and($order->account_name)->toBe('PRIMARY ACCOUNT')
-        ->and($order->bonus_amount)->toBe('60000.00');
+        ->and($order->bonus_amount)->toBe('60000.00')
+        ->and(data_get($order->metadata, 'qr_url'))->toBe(
+            sprintf(
+                'https://img.vietqr.io/image/BANK-TRANSFER-111122223333-compact.png?addInfo=%s&amount=500000',
+                urlencode($order->order_code),
+            ),
+        );
 });
 
 test('client can view own recharge order only', function () {

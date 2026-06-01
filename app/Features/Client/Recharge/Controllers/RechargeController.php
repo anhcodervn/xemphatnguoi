@@ -2,16 +2,16 @@
 
 namespace App\Features\Client\Recharge\Controllers;
 
-use App\Features\Client\Recharge\Actions\StoreRechargeOrderAction;
 use App\Features\Client\Profile\Actions\RecordUserLogAction;
+use App\Features\Client\Recharge\Actions\StoreRechargeOrderAction;
 use App\Features\Client\Recharge\Requests\StoreRechargeOrderRequest;
 use App\Features\Client\Recharge\Resources\RechargeOrderResource;
 use App\Features\Client\Recharge\Services\RechargeService;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use App\Models\RechargeOrder;
 use App\Models\User;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class RechargeController extends Controller
 {
@@ -38,14 +38,14 @@ class RechargeController extends Controller
         StoreRechargeOrderRequest $request,
         StoreRechargeOrderAction $action,
         RecordUserLogAction $recordUserLogAction,
-    ): JsonResponse
-    {
+    ): JsonResponse {
         /** @var User|null $user */
         $user = $request->user();
 
         abort_if(! $user instanceof User, 401);
 
         $order = $action->handle($user, $request->validated());
+
         $recordUserLogAction->handle(
             $user,
             'recharge_order_created',

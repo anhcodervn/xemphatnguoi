@@ -1,4 +1,15 @@
-import { Landmark, LayoutDashboard, ListChecks, Mail, Package, Settings, Users, Webhook, type LucideIcon } from 'lucide-vue-next';
+import {
+    KeyRound,
+    Landmark,
+    LayoutDashboard,
+    ListChecks,
+    Mail,
+    Package,
+    Settings,
+    Users,
+    Webhook,
+    type LucideIcon,
+} from 'lucide-vue-next';
 
 export type AdminMenuChild = {
     label: string;
@@ -50,7 +61,6 @@ export const adminMenuGroups: AdminMenuGroup[] = [
             },
         ],
     },
-    
     {
         key: 'packages',
         label: 'Quản lý gói thuê',
@@ -82,6 +92,29 @@ export const adminMenuGroups: AdminMenuGroup[] = [
             {
                 label: 'Phương thức nạp',
                 href: '/admin/recharge-methods',
+            },
+        ],
+    },
+    {
+        key: 'api-management',
+        label: 'Quản lý API',
+        icon: KeyRound,
+        children: [
+            {
+                label: 'Thêm bank',
+                href: '/admin/banks/create',
+            },
+            {
+                label: 'Quản lý bank',
+                href: '/admin/banks',
+            },
+            {
+                label: 'Quản lý API key',
+                href: '/admin/api-keys',
+            },
+            {
+                label: 'Quản lý API log',
+                href: '/admin/api-logs',
             },
         ],
     },

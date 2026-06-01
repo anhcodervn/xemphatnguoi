@@ -6,9 +6,8 @@ use App\Exceptions\ApiException;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
-class UpdateBankRequest extends FormRequest
+class StoreBankRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -21,13 +20,8 @@ class UpdateBankRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'code' => [
-                'sometimes',
-                'string',
-                'max:50',
-                Rule::unique('banks', 'code')->ignore($this->route('bank')?->id),
-            ],
-            'name' => ['sometimes', 'string', 'max:255'],
+            'code' => ['required', 'string', 'max:50', 'unique:banks,code'],
+            'name' => ['required', 'string', 'max:255'],
             'short_name' => ['nullable', 'string', 'max:255'],
             'logo' => ['nullable', 'string', 'max:500'],
             'bg_color' => ['nullable', 'string', 'max:20'],
@@ -41,7 +35,9 @@ class UpdateBankRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'code.required' => 'Mã ngân hàng là bắt buộc.',
             'code.unique' => 'Mã ngân hàng đã tồn tại.',
+            'name.required' => 'Tên ngân hàng là bắt buộc.',
             'limit_request_per_minute.min' => 'Giới hạn request/phút phải lớn hơn hoặc bằng 1.',
             'limit_request_per_minute.max' => 'Giới hạn request/phút không được vượt quá 120.',
         ];
