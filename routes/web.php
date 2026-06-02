@@ -9,7 +9,7 @@ use App\Support\SettingStore;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function (SettingStore $settingStore) {
+Route::middleware('site.active')->get('/', function (SettingStore $settingStore) {
     $defaults = [
         'site_name' => config('app.name', 'Nạp Tiền Tự Động'),
         'site_domain' => '',
@@ -39,7 +39,7 @@ Route::get('/', function (SettingStore $settingStore) {
     ]);
 });
 
-Route::middleware('guest')->group(function (): void {
+Route::middleware(['guest', 'site.active'])->group(function (): void {
     Route::prefix('/auth')->group(function (): void {
         Route::get('/login', function () {
             return view('pages.auth.login');
@@ -104,7 +104,7 @@ Route::controller(PublicSeoPageController::class)->group(function (): void {
     Route::get('/blog/{slug}', 'show')->name('seo.show');
 });
 
-Route::middleware('auth')->get('/{any}', function (SettingStore $settingStore) {
+Route::middleware(['auth', 'site.active'])->get('/{any}', function (SettingStore $settingStore) {
     return view('app', [
         'systemSettings' => $settingStore->getMany([
             'site_name' => config('app.name', 'Nạp Tiền Tự Động'),

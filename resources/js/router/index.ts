@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
 import adminRouter from "./modules/admin";
 import clientRouter from "./modules/client";
+import { useUserStore } from "@/stores/user.store";
 
 const routes: RouteRecordRaw[] = [adminRouter, clientRouter];
 
@@ -60,6 +61,34 @@ const routeTitles: Record<string, string> = {
 const router = createRouter({
     history: createWebHistory(),
     routes,
+});
+
+router.beforeEach(async (to) => {
+    const routeName = typeof to.name === "string" ? to.name : "";
+
+    if (!routeName.startsWith("admin.")) {
+        return true;
+    }
+
+    const userStore = useUserStore();
+    const user = await userStore.bootstrap({ silent: true });
+
+    if (!user) {
+        return {
+            path: "/login",
+            query: {
+                redirect: to.fullPath,
+            },
+        };
+    }
+
+    if (user.role !== "admin") {
+        return {
+            path: "/",
+        };
+    }
+
+    return true;
 });
 
 router.afterEach((to) => {

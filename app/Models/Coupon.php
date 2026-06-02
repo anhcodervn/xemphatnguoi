@@ -13,6 +13,7 @@ class Coupon extends Model
     use HasFactory, SoftDeletes;
 
     public const TYPE_FIXED = 'fixed';
+
     public const TYPE_PERCENT = 'percent';
 
     protected $fillable = [
@@ -64,7 +65,7 @@ class Coupon extends Model
 
     public function isStarted(): bool
     {
-        return $this->starts_at === null || $this->starts_at->isPast() || $this->starts_at->isNow();
+        return $this->starts_at === null || $this->starts_at->lte(now());
     }
 
     public function isAvailable(): bool
