@@ -7,7 +7,7 @@ use App\Jobs\SendSystemMailJob;
 class MailQueue
 {
     /**
-     * @param array<int, string> $messageLines
+     * @param  array<int, string>  $messageLines
      */
     public function dispatch(
         string $to,
@@ -17,8 +17,7 @@ class MailQueue
         ?string $ctaText = null,
         ?string $ctaUrl = null,
         ?string $mailer = null,
-    ): void
-    {
+    ): void {
         SendSystemMailJob::dispatch(
             to: $to,
             subjectText: $subjectText,
@@ -27,6 +26,6 @@ class MailQueue
             ctaText: $ctaText,
             ctaUrl: $ctaUrl,
             mailer: $mailer,
-        )->onQueue('mails');
+        )->onQueue('mails')->afterCommit();
     }
 }

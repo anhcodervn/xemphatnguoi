@@ -11,8 +11,6 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 class RechargeMethodFactory extends Factory
 {
     /**
-     * Define the model's default state.
-     *
      * @return array<string, mixed>
      */
     public function definition(): array
@@ -26,6 +24,7 @@ class RechargeMethodFactory extends Factory
             'bank_name' => fake()->randomElement(['Vietcombank', 'ACB', 'MB Bank']),
             'account_number' => fake()->numerify('##########'),
             'account_name' => strtoupper(fake()->company()),
+            'secret_key' => fake()->optional()->regexify('[A-Za-z0-9]{24}'),
             'min_amount' => 50_000,
             'max_amount' => 100_000_000,
             'bonus_percentage' => fake()->numberBetween(0, 15),

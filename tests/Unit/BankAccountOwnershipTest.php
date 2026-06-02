@@ -241,6 +241,38 @@ test('client cannot view another user bank account details', function () {
         ->assertNotFound();
 });
 
+test('client can toggle own bank account status and inactive account cannot be viewed', function () {
+    $owner = User::query()->create([
+        'username' => 'owner-four',
+        'email' => 'owner-four@example.com',
+        'password' => 'password',
+    ]);
+
+    $package = createOwnershipTestPackage();
+    grantOwnershipAccess($owner, $package);
+
+    $bankAccount = BankAccount::query()->create([
+        'user_id' => $owner->id,
+        'bank_name' => 'acb',
+        'account_name' => 'Toggle Account',
+        'account_number' => '1122334455',
+        'username' => 'toggle-acb',
+        'status' => 'active',
+    ]);
+
+    Sanctum::actingAs($owner);
+
+    $this->patchJson("/api/bank/accounts/{$bankAccount->id}/status", [
+        'status' => 'inactive',
+    ])
+        ->assertOk()
+        ->assertJsonPath('data.status', 'inactive');
+
+    $this->getJson("/api/bank/accounts/{$bankAccount->id}")
+        ->assertStatus(422)
+        ->assertJsonPath('message', 'Thẻ này đang tắt. Vui lòng bật lại để sử dụng chức năng này.');
+});
+
 test('recharge client order action rejects bank account from another user', function () {
     $owner = User::query()->create([
         'username' => 'owner-three',

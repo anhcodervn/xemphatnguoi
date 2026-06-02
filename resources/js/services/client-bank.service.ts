@@ -28,6 +28,10 @@ export const clientBankService = {
         return api.put(`/api/bank/accounts/${id}`, payload);
     },
 
+    async updateAccountStatus(id: string | number, status: 'active' | 'inactive') {
+        return api.patch(`/api/bank/accounts/${id}/status`, { status });
+    },
+
     async deleteAccount(id: string | number) {
         return api.delete(`/api/bank/accounts/${id}`);
     },

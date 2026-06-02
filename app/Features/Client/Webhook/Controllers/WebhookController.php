@@ -2,6 +2,7 @@
 
 namespace App\Features\Client\Webhook\Controllers;
 
+use App\Exceptions\ApiException;
 use App\Features\Client\Webhook\Actions\DispatchTransactionWebhookAction;
 use App\Features\Client\Webhook\Actions\DispatchWebhookAction;
 use App\Features\Client\Webhook\Actions\StoreWebhookAction;
@@ -39,6 +40,7 @@ class WebhookController extends Controller
     {
         $user = $this->authenticatedUser($request);
         $this->ensureBankAccountOwnership($request, $bankAccount);
+        $this->ensureBankAccountOperational($bankAccount);
 
         return response()->json([
             'status' => true,
@@ -77,6 +79,7 @@ class WebhookController extends Controller
     ): JsonResponse {
         $user = $this->authenticatedUser($request);
         $this->ensureBankAccountOwnership($request, $bankAccount);
+        $this->ensureBankAccountOperational($bankAccount);
 
         $validated = $request->validate([
             'event_keyword' => ['nullable', 'string', 'max:100'],
@@ -107,6 +110,7 @@ class WebhookController extends Controller
     ): JsonResponse {
         $user = $this->authenticatedUser($request);
         $this->ensureBankAccountOwnership($request, $bankAccount);
+        $this->ensureBankAccountOperational($bankAccount);
         abort_if($bankTransaction->bank_account_id !== $bankAccount->id, 404);
 
         $dispatchedCount = $action->handle($user, $bankAccount, $bankTransaction);
@@ -127,6 +131,7 @@ class WebhookController extends Controller
     ): JsonResponse {
         $user = $this->authenticatedUser($request);
         $this->ensureBankAccountOwnership($request, $bankAccount);
+        $this->ensureBankAccountOperational($bankAccount);
 
         $webhook = $action->handle($user, $bankAccount, $request->validated());
 
@@ -182,6 +187,13 @@ class WebhookController extends Controller
     protected function ensureBankAccountOwnership(Request $request, BankAccount $bankAccount): void
     {
         abort_if($bankAccount->user_id !== $this->authenticatedUser($request)->id, 404);
+    }
+
+    protected function ensureBankAccountOperational(BankAccount $bankAccount): void
+    {
+        if ($bankAccount->status !== 'active') {
+            throw new ApiException('Thẻ này đang tắt. Vui lòng bật lại để sử dụng chức năng này.', 422);
+        }
     }
 
     /**

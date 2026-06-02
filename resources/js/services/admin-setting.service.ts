@@ -1,7 +1,8 @@
 import api from "@/config/axios";
-import {
+import type {
     BrandingSettingType,
     ContactSettingType,
+    ContentPageSettingsType,
     GeneralSettingType,
     HomeCategorySettingType,
     OptionSettingType,
@@ -12,12 +13,12 @@ import {
 } from "@/types/setting.type";
 
 const getTab = async <T>(tab: string): Promise<SettingApiResponse<T>> => {
-        const res = await api.get(`/api/admin-api/settings/${tab}`);
+    const res = await api.get(`/api/admin-api/settings/${tab}`);
     return res.data.data as SettingApiResponse<T>;
 };
 
 const updateTab = async <T>(tab: string, payload: T): Promise<SettingApiResponse<T>> => {
-        const res = await api.patch(`/api/admin-api/settings/${tab}`, payload);
+    const res = await api.patch(`/api/admin-api/settings/${tab}`, payload);
     return res.data.data as SettingApiResponse<T>;
 };
 
@@ -69,5 +70,11 @@ export const adminSettingService = {
     },
     updateOptions(payload: OptionSettingType) {
         return updateTab<OptionSettingType>("options", payload);
+    },
+    getContentPages() {
+        return getTab<ContentPageSettingsType>("content-pages");
+    },
+    updateContentPages(payload: ContentPageSettingsType) {
+        return updateTab<ContentPageSettingsType>("content-pages", payload);
     },
 };

@@ -29,6 +29,7 @@ class RechargeMethodController extends Controller
                         ->orWhere('bank_name', 'like', "%{$search}%")
                         ->orWhere('account_number', 'like', "%{$search}%")
                         ->orWhere('account_name', 'like', "%{$search}%")
+                        ->orWhere('secret_key', 'like', "%{$search}%")
                         ->orWhereHas('bankAccounts', function (Builder $bankAccountQuery) use ($search): void {
                             $bankAccountQuery
                                 ->where('bank_name', 'like', "%{$search}%")
@@ -110,7 +111,7 @@ class RechargeMethodController extends Controller
     }
 
     /**
-     * @param array<string, mixed> $validated
+     * @param  array<string, mixed>  $validated
      * @return array<string, mixed>
      */
     private function payload(array $validated): array
@@ -124,6 +125,7 @@ class RechargeMethodController extends Controller
             'bank_name' => filled($validated['bank_name'] ?? null) ? trim((string) $validated['bank_name']) : null,
             'account_number' => filled($validated['account_number'] ?? null) ? trim((string) $validated['account_number']) : null,
             'account_name' => filled($validated['account_name'] ?? null) ? trim((string) $validated['account_name']) : null,
+            'secret_key' => filled($validated['secret_key'] ?? null) ? trim((string) $validated['secret_key']) : null,
             'min_amount' => $validated['min_amount'],
             'max_amount' => $validated['max_amount'],
             'bonus_percentage' => $validated['bonus_percentage'],
@@ -134,7 +136,7 @@ class RechargeMethodController extends Controller
     }
 
     /**
-     * @param list<int> $bankAccountIds
+     * @param  list<int>  $bankAccountIds
      */
     private function syncBankAccounts(RechargeMethod $rechargeMethod, array $bankAccountIds): void
     {

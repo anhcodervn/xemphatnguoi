@@ -2,6 +2,7 @@
 
 namespace App\Features\Client\Bank\Controllers;
 
+use App\Exceptions\ApiException;
 use App\Features\Client\Bank\Actions\SaveBankAction;
 use App\Features\Client\Bank\Actions\TransactionBankAction;
 use App\Features\Client\Bank\Requests\SaveBankRequest;
@@ -88,6 +89,7 @@ class BankController extends Controller
     public function showAccount(BankAccount $bankAccount): JsonResponse
     {
         $this->ensureBankAccountOwnership(request(), $bankAccount);
+        $this->ensureBankAccountOperational($bankAccount);
 
         return response()->json([
             'status' => true,
@@ -98,6 +100,7 @@ class BankController extends Controller
     public function transactions(Request $request, BankAccount $bankAccount, TransactionBankAction $action): JsonResponse
     {
         $this->ensureBankAccountOwnership($request, $bankAccount);
+        $this->ensureBankAccountOperational($bankAccount);
 
         $validated = $request->validate([
             'limit' => ['nullable', 'integer', 'min:1', 'max:100'],
@@ -141,6 +144,29 @@ class BankController extends Controller
         ]);
     }
 
+    public function updateStatus(Request $request, BankAccount $bankAccount): JsonResponse
+    {
+        $this->ensureBankAccountOwnership($request, $bankAccount);
+
+        $validated = $request->validate([
+            'status' => ['required', 'string', 'in:active,inactive'],
+        ]);
+
+        $status = (string) $validated['status'];
+
+        $bankAccount->forceFill([
+            'status' => $status,
+        ])->save();
+
+        return response()->json([
+            'status' => true,
+            'message' => $status === 'active'
+                ? 'Đã bật thẻ thành công.'
+                : 'Đã tắt thẻ thành công.',
+            'data' => $this->serializeBankAccount($bankAccount->fresh()),
+        ]);
+    }
+
     public function destroyAccount(BankAccount $bankAccount): JsonResponse
     {
         $this->ensureBankAccountOwnership(request(), $bankAccount);
@@ -165,6 +191,13 @@ class BankController extends Controller
     protected function ensureBankAccountOwnership(Request $request, BankAccount $bankAccount): void
     {
         abort_if($bankAccount->user_id !== $this->authenticatedUser($request)->id, 404);
+    }
+
+    protected function ensureBankAccountOperational(BankAccount $bankAccount): void
+    {
+        if ($bankAccount->status !== 'active') {
+            throw new ApiException('Thẻ này đang tắt. Vui lòng bật lại để sử dụng chức năng này.', 422);
+        }
     }
 
     /**

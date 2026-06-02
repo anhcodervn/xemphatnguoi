@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
+import Footer from './client/Footer.vue';
 import Header from './client/Header.vue';
 import Sidebar from './client/Sidebar.vue';
 
@@ -17,6 +18,8 @@ const isSidebarOpen = ref(false);
                 <main class="mx-auto w-full max-w-[1200px] px-3 pb-6 pt-[6rem]">
                     <router-view />
                 </main>
+
+                <Footer />
             </div>
         </div>
     </div>

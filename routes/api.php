@@ -43,7 +43,8 @@ Route::prefix('')->group(function (): void {
             'youtube' => '',
             'meta_title' => '',
             'meta_description' => '',
-            'logo' => '',
+            'light_logo' => '',
+            'dark_logo' => '',
             'favicon' => '',
             'og_image' => '',
             'robots' => 'index,follow',
@@ -51,9 +52,17 @@ Route::prefix('')->group(function (): void {
             'meta_pixel_id' => '',
             'custom_script' => '',
             'recharge_syntax' => 'NAP',
-            'terms_of_use' => [],
-            'privacy_policy' => [],
-            'refund_policy' => [],
+            'contact_page_content' => [],
+            'terms_page_content' => [],
+            'faq_page_content' => [],
+            'privacy_page_content' => [],
+            'about_page_content' => [],
+            'refund_policy_content' => [],
+            'payment_policy_content' => [],
+            'api_usage_policy_content' => [],
+            'disclaimer_content' => [],
+            'system_status_content' => [],
+            'system_updates_content' => [],
         ];
 
         $settings = $settingStore->getMany($defaults);
@@ -105,6 +114,10 @@ if (file_exists(base_path('app/Features/Client/Profile/routes.php'))) {
 
 if (file_exists(base_path('app/Features/Client/Notification/routes.php'))) {
     require base_path('app/Features/Client/Notification/routes.php');
+}
+
+if (file_exists(base_path('app/Features/Client/Upload/routes.php'))) {
+    require base_path('app/Features/Client/Upload/routes.php');
 }
 
 if (file_exists(base_path('app/Features/Client/Contact/routes.php'))) {
@@ -177,4 +190,8 @@ if (file_exists(base_path('app/Features/Admin/ApiLog/routes.php'))) {
 
 if (file_exists(base_path('app/Features/Client/ApiKey/routes.php'))) {
     require base_path('app/Features/Client/ApiKey/routes.php');
+}
+
+if (file_exists(base_path('app/Features/Admin/Seo/routes.php'))) {
+    require base_path('app/Features/Admin/Seo/routes.php');
 }

@@ -19,20 +19,29 @@
                 <div class="grid gap-4 md:grid-cols-2">
                     <div class="space-y-2">
                         <label class="text-sm font-medium text-slate-700">Tên website</label>
-                        <input v-model="formData.site_name" type="text"
-                            class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-slate-900" />
+                        <input
+                            v-model="formData.site_name"
+                            type="text"
+                            class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-slate-900"
+                        />
                     </div>
 
                     <div class="space-y-2">
                         <label class="text-sm font-medium text-slate-700">Domain chính</label>
-                        <input v-model="formData.site_domain" type="text"
-                            class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-slate-900" />
+                        <input
+                            v-model="formData.site_domain"
+                            type="text"
+                            class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-slate-900"
+                        />
                     </div>
 
                     <div class="space-y-2 md:col-span-2">
                         <label class="text-sm font-medium text-slate-700">Mô tả ngắn</label>
-                        <textarea v-model="formData.site_description" rows="4"
-                            class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-slate-900" />
+                        <textarea
+                            v-model="formData.site_description"
+                            rows="4"
+                            class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-slate-900"
+                        />
                     </div>
                 </div>
             </div>
@@ -54,8 +63,7 @@
                                     Tắt chế độ bảo trì và cho phép truy cập bình thường.
                                 </p>
                             </div>
-                            <input v-model="formData.site_active" type="checkbox"
-                                class="mt-1 h-4 w-4 rounded border-slate-300" />
+                            <input v-model="formData.site_active" type="checkbox" class="mt-1 h-4 w-4 rounded border-slate-300" />
                         </div>
                     </label>
 
@@ -67,8 +75,7 @@
                                     Cho phép người dùng tự tạo tài khoản trên hệ thống.
                                 </p>
                             </div>
-                            <input v-model="formData.allow_register" type="checkbox"
-                                class="mt-1 h-4 w-4 rounded border-slate-300" />
+                            <input v-model="formData.allow_register" type="checkbox" class="mt-1 h-4 w-4 rounded border-slate-300" />
                         </div>
                     </label>
                 </div>
@@ -89,7 +96,7 @@
 
                     <div class="rounded-xl bg-white/5 p-3">
                         <p class="text-sm text-slate-300">Domain hiện tại</p>
-                        <p class="mt-1 text-lg font-semibold break-all">
+                        <p class="mt-1 break-all text-lg font-semibold">
                             {{ formData.site_domain || "-" }}
                         </p>
                     </div>
@@ -102,7 +109,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 import { adminSettingService } from "@/services/admin-setting.service";
-import { GeneralSettingType } from "@/types/setting.type";
+import type { GeneralSettingType } from "@/types/setting.type";
 import { handleErrorResponse, handleSuccessResponse } from "@/utils/response";
 
 const isSaving = ref(false);
@@ -114,7 +121,7 @@ const formData = ref<GeneralSettingType>({
     allow_register: false,
 });
 
-const loadData = async () => {
+const loadData = async (): Promise<void> => {
     try {
         const data = await adminSettingService.getGeneral();
         formData.value = { ...data.settings };
@@ -123,7 +130,7 @@ const loadData = async () => {
     }
 };
 
-const submitForm = async () => {
+const submitForm = async (): Promise<void> => {
     try {
         isSaving.value = true;
         const res = await adminSettingService.updateGeneral(formData.value);

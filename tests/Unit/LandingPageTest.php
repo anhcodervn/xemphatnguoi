@@ -41,7 +41,7 @@ beforeEach(function () {
 test('landing page renders successfully with configured logo setting', function () {
     DB::table('settings')->insert([
         ['key' => 'site_name', 'value' => 'Apibankvn', 'type' => 'string', 'created_at' => now(), 'updated_at' => now()],
-        ['key' => 'logo', 'value' => 'https://cdn.example.com/logo.png', 'type' => 'string', 'created_at' => now(), 'updated_at' => now()],
+        ['key' => 'light_logo', 'value' => 'https://cdn.example.com/logo-light.png', 'type' => 'string', 'created_at' => now(), 'updated_at' => now()],
     ]);
 
     DB::table('packages')->insert([
@@ -65,7 +65,9 @@ test('landing page renders successfully with configured logo setting', function 
     $response = $this->get('/');
 
     $response->assertOk();
-    $response->assertSee('https://cdn.example.com/logo.png', false);
+    $response->assertSee('https://cdn.example.com/logo-light.png', false);
     $response->assertSee('Tạo tài khoản');
     $response->assertSee('Tạo lệnh nạp, quét giao dịch và xác nhận chuyển khoản tự động');
+    $response->assertSee('/gioi-thieu', false);
+    $response->assertSee('/chinh-sach-bao-mat', false);
 });

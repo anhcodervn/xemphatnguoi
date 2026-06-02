@@ -17,6 +17,7 @@ export type RechargeMethodPayload = {
     bank_name: string | null;
     account_number: string | null;
     account_name: string | null;
+    secret_key: string | null;
     min_amount: number;
     max_amount: number;
     bonus_percentage: number;

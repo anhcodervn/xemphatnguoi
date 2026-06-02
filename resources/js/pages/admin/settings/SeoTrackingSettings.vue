@@ -5,9 +5,7 @@
                 <div class="mb-4 flex items-start justify-between gap-3">
                     <div>
                         <h2 class="text-base font-semibold text-slate-900">SEO mặc định</h2>
-                        <p class="text-sm text-slate-500">
-                            Áp dụng cho trang chủ và các trang chưa có metadata riêng.
-                        </p>
+                        <p class="text-sm text-slate-500">Áp dụng cho trang chủ và các trang chưa có metadata riêng.</p>
                     </div>
 
                     <button
@@ -25,7 +23,7 @@
                         <input
                             v-model="formData.meta_title"
                             class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-900"
-                            placeholder="Tiêu đề SEO (50–60 ký tự)"
+                            placeholder="Tiêu đề SEO (50-60 ký tự)"
                         />
                     </div>
 
@@ -35,7 +33,7 @@
                             v-model="formData.meta_description"
                             rows="4"
                             class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-900"
-                            placeholder="Mô tả SEO (120–160 ký tự)"
+                            placeholder="Mô tả SEO (120-160 ký tự)"
                         />
                     </div>
 
@@ -53,9 +51,7 @@
             <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                 <div class="mb-4">
                     <h2 class="text-base font-semibold text-slate-900">Tracking & Pixel</h2>
-                    <p class="text-sm text-slate-500">
-                        Tách riêng mã đo lường để tránh ảnh hưởng logic các phần khác.
-                    </p>
+                    <p class="text-sm text-slate-500">Tách riêng mã đo lường để tránh ảnh hưởng logic các phần khác.</p>
                 </div>
 
                 <div class="grid gap-4">
@@ -113,7 +109,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 import { adminSettingService } from "@/services/admin-setting.service";
-import { SeoSettingType } from "@/types/setting.type";
+import type { SeoSettingType } from "@/types/setting.type";
 import { handleErrorResponse, handleSuccessResponse } from "@/utils/response";
 
 const isSaving = ref(false);
@@ -126,7 +122,7 @@ const formData = ref<SeoSettingType>({
     custom_script: "",
 });
 
-const loadData = async () => {
+const loadData = async (): Promise<void> => {
     try {
         const data = await adminSettingService.getSeo();
         formData.value = { ...data.settings };
@@ -135,7 +131,7 @@ const loadData = async () => {
     }
 };
 
-const submitForm = async () => {
+const submitForm = async (): Promise<void> => {
     try {
         isSaving.value = true;
         const res = await adminSettingService.updateSeo(formData.value);

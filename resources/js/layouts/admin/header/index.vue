@@ -147,7 +147,7 @@ const userInitials = computed(() => {
                             <div class="mt-2 space-y-1">
                                 <MenuItem v-slot="{ active }">
                                     <RouterLink
-                                        to="/admin/settings"
+                                        to="/admin/settings/general"
                                         class="flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm transition"
                                         :class="active ? 'bg-slate-50 text-slate-950' : 'text-slate-600'"
                                     >
@@ -168,14 +168,15 @@ const userInitials = computed(() => {
                                 </MenuItem>
 
                                 <MenuItem v-slot="{ active }">
-                                    <button
+                                    <RouterLink
+                                        to="/"
                                         type="button"
                                         class="flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left text-sm transition"
                                         :class="active ? 'bg-rose-50 text-rose-700' : 'text-slate-600'"
                                     >
                                         <LogOut class="h-4 w-4" />
-                                        <span>Logout</span>
-                                    </button>
+                                        <span>Trở về website</span>
+                                    </RouterLink>
                                 </MenuItem>
                             </div>
                         </MenuItems>

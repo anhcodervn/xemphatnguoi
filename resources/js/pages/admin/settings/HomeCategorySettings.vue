@@ -27,9 +27,7 @@
                 <div class="rounded-2xl border border-slate-200 p-4">
                     <div class="mb-4">
                         <h3 class="text-sm font-semibold text-slate-900">Tất cả danh mục của site</h3>
-                        <p class="text-sm text-slate-500">
-                            Đánh dấu những danh mục muốn hiển thị ở đầu trang chủ.
-                        </p>
+                        <p class="text-sm text-slate-500">Đánh dấu những danh mục muốn hiển thị ở đầu trang chủ.</p>
                     </div>
 
                     <div v-if="!categories.length" class="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
@@ -63,9 +61,7 @@
                 <div class="rounded-2xl border border-slate-200 p-4">
                     <div class="mb-4">
                         <h3 class="text-sm font-semibold text-slate-900">Thứ tự hiển thị</h3>
-                        <p class="text-sm text-slate-500">
-                            Danh mục nào nằm trên cùng sẽ được ưu tiên hiển thị trước.
-                        </p>
+                        <p class="text-sm text-slate-500">Danh mục nào nằm trên cùng sẽ được ưu tiên hiển thị trước.</p>
                     </div>
 
                     <div v-if="!selectedItems.length" class="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
@@ -131,7 +127,7 @@
 import { computed, onMounted, ref } from "vue";
 import api from "@/config/axios";
 import { adminSettingService } from "@/services/admin-setting.service";
-import { ProductCategoryType } from "@/types/product-category.type";
+import type { ProductCategoryType } from "@/types/product-category.type";
 import { handleErrorResponse, handleSuccessResponse } from "@/utils/response";
 
 const loading = ref(false);
@@ -147,9 +143,9 @@ const selectedItems = computed(() => {
         .filter((item): item is ProductCategoryType => Boolean(item));
 });
 
-const isSelected = (categoryId: number) => selectedIds.value.includes(categoryId);
+const isSelected = (categoryId: number): boolean => selectedIds.value.includes(categoryId);
 
-const toggleCategory = (categoryId: number) => {
+const toggleCategory = (categoryId: number): void => {
     if (isSelected(categoryId)) {
         selectedIds.value = selectedIds.value.filter((id) => id !== categoryId);
         return;
@@ -158,7 +154,7 @@ const toggleCategory = (categoryId: number) => {
     selectedIds.value = [...selectedIds.value, categoryId];
 };
 
-const moveCategory = (index: number, direction: "up" | "down") => {
+const moveCategory = (index: number, direction: "up" | "down"): void => {
     const nextIndex = direction === "up" ? index - 1 : index + 1;
 
     if (nextIndex < 0 || nextIndex >= selectedIds.value.length) {
@@ -170,16 +166,16 @@ const moveCategory = (index: number, direction: "up" | "down") => {
     selectedIds.value = nextIds;
 };
 
-const removeCategory = (categoryId: number) => {
+const removeCategory = (categoryId: number): void => {
     selectedIds.value = selectedIds.value.filter((id) => id !== categoryId);
 };
 
-const loadData = async () => {
+const loadData = async (): Promise<void> => {
     try {
         loading.value = true;
 
         const [categoryRes, settingRes] = await Promise.all([
-                api.get("/api/admin-api/product-categories", { params: { limit: 200 } }),
+            api.get("/api/admin-api/product-categories", { params: { limit: 200 } }),
             adminSettingService.getHomeCategory(),
         ]);
 
@@ -196,7 +192,7 @@ const loadData = async () => {
     }
 };
 
-const submit = async () => {
+const submit = async (): Promise<void> => {
     try {
         saving.value = true;
         const res = await adminSettingService.updateHomeCategory({

@@ -156,12 +156,33 @@
 
                                 <div class="flex flex-wrap items-center gap-2 xl:justify-end">
                                     <RouterLink
+                                        v-if="card.status === 'active'"
                                         :to="{ name: 'client.bank-manager.detail', params: { bank_id: card.id } }"
                                         class="inline-flex items-center gap-1.5 rounded-[8px] border border-blue-200 bg-white px-2.5 py-2 text-xs font-semibold text-blue-600 transition hover:bg-blue-50"
                                     >
                                         Chi tiết
                                         <ChevronRight class="h-3.5 w-3.5" />
                                     </RouterLink>
+                                    <span
+                                        v-else
+                                        class="inline-flex items-center gap-1.5 rounded-[8px] border border-slate-200 bg-slate-50 px-2.5 py-2 text-xs font-medium text-slate-400"
+                                    >
+                                        Thẻ đang tắt
+                                    </span>
+                                    <button
+                                        type="button"
+                                        class="inline-flex items-center gap-1.5 rounded-[8px] border px-2.5 py-2 text-xs font-medium transition"
+                                        :class="
+                                            card.status === 'active'
+                                                ? 'border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100'
+                                                : 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+                                        "
+                                        :disabled="togglingCardId === card.id"
+                                        @click="toggleCardStatus(card)"
+                                    >
+                                        <RefreshCcw class="h-3.5 w-3.5" :class="togglingCardId === card.id ? 'animate-spin' : ''" />
+                                        {{ togglingCardId === card.id ? 'Đang cập nhật...' : card.status === 'active' ? 'Tắt thẻ' : 'Bật thẻ' }}
+                                    </button>
                                     <RouterLink
                                         :to="{ name: 'client.bank-manager.bank.edit', params: { bank_id: card.id } }"
                                         class="inline-flex items-center gap-1.5 rounded-[8px] border border-slate-200 bg-white px-2.5 py-2 text-xs font-medium text-slate-600 transition hover:bg-slate-50"
@@ -220,6 +241,7 @@
 import { clientBankService } from '@/services/client-bank.service';
 import { useUserStore } from '@/stores/user.store';
 import type { BankAccountType } from '@/types/bank.type';
+import { handleErrorResponse } from '@/utils/response';
 import PackageRequiredState from './components/PackageRequiredState.vue';
 import {
     Bell,
@@ -242,10 +264,12 @@ import {
 } from 'lucide-vue-next';
 import { computed, onMounted, ref } from 'vue';
 import { RouterLink } from 'vue-router';
+import Swal from 'sweetalert2';
 
 const search = ref('');
 const cards = ref<BankAccountType[]>([]);
 const isLoadingCards = ref(false);
+const togglingCardId = ref<number | null>(null);
 const userStore = useUserStore();
 
 const hasBankAccess = computed(() => {
@@ -348,6 +372,50 @@ const loadCards = async (): Promise<void> => {
         cards.value = [];
     } finally {
         isLoadingCards.value = false;
+    }
+};
+
+const toggleCardStatus = async (card: BankAccountType): Promise<void> => {
+    if (togglingCardId.value === card.id) {
+        return;
+    }
+
+    const nextStatus: 'active' | 'inactive' = card.status === 'active' ? 'inactive' : 'active';
+
+    const confirmation = await Swal.fire({
+        icon: 'question',
+        title: nextStatus === 'inactive' ? 'Tắt thẻ này?' : 'Bật lại thẻ này?',
+        text:
+            nextStatus === 'inactive'
+                ? 'Khi tắt, thẻ sẽ không được cron đồng bộ và không thể xem chi tiết.'
+                : 'Khi bật lại, các chức năng liên quan đến thẻ sẽ hoạt động bình thường.',
+        showCancelButton: true,
+        confirmButtonText: nextStatus === 'inactive' ? 'Tắt thẻ' : 'Bật thẻ',
+        cancelButtonText: 'Hủy',
+        confirmButtonColor: nextStatus === 'inactive' ? '#f59e0b' : '#2563eb',
+    });
+
+    if (!confirmation.isConfirmed) {
+        return;
+    }
+
+    togglingCardId.value = card.id;
+
+    try {
+        const response = await clientBankService.updateAccountStatus(card.id, nextStatus);
+        const updatedCard = response.data?.data as BankAccountType | undefined;
+
+        if (updatedCard) {
+            cards.value = cards.value.map((item) => (item.id === updatedCard.id ? { ...item, ...updatedCard } : item));
+        } else {
+            await loadCards();
+        }
+
+        await Swal.fire('Thành công', response.data?.message || 'Cập nhật trạng thái thẻ thành công.', 'success');
+    } catch (error) {
+        handleErrorResponse(error);
+    } finally {
+        togglingCardId.value = null;
     }
 };
 

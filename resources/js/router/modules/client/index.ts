@@ -57,5 +57,10 @@ export default {
             name: 'client.api-docs',
             component: () => import('@/pages/client/api-docs/index.vue'),
         },
+        {
+            path: ':pathMatch(.*)*',
+            name: 'client.error.404',
+            component: () => import('@/pages/errors/client/NotFoundPage.vue'),
+        },
     ],
 };

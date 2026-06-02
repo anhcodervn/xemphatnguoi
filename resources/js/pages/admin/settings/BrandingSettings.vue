@@ -6,7 +6,7 @@
                     <div>
                         <h2 class="text-base font-semibold text-slate-900">Nhận diện thương hiệu</h2>
                         <p class="text-sm text-slate-500">
-                            Thiết lập logo, favicon và hình ảnh đại diện cho website.
+                            Thiết lập logo nền tối, logo nền sáng, favicon và ảnh chia sẻ mặc định cho website.
                         </p>
                     </div>
 
@@ -21,23 +21,45 @@
 
                 <div class="grid gap-4 md:grid-cols-2">
                     <div class="rounded-2xl border border-dashed border-slate-300 p-4">
-                        <p class="text-sm font-medium text-slate-700">Logo header</p>
+                        <p class="text-sm font-medium text-slate-700">Logo dùng trên nền tối</p>
 
-                        <div class="mt-3 flex h-32 items-center justify-center overflow-hidden rounded-xl bg-slate-50 text-sm text-slate-400">
+                        <div class="mt-3 flex h-32 items-center justify-center overflow-hidden rounded-xl bg-slate-900 text-sm text-slate-400">
                             <img
-                                v-if="formData.logo"
-                                :src="formData.logo"
-                                alt="logo"
-                                class="h-full w-full object-contain"
+                                v-if="formData.light_logo"
+                                :src="formData.light_logo"
+                                alt="logo-light"
+                                class="h-full w-full object-contain p-3"
                             />
                             <span v-else>320 × 96</span>
                         </div>
 
                         <div class="mt-3">
                             <UploadImage
-                                :accept="['image/png','image/jpeg','image/webp','image/svg+xml']"
+                                :accept="['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml']"
                                 :compress="true"
-                                @uploaded="(url: string) => (formData.logo = url)"
+                                @uploaded="(url: string) => (formData.light_logo = url)"
+                            />
+                        </div>
+                    </div>
+
+                    <div class="rounded-2xl border border-dashed border-slate-300 p-4">
+                        <p class="text-sm font-medium text-slate-700">Logo dùng trên nền sáng</p>
+
+                        <div class="mt-3 flex h-32 items-center justify-center overflow-hidden rounded-xl bg-slate-50 text-sm text-slate-400">
+                            <img
+                                v-if="formData.dark_logo"
+                                :src="formData.dark_logo"
+                                alt="logo-dark"
+                                class="h-full w-full object-contain p-3"
+                            />
+                            <span v-else>320 × 96</span>
+                        </div>
+
+                        <div class="mt-3">
+                            <UploadImage
+                                :accept="['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml']"
+                                :compress="true"
+                                @uploaded="(url: string) => (formData.dark_logo = url)"
                             />
                         </div>
                     </div>
@@ -57,9 +79,31 @@
 
                         <div class="mt-3">
                             <UploadImage
-                                :accept="['image/png','image/jpeg','image/webp','image/svg+xml','image/x-icon']"
+                                :accept="['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml', 'image/x-icon']"
                                 :compress="true"
                                 @uploaded="(url: string) => (formData.favicon = url)"
+                            />
+                        </div>
+                    </div>
+
+                    <div class="rounded-2xl border border-dashed border-slate-300 p-4">
+                        <p class="text-sm font-medium text-slate-700">Ảnh chia sẻ mặc định</p>
+
+                        <div class="mt-3 flex h-32 items-center justify-center overflow-hidden rounded-xl bg-slate-50 text-sm text-slate-400">
+                            <img
+                                v-if="formData.og_image"
+                                :src="formData.og_image"
+                                alt="og-image"
+                                class="h-full w-full object-cover"
+                            />
+                            <span v-else>1200 × 630</span>
+                        </div>
+
+                        <div class="mt-3">
+                            <UploadImage
+                                :accept="['image/png', 'image/jpeg', 'image/webp']"
+                                :compress="true"
+                                @uploaded="(url: string) => (formData.og_image = url)"
                             />
                         </div>
                     </div>
@@ -70,7 +114,7 @@
                 <div class="mb-4">
                     <h2 class="text-base font-semibold text-slate-900">Màu sắc giao diện</h2>
                     <p class="text-sm text-slate-500">
-                        Người dùng có thể chọn màu trực tiếp hoặc nhập mã màu HEX thủ công.
+                        Có thể chọn màu trực tiếp hoặc nhập mã màu HEX thủ công.
                     </p>
                 </div>
 
@@ -106,27 +150,53 @@
                             @blur="normalizeColor(item.key)"
                         />
 
-                        <p class="text-xs text-slate-500">
-                            Hỗ trợ mã HEX dạng <code>#RRGGBB</code>.
-                        </p>
+                        <p class="text-xs text-slate-500">Hỗ trợ mã HEX dạng <code>#RRGGBB</code>.</p>
                     </div>
                 </div>
             </div>
         </section>
 
-        <aside class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <aside class="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
             <h3 class="text-sm font-semibold text-slate-900">Xem trước nhanh</h3>
 
+            <div class="space-y-3">
+                <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                    <p class="text-xs uppercase tracking-[0.18em] text-slate-400">Nền sáng</p>
+                    <div class="mt-3 flex h-16 items-center justify-center rounded-xl border border-slate-200 bg-white">
+                        <img
+                            v-if="formData.dark_logo"
+                            :src="formData.dark_logo"
+                            alt="preview-dark-logo"
+                            class="h-full w-full object-contain p-2"
+                        />
+                        <span v-else class="text-xs text-slate-400">Chưa có logo nền sáng</span>
+                    </div>
+                </div>
+
+                <div class="rounded-2xl border border-slate-800 bg-slate-950 p-4 shadow-sm">
+                    <p class="text-xs uppercase tracking-[0.18em] text-slate-400">Nền tối</p>
+                    <div class="mt-3 flex h-16 items-center justify-center rounded-xl border border-slate-700 bg-slate-900">
+                        <img
+                            v-if="formData.light_logo"
+                            :src="formData.light_logo"
+                            alt="preview-light-logo"
+                            class="h-full w-full object-contain p-2"
+                        />
+                        <span v-else class="text-xs text-slate-500">Chưa có logo nền tối</span>
+                    </div>
+                </div>
+            </div>
+
             <div
-                class="mt-4 rounded-[28px] border border-slate-200 p-4"
+                class="rounded-[28px] border border-slate-200 p-4"
                 :style="{ backgroundColor: safeColor(formData.color_surface, '#F8FAFC') }"
             >
                 <div class="rounded-2xl bg-white p-4 shadow-sm">
                     <div class="flex items-center justify-between">
                         <div class="flex h-8 w-24 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white">
                             <img
-                                v-if="formData.logo"
-                                :src="formData.logo"
+                                v-if="formData.dark_logo"
+                                :src="formData.dark_logo"
                                 alt="logo-preview"
                                 class="h-full w-full object-contain"
                             />
@@ -161,7 +231,7 @@
 import { onMounted, ref } from "vue";
 import UploadImage from "@/components/shared/UpladImage/index.vue";
 import { adminSettingService } from "@/services/admin-setting.service";
-import { BrandingSettingType } from "@/types/setting.type";
+import type { BrandingSettingType } from "@/types/setting.type";
 import { handleErrorResponse, handleSuccessResponse } from "@/utils/response";
 
 type ColorFieldKey = "color_primary" | "color_accent" | "color_surface";
@@ -174,20 +244,22 @@ const colorFields: Array<{ key: ColorFieldKey; label: string }> = [
 
 const isSaving = ref(false);
 const formData = ref<BrandingSettingType>({
-    logo: "",
+    light_logo: "",
+    dark_logo: "",
     favicon: "",
+    og_image: "",
     color_primary: "#0F172A",
     color_accent: "#0EA5E9",
     color_surface: "#F8FAFC",
 });
 
-const isValidHexColor = (value: string) => /^#(?:[0-9A-F]{6})$/i.test(value);
+const isValidHexColor = (value: string): boolean => /^#(?:[0-9A-F]{6})$/i.test(value);
 
-const safeColor = (value: string, fallback: string) => {
+const safeColor = (value: string, fallback: string): string => {
     return isValidHexColor(value) ? value : fallback;
 };
 
-const normalizeHexValue = (value: string) => {
+const normalizeHexValue = (value: string): string => {
     let normalized = value.trim().toUpperCase();
 
     if (normalized && !normalized.startsWith("#")) {
@@ -197,21 +269,21 @@ const normalizeHexValue = (value: string) => {
     return normalized.slice(0, 7);
 };
 
-const updateColor = (field: ColorFieldKey, value: string) => {
+const updateColor = (field: ColorFieldKey, value: string): void => {
     formData.value = {
         ...formData.value,
         [field]: value.toUpperCase(),
     };
 };
 
-const updateHexInput = (field: ColorFieldKey, value: string) => {
+const updateHexInput = (field: ColorFieldKey, value: string): void => {
     formData.value = {
         ...formData.value,
         [field]: normalizeHexValue(value),
     };
 };
 
-const normalizeColor = (field: ColorFieldKey) => {
+const normalizeColor = (field: ColorFieldKey): void => {
     const defaults: Record<ColorFieldKey, string> = {
         color_primary: "#0F172A",
         color_accent: "#0EA5E9",
@@ -226,7 +298,7 @@ const normalizeColor = (field: ColorFieldKey) => {
     };
 };
 
-const loadData = async () => {
+const loadData = async (): Promise<void> => {
     try {
         const data = await adminSettingService.getBranding();
         formData.value = {
@@ -240,7 +312,7 @@ const loadData = async () => {
     }
 };
 
-const submitForm = async () => {
+const submitForm = async (): Promise<void> => {
     try {
         isSaving.value = true;
 
@@ -255,7 +327,13 @@ const submitForm = async () => {
             color_accent: safeColor(res.settings.color_accent, "#0EA5E9"),
             color_surface: safeColor(res.settings.color_surface, "#F8FAFC"),
         };
-        handleSuccessResponse({ data: { status: true, message: "Cập nhật cài đặt nhận diện thành công" } });
+
+        handleSuccessResponse({
+            data: {
+                status: true,
+                message: "Cập nhật nhận diện thương hiệu thành công",
+            },
+        });
     } catch (err) {
         handleErrorResponse(err);
     } finally {

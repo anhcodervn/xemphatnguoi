@@ -2,13 +2,15 @@
 
 namespace App\Providers;
 
+use App\Features\Client\Wallet\Observers\WalletTransactionObserver;
 use App\Models\ApiKey;
 use App\Models\QueueLog;
+use App\Models\WalletTransaction;
+use Illuminate\Http\Request;
 use Illuminate\Queue\Events\JobFailed;
 use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Support\Arr;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Queue;
@@ -31,6 +33,7 @@ class AppServiceProvider extends ServiceProvider
     {
         App::setLocale('vi');
         config(['app.locale' => 'vi']);
+        WalletTransaction::observe(WalletTransactionObserver::class);
 
         Auth::viaRequest('api-key', function (Request $request) {
             $apiKeyValue = trim((string) $request->header('X-API-KEY'));
@@ -130,7 +133,7 @@ class AppServiceProvider extends ServiceProvider
     }
 
     /**
-     * @param array<string, mixed> $payload
+     * @param  array<string, mixed>  $payload
      * @return array<string, mixed>
      */
     private function sanitizeQueuePayload(array $payload): array

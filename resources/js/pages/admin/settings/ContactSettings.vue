@@ -5,7 +5,7 @@
                 <div>
                     <h2 class="text-base font-semibold text-slate-900">Liên hệ & CSKH</h2>
                     <p class="text-sm text-slate-500">
-                        Thông tin sử dụng cho footer, trang liên hệ và các điểm chạm với khách hàng.
+                        Thông tin dùng cho footer, trang liên hệ và các điểm chạm với khách hàng.
                     </p>
                 </div>
 
@@ -92,7 +92,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 import { adminSettingService } from "@/services/admin-setting.service";
-import { ContactSettingType } from "@/types/setting.type";
+import type { ContactSettingType } from "@/types/setting.type";
 import { handleErrorResponse, handleSuccessResponse } from "@/utils/response";
 
 const isSaving = ref(false);
@@ -105,7 +105,7 @@ const formData = ref<ContactSettingType>({
     youtube: "",
 });
 
-const loadData = async () => {
+const loadData = async (): Promise<void> => {
     try {
         const data = await adminSettingService.getContact();
         formData.value = { ...data.settings };
@@ -114,7 +114,7 @@ const loadData = async () => {
     }
 };
 
-const submitForm = async () => {
+const submitForm = async (): Promise<void> => {
     try {
         isSaving.value = true;
         const res = await adminSettingService.updateContact(formData.value);

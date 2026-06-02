@@ -5,10 +5,14 @@ use App\Http\Middleware\EnsureAdminUser;
 use App\Http\Middleware\EnsureApiKeyPermission;
 use App\Http\Middleware\EnsureHasActiveSubscription;
 use App\Http\Middleware\LogApiRequest;
+use App\Support\SettingStore;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Route;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -35,5 +39,59 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        $exceptions->render(function (Throwable $throwable, Request $request) {
+            if ($request->expectsJson() || $request->is('api/*') || $request->is('admin-api/*')) {
+                return null;
+            }
+
+            $statusCode = $throwable instanceof HttpExceptionInterface
+                ? $throwable->getStatusCode()
+                : 500;
+
+            if (! in_array($statusCode, [404, 520, 524], true)) {
+                return null;
+            }
+
+            /** @var SettingStore $settingStore */
+            $settingStore = app(SettingStore::class);
+
+            $systemSettings = $settingStore->getMany([
+                'site_name' => config('app.name', 'Nạp Tiền Tự Động'),
+                'site_description' => '',
+                'support_email' => '',
+                'hotline' => '',
+                'light_logo' => '',
+                'dark_logo' => '',
+                'favicon' => '',
+            ]);
+
+            $context = 'landing';
+
+            if ($request->is('admin*')) {
+                $context = 'admin';
+            } elseif ($request->user() !== null) {
+                $context = 'client';
+            }
+
+            $contextActions = [
+                'landing' => [
+                    'primary' => ['label' => 'Về trang chủ', 'href' => '/'],
+                    'secondary' => ['label' => 'Liên hệ hỗ trợ', 'href' => '/lien-he'],
+                ],
+                'client' => [
+                    'primary' => ['label' => 'Về tổng quan', 'href' => '/'],
+                    'secondary' => ['label' => 'Liên hệ & góp ý', 'href' => '/contact'],
+                ],
+                'admin' => [
+                    'primary' => ['label' => 'Về dashboard admin', 'href' => '/admin'],
+                    'secondary' => ['label' => 'Quản lý queue', 'href' => '/admin/queues'],
+                ],
+            ];
+
+            return response()->view("errors.{$statusCode}", [
+                'errorContext' => $context,
+                'errorActions' => Arr::get($contextActions, $context, $contextActions['landing']),
+                'systemSettings' => $systemSettings,
+            ], $statusCode);
+        });
     })->create();

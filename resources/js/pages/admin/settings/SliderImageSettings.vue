@@ -225,7 +225,7 @@ import { computed, onMounted, ref } from "vue";
 import Modal from "@/components/shared/Modal/index.vue";
 import UploadImage from "@/components/shared/UpladImage/index.vue";
 import { adminSettingService } from "@/services/admin-setting.service";
-import { FeaturedSliderItemType, SliderImageSettingType } from "@/types/setting.type";
+import type { FeaturedSliderItemType, SliderImageSettingType } from "@/types/setting.type";
 import { handleErrorResponse, handleSuccessResponse } from "@/utils/response";
 
 const isSaving = ref(false);
@@ -252,7 +252,7 @@ const normalizeItem = (item: Partial<FeaturedSliderItemType>): FeaturedSliderIte
     sort_order: item.sort_order ?? 0,
 });
 
-const loadData = async () => {
+const loadData = async (): Promise<void> => {
     try {
         const data = await adminSettingService.getFeaturedSliders();
         formData.value = {
@@ -263,7 +263,7 @@ const loadData = async () => {
     }
 };
 
-const appendImage = (url: string) => {
+const appendImage = (url: string): void => {
     formData.value = {
         items: [
             ...formData.value.items,
@@ -279,7 +279,7 @@ const appendImage = (url: string) => {
     openEditModal(formData.value.items.length - 1);
 };
 
-const replaceEditingImage = (url: string) => {
+const replaceEditingImage = (url: string): void => {
     if (editingIndex.value === null) {
         return;
     }
@@ -295,7 +295,7 @@ const replaceEditingImage = (url: string) => {
     };
 };
 
-const removeItem = (index: number) => {
+const removeItem = (index: number): void => {
     formData.value = {
         items: formData.value.items.filter((_, itemIndex) => itemIndex !== index),
     };
@@ -310,7 +310,7 @@ const removeItem = (index: number) => {
     }
 };
 
-const moveItem = (index: number, direction: "up" | "down") => {
+const moveItem = (index: number, direction: "up" | "down"): void => {
     const nextIndex = direction === "up" ? index - 1 : index + 1;
 
     if (nextIndex < 0 || nextIndex >= formData.value.items.length) {
@@ -328,17 +328,17 @@ const moveItem = (index: number, direction: "up" | "down") => {
     }
 };
 
-const openEditModal = (index: number) => {
+const openEditModal = (index: number): void => {
     editingIndex.value = index;
     isEditModalOpen.value = true;
 };
 
-const closeEditModal = () => {
+const closeEditModal = (): void => {
     isEditModalOpen.value = false;
     editingIndex.value = null;
 };
 
-const submitForm = async () => {
+const submitForm = async (): Promise<void> => {
     try {
         isSaving.value = true;
 

@@ -28,7 +28,8 @@ class SettingController extends Controller
                 'allow_register' => false,
             ],
             'branding' => [
-                'logo' => '',
+                'light_logo' => '',
+                'dark_logo' => '',
                 'favicon' => '',
                 'og_image' => '',
                 'color_primary' => '#0F172A',
@@ -52,10 +53,78 @@ class SettingController extends Controller
                 'custom_script' => '',
             ],
             'options' => [
+                'recharge_syntax' => 'NAP',
                 'terms_of_use' => [],
                 'privacy_policy' => [],
                 'refund_policy' => [],
-                'recharge_syntax' => 'NAP',
+            ],
+            'content-pages' => [
+                'contact_page_title' => 'Liên hệ',
+                'contact_page_excerpt' => '',
+                'contact_page_content' => [],
+                'contact_page_seo_title' => '',
+                'contact_page_seo_description' => '',
+                'contact_page_is_published' => true,
+                'terms_page_title' => 'Điều khoản sử dụng',
+                'terms_page_excerpt' => '',
+                'terms_page_content' => [],
+                'terms_page_seo_title' => '',
+                'terms_page_seo_description' => '',
+                'terms_page_is_published' => true,
+                'faq_page_title' => 'Câu hỏi thường gặp',
+                'faq_page_excerpt' => '',
+                'faq_page_content' => [],
+                'faq_page_seo_title' => '',
+                'faq_page_seo_description' => '',
+                'faq_page_is_published' => true,
+                'privacy_page_title' => 'Chính sách bảo mật',
+                'privacy_page_excerpt' => '',
+                'privacy_page_content' => [],
+                'privacy_page_seo_title' => '',
+                'privacy_page_seo_description' => '',
+                'privacy_page_is_published' => true,
+                'about_page_title' => 'Giới thiệu',
+                'about_page_excerpt' => '',
+                'about_page_content' => [],
+                'about_page_seo_title' => '',
+                'about_page_seo_description' => '',
+                'about_page_is_published' => true,
+                'refund_policy_title' => 'Chính sách hoàn tiền',
+                'refund_policy_excerpt' => '',
+                'refund_policy_content' => [],
+                'refund_policy_seo_title' => '',
+                'refund_policy_seo_description' => '',
+                'refund_policy_is_published' => true,
+                'payment_policy_title' => 'Chính sách thanh toán',
+                'payment_policy_excerpt' => '',
+                'payment_policy_content' => [],
+                'payment_policy_seo_title' => '',
+                'payment_policy_seo_description' => '',
+                'payment_policy_is_published' => true,
+                'api_usage_policy_title' => 'Chính sách sử dụng API',
+                'api_usage_policy_excerpt' => '',
+                'api_usage_policy_content' => [],
+                'api_usage_policy_seo_title' => '',
+                'api_usage_policy_seo_description' => '',
+                'api_usage_policy_is_published' => true,
+                'disclaimer_title' => 'Miễn trừ trách nhiệm',
+                'disclaimer_excerpt' => '',
+                'disclaimer_content' => [],
+                'disclaimer_seo_title' => '',
+                'disclaimer_seo_description' => '',
+                'disclaimer_is_published' => true,
+                'system_status_title' => 'Trạng thái hệ thống',
+                'system_status_excerpt' => '',
+                'system_status_content' => [],
+                'system_status_seo_title' => '',
+                'system_status_seo_description' => '',
+                'system_status_is_published' => true,
+                'system_updates_title' => 'Cập nhật hệ thống',
+                'system_updates_excerpt' => '',
+                'system_updates_content' => [],
+                'system_updates_seo_title' => '',
+                'system_updates_seo_description' => '',
+                'system_updates_is_published' => true,
             ],
             'home-category' => [
                 'category_ids' => [],
@@ -76,7 +145,7 @@ class SettingController extends Controller
             ...$this->tabDefaults()['branding'],
             ...$this->tabDefaults()['contact'],
             ...$this->tabDefaults()['seo'],
-            ...$this->tabDefaults()['options'],
+            'recharge_syntax' => (string) $this->tabDefaults()['options']['recharge_syntax'],
         ];
     }
 
@@ -94,7 +163,8 @@ class SettingController extends Controller
                 'allow_register' => 'allow_register',
             ],
             'branding' => [
-                'logo' => 'logo',
+                'light_logo' => 'light_logo',
+                'dark_logo' => 'dark_logo',
                 'favicon' => 'favicon',
                 'og_image' => 'og_image',
                 'color_primary' => 'color_primary',
@@ -118,11 +188,14 @@ class SettingController extends Controller
                 'custom_script' => 'custom_script',
             ],
             'options' => [
+                'recharge_syntax' => 'recharge_syntax',
                 'terms_of_use' => 'terms_of_use',
                 'privacy_policy' => 'privacy_policy',
                 'refund_policy' => 'refund_policy',
-                'recharge_syntax' => 'recharge_syntax',
             ],
+            'content-pages' => collect($this->tabDefaults()['content-pages'])
+                ->mapWithKeys(fn (mixed $value, string $field) => [$field => $field])
+                ->all(),
             'home-category' => [
                 'category_ids' => 'home_category_ids',
             ],
@@ -180,7 +253,10 @@ class SettingController extends Controller
         $branding = $this->readTab($settingStore, $this->tabDefaults()['branding'], $this->tabStorageMap()['branding']);
         $contact = $this->readTab($settingStore, $this->tabDefaults()['contact'], $this->tabStorageMap()['contact']);
         $seo = $this->readTab($settingStore, $this->tabDefaults()['seo'], $this->tabStorageMap()['seo']);
-        $options = $this->readTab($settingStore, $this->tabDefaults()['options'], $this->tabStorageMap()['options']);
+        $options = Arr::only(
+            $this->readTab($settingStore, $this->tabDefaults()['options'], $this->tabStorageMap()['options']),
+            ['recharge_syntax'],
+        );
 
         return [
             ...$this->defaultSystem(),
@@ -248,10 +324,16 @@ class SettingController extends Controller
 
         $payload['recharge_syntax'] = trim((string) $payload['recharge_syntax']) ?: 'NAP';
 
-        foreach (['general', 'branding', 'contact', 'seo', 'options'] as $tab) {
+        foreach (['general', 'branding', 'contact', 'seo'] as $tab) {
             $tabPayload = Arr::only($payload, array_keys($this->tabDefaults()[$tab]));
             $this->writeTab($settingStore, $tabPayload, $this->tabStorageMap()[$tab]);
         }
+
+        $this->writeTab(
+            $settingStore,
+            Arr::only($payload, ['recharge_syntax']),
+            Arr::only($this->tabStorageMap()['options'], ['recharge_syntax']),
+        );
 
         return response()->json([
             'status' => true,

@@ -32,7 +32,7 @@ class ApiBankVnCallbackService
             return [
                 'ok' => false,
                 'status_code' => 422,
-                'message' => 'Thieu thong tin xac thuc callback.',
+                'message' => 'Thiếu thông tin xác thực callback.',
                 'data' => [
                     'reason' => 'missing_signature_fields',
                 ],
@@ -49,7 +49,7 @@ class ApiBankVnCallbackService
             return [
                 'ok' => false,
                 'status_code' => 403,
-                'message' => 'Webhook secret khong hop le hoac da ngung hoat dong.',
+                'message' => 'Webhook secret không hợp lệ hoặc đã ngừng hoạt động.',
                 'data' => [
                     'reason' => 'invalid_webhook_secret',
                 ],
@@ -62,7 +62,7 @@ class ApiBankVnCallbackService
             return [
                 'ok' => false,
                 'status_code' => 401,
-                'message' => 'Chu ky callback khong hop le.',
+                'message' => 'Chữ ký callback không hợp lệ.',
                 'data' => [
                     'reason' => 'invalid_signature',
                 ],
@@ -72,7 +72,7 @@ class ApiBankVnCallbackService
         return [
             'ok' => true,
             'status_code' => 200,
-            'message' => 'Signature hop le.',
+            'message' => 'Chữ ký hợp lệ.',
             'data' => [],
             'credentials' => [
                 'webhook' => $webhook,
@@ -250,7 +250,7 @@ class ApiBankVnCallbackService
                     'status_code' => 200,
                     'body' => [
                         'status' => true,
-                        'message' => 'Lenh nap nay da duoc xu ly truoc do.',
+                        'message' => 'Lệnh nạp đã được xử lý trước đó.',
                         'data' => [
                             'ignored' => true,
                             'reason' => 'already_processed',
@@ -299,7 +299,7 @@ class ApiBankVnCallbackService
                 'balance_after' => $balanceAfter,
                 'reference_type' => RechargeOrder::class,
                 'reference_id' => $lockedOrder->id,
-                'description' => 'Webhook callback approved recharge '.$lockedOrder->order_code,
+                'description' => 'Nạp tiền tự động thành công mã GD:'.$lockedOrder->order_code,
                 'status' => 'success',
             ]);
 
@@ -319,7 +319,7 @@ class ApiBankVnCallbackService
             SaveUserLogJob::dispatch(
                 userId: (int) $lockedOrder->user_id,
                 action: 'recharge_order_paid',
-                description: sprintf('Yeu cau nap %s da duoc xac nhan qua callback webhook', $lockedOrder->order_code),
+                description: sprintf('Yêu cầu nạp %s đã được xác nhận qua callback webhook', $lockedOrder->order_code),
                 ip: $ip,
                 userAgent: (string) $userAgent,
             )->onQueue('user-logs')->afterCommit();
@@ -328,7 +328,7 @@ class ApiBankVnCallbackService
                 'status_code' => 200,
                 'body' => [
                     'status' => true,
-                    'message' => 'Da xac nhan lenh nap thanh cong.',
+                    'message' => 'Đã xác nhận lệnh nạp thành công.',
                     'data' => [
                         'ignored' => false,
                         'order_code' => $lockedOrder->order_code,

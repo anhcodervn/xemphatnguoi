@@ -1,4 +1,5 @@
 import {
+    BookMarked,
     KeyRound,
     Landmark,
     LayoutDashboard,
@@ -9,7 +10,7 @@ import {
     Users,
     Webhook,
     type LucideIcon,
-} from 'lucide-vue-next';
+} from "lucide-vue-next";
 
 export type AdminMenuChild = {
     label: string;
@@ -26,146 +27,182 @@ export type AdminMenuGroup = {
 
 export const adminMenuGroups: AdminMenuGroup[] = [
     {
-        key: 'dashboard',
-        label: 'Dashboard',
+        key: "dashboard",
+        label: "Dashboard",
         icon: LayoutDashboard,
-        href: '/admin',
+        href: "/admin",
     },
     {
-        key: 'users',
-        label: 'Quản lý người dùng',
+        key: "users",
+        label: "Quản lý người dùng",
         icon: Users,
         children: [
             {
-                label: 'Danh sách thành viên',
-                href: '/admin/users',
+                label: "Danh sách thành viên",
+                href: "/admin/users",
             },
             {
-                label: 'Lịch sử dòng tiền',
-                href: '/admin/users/wallet-transactions',
+                label: "Lịch sử dòng tiền",
+                href: "/admin/users/wallet-transactions",
             },
         ],
     },
     {
-        key: 'notifications',
-        label: 'Quản lý thông báo',
+        key: "notifications",
+        label: "Quản lý thông báo",
         icon: Users,
         children: [
             {
-                label: 'Tạo thông báo mới',
-                href: '/admin/notifications/create',
+                label: "Tạo thông báo mới",
+                href: "/admin/notifications/create",
             },
             {
-                label: 'Danh sách thông báo',
-                href: '/admin/notifications',
+                label: "Danh sách thông báo",
+                href: "/admin/notifications",
             },
         ],
     },
     {
-        key: 'packages',
-        label: 'Quản lý gói thuê',
+        key: "packages",
+        label: "Quản lý gói thuê",
         icon: Package,
         children: [
             {
-                label: 'Tạo gói mới',
-                href: '/admin/packages/create',
+                label: "Tạo gói mới",
+                href: "/admin/packages/create",
             },
             {
-                label: 'Danh sách gói',
-                href: '/admin/packages',
+                label: "Danh sách gói",
+                href: "/admin/packages",
             },
             {
-                label: 'Gói đã cho thuê',
-                href: '/admin/packages/orders',
+                label: "Gói đã cho thuê",
+                href: "/admin/packages/orders",
             },
         ],
     },
     {
-        key: 'recharge-methods',
-        label: 'Quản lý nạp tiền',
+        key: "recharge-methods",
+        label: "Quản lý nạp tiền",
         icon: Landmark,
         children: [
             {
-                label: 'Tạo phương thức',
-                href: '/admin/recharge-methods/create',
+                label: "Tạo phương thức",
+                href: "/admin/recharge-methods/create",
             },
             {
-                label: 'Phương thức nạp',
-                href: '/admin/recharge-methods',
+                label: "Phương thức nạp",
+                href: "/admin/recharge-methods",
             },
         ],
     },
     {
-        key: 'api-management',
-        label: 'Quản lý API',
+        key: "api-management",
+        label: "Quản lý API",
         icon: KeyRound,
         children: [
             {
-                label: 'Thêm bank',
-                href: '/admin/banks/create',
+                label: "Thêm bank",
+                href: "/admin/banks/create",
             },
             {
-                label: 'Quản lý bank',
-                href: '/admin/banks',
+                label: "Quản lý bank",
+                href: "/admin/banks",
             },
             {
-                label: 'Quản lý API key',
-                href: '/admin/api-keys',
+                label: "Quản lý API key",
+                href: "/admin/api-keys",
             },
             {
-                label: 'Quản lý API log',
-                href: '/admin/api-logs',
+                label: "Quản lý API log",
+                href: "/admin/api-logs",
             },
         ],
     },
     {
-        key: 'coupons',
-        label: 'Mã giảm giá',
+        key: "seo-management",
+        label: "Quản trị SEO",
+        icon: BookMarked,
+        children: [
+            {
+                label: "Tổng quan SEO",
+                href: "/admin/seo",
+            },
+            {
+                label: "Danh mục SEO",
+                href: "/admin/seo/categories",
+            },
+            {
+                label: "Bài viết SEO",
+                href: "/admin/seo/posts",
+            },
+            {
+                label: "Tạo bài viết",
+                href: "/admin/seo/posts/create",
+            },
+            {
+                label: "Sitemap & index",
+                href: "/admin/seo/sitemaps",
+            },
+        ],
+    },
+    {
+        key: "coupons",
+        label: "Mã giảm giá",
         icon: Landmark,
         children: [
             {
-                label: 'Tạo mã giảm giá',
-                href: '/admin/couponts/create',
+                label: "Tạo mã giảm giá",
+                href: "/admin/couponts/create",
             },
             {
-                label: 'Danh sách coupon',
-                href: '/admin/couponts',
+                label: "Danh sách coupon",
+                href: "/admin/couponts",
             },
             {
-                label: 'Lịch sử coupon',
-                href: '/admin/couponts/history',
+                label: "Lịch sử coupon",
+                href: "/admin/couponts/history",
             },
         ],
     },
     {
-        key: 'settings',
-        label: 'Cấu hình hệ thống',
+        key: "settings",
+        label: "Cấu hình hệ thống",
         icon: Settings,
-        href: '/admin/settings',
+        children: [
+            {
+                label: "Cấu hình chung",
+                href: "/admin/settings/general",
+            },
+            {
+                label: "Cấu hình điều khoản",
+                href: "/admin/settings/content",
+            },
+        ],
     },
     {
-        key: 'mail',
-        label: 'Gửi email',
+        key: "mail",
+        label: "Gửi email",
         icon: Mail,
-        href: '/admin/mail',
+        href: "/admin/mail",
     },
     {
-        key: 'queues',
-        label: 'Quản lý queue',
+        key: "queues",
+        label: "Quản lý queue",
         icon: ListChecks,
-        href: '/admin/queues',
+        href: "/admin/queues",
     },
     {
-        key: 'webhooks',
-        label: 'Quản lý webhook',
+        key: "webhooks",
+        label: "Quản lý webhook",
         icon: Webhook,
-        href: '/admin/webhooks',
+        href: "/admin/webhooks",
     },
     {
-        key: 'feedbacks',
-        label: 'Liên hệ & góp ý',
+        key: "feedbacks",
+        label: "Liên hệ và góp ý",
         icon: Mail,
-        href: '/admin/feedbacks',
+        href: "/admin/feedbacks",
     },
 ];
 
@@ -185,5 +222,5 @@ export const resolveAdminPageTitle = (path: string): string => {
         }
     }
 
-    return 'Admin';
+    return "Admin";
 };

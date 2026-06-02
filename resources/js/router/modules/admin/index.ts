@@ -197,13 +197,58 @@ export default {
             component: () => import('@/pages/admin/api-logs/index.vue'),
         },
         {
-            path: 'setting',
-            redirect: { name: 'admin.settings.system' },
+            path: 'seo',
+            children: [
+                {
+                    path: '',
+                    name: 'admin.seo.dashboard',
+                    component: () => import('@/pages/admin/seo/dashboard/index.vue'),
+                },
+                {
+                    path: 'categories',
+                    name: 'admin.seo.categories',
+                    component: () => import('@/pages/admin/seo/categories/index.vue'),
+                },
+                {
+                    path: 'posts',
+                    name: 'admin.seo.posts',
+                    component: () => import('@/pages/admin/seo/posts/index.vue'),
+                },
+                {
+                    path: 'posts/create',
+                    name: 'admin.seo.posts.create',
+                    component: () => import('@/pages/admin/seo/posts/create/index.vue'),
+                },
+                {
+                    path: 'posts/:seo_post_id(\\d+)/edit',
+                    name: 'admin.seo.posts.edit',
+                    component: () => import('@/pages/admin/seo/posts/create/index.vue'),
+                },
+                {
+                    path: 'sitemaps',
+                    name: 'admin.seo.sitemaps',
+                    component: () => import('@/pages/admin/seo/sitemaps/index.vue'),
+                },
+            ],
         },
         {
-            path: 'settings',
-            name: 'admin.settings.system',
+            path: 'setting',
+            redirect: { name: 'admin.settings.general' },
+        },
+        {
+            path: 'settings/general',
+            name: 'admin.settings.general',
             component: () => import('@/pages/admin/settings/index.vue'),
+        },
+        {
+            path: 'settings/content',
+            name: 'admin.settings.content',
+            component: () => import('@/pages/admin/settings/content/index.vue'),
+        },
+        {
+            path: ':pathMatch(.*)*',
+            name: 'admin.error.404',
+            component: () => import('@/pages/errors/admin/NotFoundPage.vue'),
         },
     ],
 };

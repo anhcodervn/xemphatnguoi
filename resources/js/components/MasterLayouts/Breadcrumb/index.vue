@@ -36,8 +36,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
-import { useRoute } from 'vue-router';
+import { computed } from "vue";
+import { useRoute } from "vue-router";
 
 interface BreadcrumbItem {
     label: string;
@@ -55,80 +55,88 @@ const props = withDefaults(
         homeLabel?: string;
     }>(),
     {
-        title: '',
-        description: '',
+        title: "",
+        description: "",
         items: () => [],
-        homeLabel: 'Dashboard',
+        homeLabel: "Dashboard",
     },
 );
 
 const routeLabelMap: Record<string, string> = {
-    'admin.dashboard': 'Dashboard',
-    'admin.users.index': 'Người dùng',
-    'admin.users.show': 'Chi tiết người dùng',
-    'admin.users.wallet-transaction': 'Lịch sử dòng tiền',
-    'admin.users.wallet-transaction.show': 'Lịch sử dòng tiền',
-    'admin.packages.index': 'Gói thuê',
-    'admin.packages.create': 'Tạo gói',
-    'admin.packages.edit': 'Cập nhật gói',
-    'admin.packages.orders': 'Gói đã bán',
-    'admin.couponts.index': 'Mã giảm giá',
-    'admin.couponts.create': 'Tạo mã giảm giá',
-    'admin.couponts.edit': 'Cập nhật mã giảm giá',
-    'admin.couponts.history': 'Lịch sử coupon',
-    'admin.notifications.index': 'Thông báo',
-    'admin.notifications.create': 'Tạo thông báo',
-    'admin.notifications.edit': 'Cập nhật thông báo',
-    'admin.notifications.history': 'Lịch sử thông báo',
-    'admin.mail.index': 'Gửi mail',
-    'admin.queues.index': 'Quản lý queue',
-    'admin.webhooks.index': 'Quản lý webhook',
-    'admin.feedbacks.index': 'Liên hệ và góp ý',
-    'admin.recharge-methods.index': 'Phương thức nạp',
-    'admin.recharge-methods.create': 'Tạo phương thức nạp',
-    'admin.recharge-methods.edit': 'Cập nhật phương thức nạp',
-    'admin.banks.index': 'Quản lý bank',
-    'admin.banks.create': 'Thêm bank',
-    'admin.banks.edit': 'Cập nhật bank',
-    'admin.api-keys.index': 'Quản lý API key',
-    'admin.api-logs.index': 'Quản lý API log',
-    'admin.settings.system': 'Cấu hình hệ thống',
-    'client.home': 'Trang chủ',
-    'client.profile': 'Hồ sơ tài khoản',
-    'client.recharge': 'Nạp tiền',
-    'client.package': 'Nâng cấp gói',
-    'client.contact': 'Liên hệ và góp ý',
-    'client.api-docs': 'Tài liệu API',
+    "admin.dashboard": "Dashboard",
+    "admin.users.index": "Người dùng",
+    "admin.users.show": "Chi tiết người dùng",
+    "admin.users.wallet-transaction": "Lịch sử dòng tiền",
+    "admin.users.wallet-transaction.show": "Lịch sử dòng tiền",
+    "admin.packages.index": "Gói thuê",
+    "admin.packages.create": "Tạo gói",
+    "admin.packages.edit": "Cập nhật gói",
+    "admin.packages.orders": "Gói đã bán",
+    "admin.couponts.index": "Mã giảm giá",
+    "admin.couponts.create": "Tạo mã giảm giá",
+    "admin.couponts.edit": "Cập nhật mã giảm giá",
+    "admin.couponts.history": "Lịch sử coupon",
+    "admin.notifications.index": "Thông báo",
+    "admin.notifications.create": "Tạo thông báo",
+    "admin.notifications.edit": "Cập nhật thông báo",
+    "admin.notifications.history": "Lịch sử thông báo",
+    "admin.mail.index": "Gửi mail",
+    "admin.queues.index": "Quản lý queue",
+    "admin.webhooks.index": "Quản lý webhook",
+    "admin.feedbacks.index": "Liên hệ và góp ý",
+    "admin.recharge-methods.index": "Phương thức nạp",
+    "admin.recharge-methods.create": "Tạo phương thức nạp",
+    "admin.recharge-methods.edit": "Cập nhật phương thức nạp",
+    "admin.banks.index": "Quản lý bank",
+    "admin.banks.create": "Thêm bank",
+    "admin.banks.edit": "Cập nhật bank",
+    "admin.api-keys.index": "Quản lý API key",
+    "admin.api-logs.index": "Quản lý API log",
+    "admin.seo.dashboard": "Quản trị SEO",
+    "admin.seo.categories": "Danh mục SEO",
+    "admin.seo.posts": "Bài viết SEO",
+    "admin.seo.posts.create": "Tạo bài viết SEO",
+    "admin.seo.posts.edit": "Cập nhật bài viết SEO",
+    "admin.seo.sitemaps": "Sitemap & index",
+    "admin.settings.general": "Cấu hình chung",
+    "admin.settings.content": "Cấu hình điều khoản",
+    "admin.error.404": "Trang quản trị không tồn tại",
+    "client.home": "Trang chủ",
+    "client.profile": "Hồ sơ tài khoản",
+    "client.recharge": "Nạp tiền",
+    "client.package": "Nâng cấp gói",
+    "client.contact": "Liên hệ và góp ý",
+    "client.api-docs": "Tài liệu API",
 };
 
 const homeRoute = computed<string>(() => {
-    const name = route.name?.toString() ?? '';
+    const name = route.name?.toString() ?? "";
 
-    if (name.startsWith('admin.')) {
-        return '/admin';
+    if (name.startsWith("admin.")) {
+        return "/admin";
     }
 
-    return '/';
+    return "/";
 });
 
 const autoItems = computed<BreadcrumbItem[]>(() => {
     const matchedRoutes = route.matched.filter((item) => item.name);
 
     const items = matchedRoutes.map((item, index) => {
-        const name = item.name?.toString() || '';
+        const name = item.name?.toString() || "";
         const label =
             routeLabelMap[name] ||
             item.meta?.title?.toString() ||
             name
-                .split('.')
+                .split(".")
                 .pop()
-                ?.replace(/-/g, ' ')
+                ?.replace(/-/g, " ")
                 .replace(/\b\w/g, (char) => char.toUpperCase()) ||
-            'Trang';
+            "Trang";
 
         return {
             label,
-            to: item.path.includes(':') ? undefined : item.path,
+            to: item.path.includes(":") ? undefined : item.path,
             active: index === matchedRoutes.length - 1,
         };
     });

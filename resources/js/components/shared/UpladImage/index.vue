@@ -14,9 +14,7 @@
                 @change="handleFile"
             />
 
-            <p v-if="!preview" class="text-gray-400">
-                Kéo ảnh vào đây hoặc click để chọn
-            </p>
+            <p v-if="!preview" class="text-gray-400">Kéo ảnh vào đây hoặc click để chọn</p>
 
             <div v-if="preview" class="relative">
                 <img
@@ -44,20 +42,9 @@
             </div>
         </div>
 
-        <div v-if="preview" class="mt-3 flex items-center justify-center">
-            <input
-                v-model="nameImage"
-                type="text"
-                class="w-full max-w-[70%] rounded-l-sm border border-gray-300 px-2 py-1 text-[11px]"
-                placeholder="Nhập tên ảnh (không bắt buộc)"
-            />
-            <button
-                class="rounded-r-sm bg-green-500 px-3 py-1 text-[12px] text-white transition hover:bg-green-600 disabled:opacity-50"
-                :disabled="!file || loading"
-                @click="upload"
-            >
-                {{ loading ? "Đang upload..." : "Tải ảnh lên" }}
-            </button>
+        <div class="mt-3 flex items-center justify-between gap-3 text-xs text-slate-500">
+            <span>Ảnh sẽ được upload ngay sau khi chọn.</span>
+            <span v-if="loading">Đang xử lý {{ Math.round(progress) }}%</span>
         </div>
     </div>
 </template>
@@ -65,6 +52,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import Swal from "sweetalert2";
+import api from "@/config/axios";
 
 const props = defineProps<{
     accept?: string[];
@@ -81,7 +69,7 @@ const fileInput = ref<HTMLInputElement | null>(null);
 const preview = ref<string | null>(null);
 const file = ref<File | null>(null);
 const loading = ref(false);
-const nameImage = ref("");
+const imageName = ref("");
 const progress = ref(0);
 let progressInterval: ReturnType<typeof setInterval> | null = null;
 
@@ -92,44 +80,34 @@ watch(
             preview.value = newSrc ?? null;
         }
 
-        nameImage.value = newName ?? "";
+        imageName.value = newName ?? "";
     },
     { immediate: true },
 );
 
-const acceptString = computed(() => {
-    return props.accept?.join(",") || "image/*";
-});
+const acceptString = computed(() => props.accept?.join(",") || "image/*");
 
 const triggerFile = (): void => {
-    fileInput.value?.click();
+    if (!loading.value) {
+        fileInput.value?.click();
+    }
 };
 
-const handleFile = (event: Event): void => {
+const handleFile = async (event: Event): Promise<void> => {
     const target = event.target as HTMLInputElement;
     const selected = target.files?.[0];
 
     if (selected) {
-        processFile(selected);
+        await processFile(selected);
     }
 };
 
-const handleDrop = (event: DragEvent): void => {
+const handleDrop = async (event: DragEvent): Promise<void> => {
     const dropped = event.dataTransfer?.files?.[0];
 
     if (dropped) {
-        processFile(dropped);
+        await processFile(dropped);
     }
-};
-
-const processFile = (selectedFile: File): void => {
-    if (!selectedFile.type.startsWith("image/")) {
-        Swal.fire("Không hợp lệ", "Chỉ được chọn file ảnh.", "warning");
-        return;
-    }
-
-    file.value = selectedFile;
-    preview.value = URL.createObjectURL(selectedFile);
 };
 
 const compressImage = (selectedFile: File): Promise<File> => {
@@ -137,8 +115,8 @@ const compressImage = (selectedFile: File): Promise<File> => {
         const img = new Image();
         const reader = new FileReader();
 
-        reader.onload = (event) => {
-            img.src = event.target?.result as string;
+        reader.onload = (loadEvent) => {
+            img.src = loadEvent.target?.result as string;
         };
 
         img.onload = () => {
@@ -164,13 +142,13 @@ const compressImage = (selectedFile: File): Promise<File> => {
                     }
 
                     resolve(
-                        new File([blob], selectedFile.name, {
-                            type: "image/jpeg",
+                        new File([blob], selectedFile.name.replace(/\.[^.]+$/, ".webp"), {
+                            type: "image/webp",
                         }),
                     );
                 },
-                "image/jpeg",
-                0.8,
+                "image/webp",
+                0.82,
             );
         };
 
@@ -201,24 +179,30 @@ const upload = async (): Promise<void> => {
 
         const formData = new FormData();
         formData.append("image", uploadFile);
-        formData.append("name", nameImage.value);
+        formData.append("name", imageName.value);
 
-        const response = await fetch("https://api.congcuauto.com/api/uploads/image", {
-            method: "POST",
-            body: formData,
+        const response = await api.post("/api/uploads/image", formData, {
+            headers: {
+                "Content-Type": "multipart/form-data",
+            },
         });
 
-        const data = await response.json();
-        const imageUrl = data?.url || data?.data?.url;
+        const imageUrl = response.data?.url || response.data?.data?.url;
 
         if (!imageUrl) {
-            throw new Error("Upload fail");
+            throw new Error("Upload failed");
         }
 
         progress.value = 100;
-        Swal.fire("Thành công", "Tải ảnh lên thành công.", "success");
+        preview.value = imageUrl;
         emit("uploaded", imageUrl);
         file.value = null;
+
+        if (fileInput.value) {
+            fileInput.value.value = "";
+        }
+
+        Swal.fire("Thành công", "Tải ảnh lên thành công.", "success");
     } catch (error) {
         console.error(error);
         Swal.fire("Thất bại", "Có lỗi xảy ra khi upload ảnh.", "error");
@@ -232,5 +216,16 @@ const upload = async (): Promise<void> => {
             progress.value = 0;
         }, 500);
     }
+};
+
+const processFile = async (selectedFile: File): Promise<void> => {
+    if (!selectedFile.type.startsWith("image/")) {
+        await Swal.fire("Không hợp lệ", "Chỉ được chọn file ảnh.", "warning");
+        return;
+    }
+
+    file.value = selectedFile;
+    preview.value = URL.createObjectURL(selectedFile);
+    await upload();
 };
 </script>

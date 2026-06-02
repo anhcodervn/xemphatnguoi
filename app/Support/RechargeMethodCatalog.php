@@ -79,6 +79,7 @@ class RechargeMethodCatalog
             'bank_name' => $bankAccount?->bank_name ?? $method->bank_name,
             'account_number' => $bankAccount?->account_number ?? $method->account_number,
             'account_name' => $bankAccount?->account_name ?? $method->account_name,
+            'secret_key' => $method->secret_key,
             'minimum_amount' => (float) $method->min_amount,
             'maximum_amount' => (float) $method->max_amount,
             'bonus_percentage' => $method->bonus_percentage,
@@ -89,7 +90,7 @@ class RechargeMethodCatalog
     }
 
     /**
-     * @param array<string, mixed> $method
+     * @param  array<string, mixed>  $method
      * @return array<string, mixed>
      */
     private function mapConfigMethod(string $key, array $method): array
@@ -105,6 +106,7 @@ class RechargeMethodCatalog
             'bank_name' => $method['bank_name'] ?? null,
             'account_number' => $method['account_number'] ?? null,
             'account_name' => $method['account_name'] ?? null,
+            'secret_key' => $method['secret_key'] ?? null,
             'minimum_amount' => (float) config('recharge.minimum_amount', 50_000),
             'maximum_amount' => (float) config('recharge.maximum_amount', 100_000_000),
             'bonus_percentage' => (int) config('recharge.bonus_percentage', 0),
@@ -115,7 +117,7 @@ class RechargeMethodCatalog
     }
 
     /**
-     * @param array<string, mixed> $method
+     * @param  array<string, mixed>  $method
      */
     private function hasDestinationAccount(array $method): bool
     {

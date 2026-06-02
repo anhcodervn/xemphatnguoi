@@ -1,24 +1,60 @@
 <template>
   <div>
-    <div ref="editorContainer"></div>
+    <textarea
+      v-if="useFallback"
+      v-model="fallbackContent"
+      class="min-h-[420px] w-full rounded-[10px] border border-slate-200 bg-white px-4 py-3 text-sm leading-7 text-slate-700 outline-none transition focus:border-slate-900"
+      placeholder="Nhập nội dung HTML hoặc văn bản tại đây..."
+      @input="handleFallbackInput"
+    />
+    <div v-else ref="editorContainer"></div>
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import Swal from "sweetalert2";
-import { ref, onMounted, onBeforeUnmount, watch } from "vue";
+import { onBeforeUnmount, onMounted, ref, watch } from "vue";
+
+type EditorInlineNode = {
+  text?: string;
+  bold?: boolean;
+  italic?: boolean;
+  underline?: boolean;
+  strike?: boolean;
+  color?: string;
+  background?: string;
+};
+
+type EditorContentNode = {
+  type?: string;
+  tag?: string;
+  src?: string;
+  alt?: string;
+  width?: number | null;
+  height?: number | null;
+  ordered?: boolean;
+  level?: number;
+  children?: EditorInlineNode[] | EditorContentNode[];
+  items?: EditorInlineNode[][];
+};
+
+declare global {
+  interface Window {
+    tinymce?: {
+      init: (config: Record<string, unknown>) => void;
+      remove: (editor: unknown) => void;
+    };
+  }
+}
 
 export default {
   name: "TinyMceEditor",
 
   props: {
-    // JSON block từ DB – CHỈ DÙNG ĐỂ INIT
     value: {
       type: Array,
       default: () => [],
     },
-
-    // debounce autosave (ms)
     debounce: {
       type: Number,
       default: 800,
@@ -27,109 +63,97 @@ export default {
 
   emits: ["update:value"],
 
-  setup(props, { emit }) {
-    const editorContainer = ref(null);
-    let editorInstance = null;
+  setup(props: { value: unknown[]; debounce: number }, { emit }: { emit: (event: "update:value", value: EditorContentNode[]) => void }) {
+    const editorContainer = ref<HTMLElement | null>(null);
+    const useFallback = ref(false);
+    const fallbackContent = ref("");
+    let editorInstance: { getContent: () => string; setContent: (value: string) => void; on: (event: string, callback: () => void) => void } | null = null;
     let isApplyingExternalValue = false;
+    let saveTimer: ReturnType<typeof setTimeout> | null = null;
 
-    /* =========================
-     * AUTOSAVE DEBOUNCE
-     * ========================= */
-    let saveTimer = null;
+    const getTinyMce = () =>
+      typeof window !== "undefined" &&
+      window.tinymce &&
+      typeof window.tinymce.init === "function"
+        ? window.tinymce
+        : null;
 
-    const emitDebounced = (json) => {
-      clearTimeout(saveTimer);
+    const emitDebounced = (json: EditorContentNode[]) => {
+      if (saveTimer) {
+        clearTimeout(saveTimer);
+      }
+
       saveTimer = setTimeout(() => {
         emit("update:value", json);
       }, props.debounce);
     };
 
-    const normalizeValue = (value) => (Array.isArray(value) ? value : []);
-    const serializeValue = (value) => JSON.stringify(normalizeValue(value));
+    const normalizeValue = (value: unknown): EditorContentNode[] => (Array.isArray(value) ? (value as EditorContentNode[]) : []);
+    const serializeValue = (value: unknown): string => JSON.stringify(normalizeValue(value));
 
-    /* =========================
-     * HTML -> JSON
-     * ========================= */
-    function htmlToJson(html) {
+    function htmlToJson(html: string): EditorContentNode[] {
       const root = document.createElement("div");
       root.innerHTML = html;
 
       return parseNodes(root);
     }
 
-    function parseNodes(parent) {
-      const nodes = [];
+    function parseNodes(parent: HTMLElement): EditorContentNode[] {
+      const nodes: EditorContentNode[] = [];
 
       parent.childNodes.forEach((node) => {
-        if (node.nodeType !== Node.ELEMENT_NODE) return;
+        if (node.nodeType !== Node.ELEMENT_NODE) {
+          return;
+        }
 
-        const tag = node.tagName.toLowerCase();
+        const element = node as HTMLElement;
+        const tag = element.tagName.toLowerCase();
 
-        /* ===== IMAGE ===== */
         if (tag === "img") {
           nodes.push({
             type: "image",
-            src: node.getAttribute("src"),
-            alt: node.getAttribute("alt") || "",
-            width: node.getAttribute("width")
-              ? Number(node.getAttribute("width"))
-              : null,
-            height: node.getAttribute("height")
-              ? Number(node.getAttribute("height"))
-              : null,
+            src: element.getAttribute("src") ?? "",
+            alt: element.getAttribute("alt") ?? "",
+            width: element.getAttribute("width") ? Number(element.getAttribute("width")) : null,
+            height: element.getAttribute("height") ? Number(element.getAttribute("height")) : null,
           });
           return;
         }
 
-        /* ===== CONTAINER ===== */
         if (["article", "div", "section"].includes(tag)) {
           nodes.push({
             type: "container",
             tag,
-            children: parseNodes(node),
+            children: parseNodes(element),
           });
           return;
         }
 
-        /* ===== BLOCK KHÁC ===== */
-        parseBlock(node, nodes);
+        parseBlock(element, nodes);
       });
 
       return nodes;
     }
 
-    /* ================= BLOCK ================= */
-
-    function parseBlock(node, blocks) {
-      if (node.nodeType !== Node.ELEMENT_NODE) return;
-
+    function parseBlock(node: HTMLElement, blocks: EditorContentNode[]) {
       const tag = node.tagName.toLowerCase();
 
-      /* ===== PARAGRAPH ===== */
       if (tag === "p") {
-        const images = Array.from(node.children).filter(
-          (el) => el.tagName.toLowerCase() === "img"
-        );
+        const images = Array.from(node.children).filter((element) => element.tagName.toLowerCase() === "img");
 
-        // ❗ p chỉ bọc img → KHÔNG tạo paragraph
-        if (images.length && node.textContent.trim() === "") {
-          images.forEach((img) => {
+        if (images.length > 0 && node.textContent?.trim() === "") {
+          images.forEach((image) => {
             blocks.push({
               type: "image",
-              src: img.getAttribute("src"),
-              alt: img.getAttribute("alt") || "",
-              width: img.getAttribute("width")
-                ? Number(img.getAttribute("width"))
-                : null,
-              height: img.getAttribute("height")
-                ? Number(img.getAttribute("height"))
-                : null,
+              src: image.getAttribute("src") ?? "",
+              alt: image.getAttribute("alt") ?? "",
+              width: image.getAttribute("width") ? Number(image.getAttribute("width")) : null,
+              height: image.getAttribute("height") ? Number(image.getAttribute("height")) : null,
             });
           });
           return;
         }
 
-        // p có text → paragraph bình thường
         blocks.push({
           type: "paragraph",
           children: parseInline(node),
@@ -137,7 +161,6 @@ export default {
         return;
       }
 
-      /* ===== HEADING ===== */
       if (/h[1-6]/.test(tag)) {
         blocks.push({
           type: "heading",
@@ -147,90 +170,91 @@ export default {
         return;
       }
 
-      /* ===== IMAGE ĐỘC LẬP ===== */
       if (tag === "img") {
         blocks.push({
           type: "image",
-          src: node.getAttribute("src"),
-          alt: node.getAttribute("alt") || "",
-          width: node.getAttribute("width")
-            ? Number(node.getAttribute("width"))
-            : null,
-          height: node.getAttribute("height")
-            ? Number(node.getAttribute("height"))
-            : null,
+          src: node.getAttribute("src") ?? "",
+          alt: node.getAttribute("alt") ?? "",
+          width: node.getAttribute("width") ? Number(node.getAttribute("width")) : null,
+          height: node.getAttribute("height") ? Number(node.getAttribute("height")) : null,
         });
         return;
       }
 
-      /* ===== LIST ===== */
       if (tag === "ul" || tag === "ol") {
         blocks.push({
           type: "list",
           ordered: tag === "ol",
           items: Array.from(node.children)
-            .filter((li) => li.tagName.toLowerCase() === "li")
-            .map((li) => parseInline(li)),
+            .filter((element) => element.tagName.toLowerCase() === "li")
+            .map((element) => parseInline(element as HTMLElement)),
         });
         return;
       }
 
-      /* ===== WRAPPER ===== */
-      node.childNodes.forEach((child) => parseBlock(child, blocks));
+      node.childNodes.forEach((child) => {
+        if (child.nodeType === Node.ELEMENT_NODE) {
+          parseBlock(child as HTMLElement, blocks);
+        }
+      });
     }
 
-    /* ================= INLINE ================= */
-
-    function parseInline(node, style = {}) {
-      // text node
+    function parseInline(node: Node, style: EditorInlineNode = {}): EditorInlineNode[] {
       if (node.nodeType === Node.TEXT_NODE) {
-        if (!node.textContent?.trim()) return [];
+        if (!node.textContent?.trim()) {
+          return [];
+        }
+
         return [{ text: node.textContent, ...style }];
       }
 
-      if (node.nodeType !== Node.ELEMENT_NODE) return [];
+      if (node.nodeType !== Node.ELEMENT_NODE) {
+        return [];
+      }
 
-      const tag = node.tagName.toLowerCase();
-      const next = { ...style };
+      const element = node as HTMLElement;
+      const tag = element.tagName.toLowerCase();
+      const next: EditorInlineNode = { ...style };
 
       if (tag === "strong" || tag === "b") next.bold = true;
       if (tag === "em" || tag === "i") next.italic = true;
       if (tag === "u") next.underline = true;
       if (tag === "s" || tag === "strike") next.strike = true;
 
-      if (node.style?.color) next.color = node.style.color;
-      if (node.style?.backgroundColor)
-        next.background = node.style.backgroundColor;
+      if (element.style?.color) next.color = element.style.color;
+      if (element.style?.backgroundColor) next.background = element.style.backgroundColor;
 
       if (tag === "br") {
         return [{ text: "\n", ...next }];
       }
 
-      return Array.from(node.childNodes).flatMap((child) =>
-        parseInline(child, next)
-      );
+      return Array.from(element.childNodes).flatMap((child) => parseInline(child, next));
     }
 
-    /* =========================
-     * JSON -> HTML (INIT ONLY)
-     * ========================= */
-    function jsonToHtml(nodes) {
+    function jsonToHtml(nodes: unknown): string {
       if (!Array.isArray(nodes)) {
-        Swal.fire(
-          "",
-          "JsonToHtml không phải json, không tải được bài viết",
-          "error"
-        );
+        void Swal.fire("", "Nội dung không hợp lệ, không thể tải dữ liệu.", "error");
+        return "";
+      }
+
+      return (nodes as EditorContentNode[]).map(renderNode).join("");
+    }
+
+    function applyEditorValue(value: unknown): void {
+      const nextValue = normalizeValue(value);
+      const nextHtml = nextValue.length > 0 ? jsonToHtml(nextValue) : "";
+
+      if (useFallback.value) {
+        if (fallbackContent.value !== nextHtml) {
+          fallbackContent.value = nextHtml;
+        }
         return;
       }
 
-      return nodes.map(renderNode).join("");
-    }
+      if (!editorInstance) {
+        return;
+      }
 
-    function applyEditorValue(value) {
-      if (!editorInstance) return;
-
-      const nextValue = normalizeValue(value);
       const nextSerialized = serializeValue(nextValue);
       const currentSerialized = serializeValue(htmlToJson(editorInstance.getContent()));
 
@@ -239,76 +263,75 @@ export default {
       }
 
       isApplyingExternalValue = true;
-      editorInstance.setContent(nextValue.length ? jsonToHtml(nextValue) : "");
+      editorInstance.setContent(nextHtml);
 
       queueMicrotask(() => {
         isApplyingExternalValue = false;
       });
     }
 
-    function renderNode(node) {
+    function renderNode(node: EditorContentNode): string {
       if (node.type === "container") {
-        const children = Array.isArray(node.children) ? node.children : [];
-        return `<${node.tag}>${children.map(renderNode).join("")}</${
-          node.tag
-        }>`;
+        const children = Array.isArray(node.children) ? (node.children as EditorContentNode[]) : [];
+        return `<${node.tag}>${children.map(renderNode).join("")}</${node.tag}>`;
       }
 
       return renderBlock(node);
     }
 
-    function renderBlock(block) {
+    function renderBlock(block: EditorContentNode): string {
       switch (block.type) {
         case "heading":
-          return `<h${block.level}>${renderInline(block.children)}</h${
-            block.level
-          }>`;
-
+          return `<h${block.level}>${renderInline(block.children as EditorInlineNode[] | undefined)}</h${block.level}>`;
         case "paragraph":
-          return `<p>${renderInline(block.children)}</p>`;
-
+          return `<p>${renderInline(block.children as EditorInlineNode[] | undefined)}</p>`;
         case "image":
-          return `<img src="${block.src}" alt="${block.alt || ""}" />`;
-
+          return `<img src="${block.src}" alt="${block.alt ?? ""}" />`;
         case "list": {
           const tag = block.ordered ? "ol" : "ul";
-          return `<${tag}>${block.items
-            .map((li) => `<li>${renderInline(li)}</li>`)
+          return `<${tag}>${(block.items ?? [])
+            .map((item) => `<li>${renderInline(item)}</li>`)
             .join("")}</${tag}>`;
         }
-
         default:
           return "";
       }
     }
 
-    function renderInline(children = []) {
+    function renderInline(children: EditorInlineNode[] = []): string {
       return children
-        .map((t) => {
-          let text = t.text || "";
+        .map((item) => {
+          let text = item.text ?? "";
 
-          if (t.bold) text = `<strong>${text}</strong>`;
-          if (t.italic) text = `<em>${text}</em>`;
-          if (t.underline) text = `<u>${text}</u>`;
-          if (t.strike) text = `<s>${text}</s>`;
+          if (item.bold) text = `<strong>${text}</strong>`;
+          if (item.italic) text = `<em>${text}</em>`;
+          if (item.underline) text = `<u>${text}</u>`;
+          if (item.strike) text = `<s>${text}</s>`;
 
           let style = "";
-          if (t.color) style += `color:${t.color};`;
-          if (t.background) style += `background-color:${t.background};`;
+          if (item.color) style += `color:${item.color};`;
+          if (item.background) style += `background-color:${item.background};`;
 
           return style ? `<span style="${style}">${text}</span>` : text;
         })
         .join("");
     }
 
-    /* =========================
-     * INIT TINYMCE (GIỮ CONFIG CŨ)
-     * ========================= */
-    onMounted(() => {
-      window.tinymce.init({
-        target: editorContainer.value,
+    function handleFallbackInput(): void {
+      emitDebounced(htmlToJson(fallbackContent.value));
+    }
 
-        // ===== GIỮ NGUYÊN CONFIG CỦA BẠN =====
+    onMounted(() => {
+      const tinymce = getTinyMce();
+
+      if (!tinymce) {
+        useFallback.value = true;
+        fallbackContent.value = jsonToHtml(props.value);
+        return;
+      }
+
+      tinymce.init({
+        target: editorContainer.value,
         language: "vi",
         language_url: "/assets/libs/tinymce/langs/vi.js",
         height: 500,
@@ -324,8 +347,7 @@ export default {
           "undo redo | formatselect | fontselect fontsizeselect | bold italic underline strikethrough | forecolor backcolor",
           "alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image emoticons | table | code fullscreen preview | removeformat",
         ],
-
-        setup(editor) {
+        setup(editor: typeof editorInstance) {
           editorInstance = editor;
 
           editor.on("change keyup undo redo", () => {
@@ -333,51 +355,25 @@ export default {
               return;
             }
 
-            const html = editor.getContent();
-            const json = htmlToJson(html);
-            emitDebounced(json);
+            emitDebounced(htmlToJson(editor.getContent()));
           });
         },
-
-        init_instance_callback(editor) {
+        init_instance_callback(editor: typeof editorInstance) {
           if (props.value?.length) {
-            editor.setContent(jsonToHtml(props.value));
+            editor?.setContent(jsonToHtml(props.value));
           }
         },
       });
     });
 
-    async function handlePasteImage(file, editor) {
-      console.log("handle Image: "+file+editor);
-      // 1. validate
-      if (!file || !file.type.startsWith("image/")) return;
-
-      // 2. nén ảnh (optional)
-      // compressImage(file)
-
-      // 3. upload
-      const form = new FormData();
-      form.append("file", file);
-
-      const res = await fetch("/api/upload-image", {
-        method: "POST",
-        body: form,
-      });
-
-      const { url } = await res.json();
-
-      // 4. insert lại ảnh sạch
-      editor.insertContent(`<img src="${url}" />`);
-    }
-
-    /* =========================
-     * CLEANUP
-     * ========================= */
     onBeforeUnmount(() => {
-      clearTimeout(saveTimer);
+      if (saveTimer) {
+        clearTimeout(saveTimer);
+      }
 
-      if (editorInstance) {
-        window.tinymce.remove(editorInstance);
+      const tinymce = getTinyMce();
+      if (editorInstance && tinymce) {
+        tinymce.remove(editorInstance);
         editorInstance = null;
       }
     });
@@ -387,11 +383,14 @@ export default {
       (value) => {
         applyEditorValue(value);
       },
-      { deep: true },
+      { deep: true }
     );
 
     return {
       editorContainer,
+      fallbackContent,
+      handleFallbackInput,
+      useFallback,
     };
   },
 };

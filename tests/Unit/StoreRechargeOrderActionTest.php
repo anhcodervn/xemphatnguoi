@@ -60,6 +60,7 @@ beforeEach(function () {
         $table->string('bank_name')->nullable();
         $table->string('account_number')->nullable();
         $table->string('account_name')->nullable();
+        $table->string('secret_key')->nullable();
         $table->decimal('min_amount', 16, 2)->default(0);
         $table->decimal('max_amount', 16, 2)->default(0);
         $table->unsignedInteger('bonus_percentage')->default(0);
@@ -139,10 +140,10 @@ test('store recharge order action builds default vietqr url for config methods',
         );
 });
 
-test('store recharge order action uses custom qr template from recharge method metadata', function () {
+test('store recharge order action uses custom qr template from recharge method metadata and keeps secret server side', function () {
     $user = createRechargeUser();
 
-    RechargeMethod::query()->create([
+    $method = RechargeMethod::query()->create([
         'code' => 'mb-bank',
         'name' => 'MB Bank',
         'description' => 'Nạp tự động',
@@ -151,6 +152,7 @@ test('store recharge order action uses custom qr template from recharge method m
         'bank_name' => 'MB',
         'account_number' => '88079999999',
         'account_name' => 'NGUYEN TUAN ANH',
+        'secret_key' => 'mb-secret-key',
         'min_amount' => 10000,
         'max_amount' => 100000000,
         'bonus_percentage' => 0,
@@ -168,10 +170,16 @@ test('store recharge order action uses custom qr template from recharge method m
         'amount' => 150000,
     ]);
 
-    expect(data_get($order->metadata, 'qr_url'))->toBe(
-        sprintf(
-            'https://example.test/qr/mb-bank/88079999999?content=%s&money=150000',
-            urlencode($order->order_code),
-        ),
-    );
+    $catalogMethod = (new RechargeMethodCatalog)->find('mb-bank');
+
+    expect($method->secret_key)->toBe('mb-secret-key')
+        ->and($catalogMethod)->not->toBeNull()
+        ->and($catalogMethod['secret_key'])->toBe('mb-secret-key')
+        ->and(data_get($order->metadata, 'secret_key'))->toBeNull()
+        ->and(data_get($order->metadata, 'qr_url'))->toBe(
+            sprintf(
+                'https://example.test/qr/mb-bank/88079999999?content=%s&money=150000',
+                urlencode($order->order_code),
+            ),
+        );
 });

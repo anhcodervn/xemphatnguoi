@@ -993,6 +993,7 @@ const loadAccount = async (): Promise<void> => {
     } catch (error) {
         account.value = null;
         handleErrorResponse(error);
+        await router.push({ name: 'client.bank-manager' });
     } finally {
         isLoadingAccount.value = false;
     }

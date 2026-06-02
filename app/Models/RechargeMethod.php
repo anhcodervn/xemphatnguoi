@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Database\Factories\RechargeMethodFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -9,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class RechargeMethod extends Model
 {
-    /** @use HasFactory<\Database\Factories\RechargeMethodFactory> */
+    /** @use HasFactory<RechargeMethodFactory> */
     use HasFactory;
 
     protected $fillable = [
@@ -21,6 +22,7 @@ class RechargeMethod extends Model
         'bank_name',
         'account_number',
         'account_name',
+        'secret_key',
         'min_amount',
         'max_amount',
         'bonus_percentage',

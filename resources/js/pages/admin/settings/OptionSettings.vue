@@ -7,8 +7,8 @@
                 <div>
                     <h2 class="text-base font-semibold text-slate-900">Nội dung option toàn website</h2>
                     <p class="text-sm text-slate-500">
-                        `recharge_syntax` sẽ được dùng để ghép nội dung nạp theo mẫu <code v-pre>{{ recharge_syntax }}{{ user.id }}</code
-                        >.
+                        <code>recharge_syntax</code> sẽ được dùng để ghép nội dung nạp theo mẫu
+                        <code v-pre>{{ recharge_syntax }}{{ user.id }}</code>.
                     </p>
                 </div>
 
@@ -17,7 +17,7 @@
                     :disabled="isSaving || !isRootDomain"
                     @click="submitForm"
                 >
-                    {{ !isRootDomain ? 'Chỉ main domain được chỉnh sửa' : isSaving ? 'Đang lưu' : 'Lưu cấu hình option' }}
+                    {{ !isRootDomain ? "Chỉ main domain được chỉnh sửa" : isSaving ? "Đang lưu" : "Lưu cấu hình option" }}
                 </button>
             </div>
 
@@ -44,7 +44,8 @@
                                         class="w-full rounded-[10px] border border-slate-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-slate-900"
                                     />
                                     <p class="text-xs text-slate-500">
-                                        Ví dụ hiển thị: <span class="font-semibold text-slate-900">{{ rechargeSyntaxPreview }}</span>
+                                        Ví dụ hiển thị:
+                                        <span class="font-semibold text-slate-900">{{ rechargeSyntaxPreview }}</span>
                                     </p>
                                 </div>
                             </div>
@@ -111,19 +112,20 @@
 </template>
 
 <script setup lang="ts">
-import Breadcrumb from '@/components/MasterLayouts/Breadcrumb/index.vue';
-import Editor from '@/components/shared/Editor/index.vue';
-import { adminSettingService } from '@/services/admin-setting.service';
-import type { OptionSettingType } from '@/types/setting.type';
-import { handleErrorResponse, handleSuccessResponse } from '@/utils/response';
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from "vue";
+import Breadcrumb from "@/components/MasterLayouts/Breadcrumb/index.vue";
+import Editor from "@/components/shared/Editor/index.vue";
+import { adminSettingService } from "@/services/admin-setting.service";
+import type { OptionSettingType } from "@/types/setting.type";
+import { uploadEditorImages } from "@/utils/editor-image-upload";
+import { handleErrorResponse, handleSuccessResponse } from "@/utils/response";
 
-type OptionTabKey = 'terms_of_use' | 'privacy_policy' | 'refund_policy';
+type OptionTabKey = "terms_of_use" | "privacy_policy" | "refund_policy";
 
 const isSaving = ref(false);
 const isRootDomain = ref(Boolean((window as Window & { APP_IS_ROOT_DOMAIN?: boolean }).APP_IS_ROOT_DOMAIN));
 const editorKey = ref(0);
-const activeTab = ref<OptionTabKey>('terms_of_use');
+const activeTab = ref<OptionTabKey>("terms_of_use");
 
 const tabs: Array<{
     key: OptionTabKey;
@@ -133,25 +135,25 @@ const tabs: Array<{
     help: string;
 }> = [
     {
-        key: 'terms_of_use',
-        label: 'Điều khoản sử dụng',
-        shortLabel: 'Điều khoản',
-        description: 'Quy định chung khi người dùng truy cập và sử dụng website.',
-        help: 'Mô tả điều kiện sử dụng, trách nhiệm người dùng và phạm vi áp dụng dịch vụ.',
+        key: "terms_of_use",
+        label: "Điều khoản sử dụng",
+        shortLabel: "Điều khoản",
+        description: "Quy định chung khi người dùng truy cập và sử dụng website.",
+        help: "Mô tả điều kiện sử dụng, trách nhiệm người dùng và phạm vi áp dụng dịch vụ.",
     },
     {
-        key: 'privacy_policy',
-        label: 'Chính sách bảo mật',
-        shortLabel: 'Bảo mật',
-        description: 'Cam kết xử lý, lưu trữ và bảo vệ dữ liệu người dùng.',
-        help: 'Trình bày cách thu thập dữ liệu, mục đích sử dụng và quyền riêng tư.',
+        key: "privacy_policy",
+        label: "Chính sách bảo mật",
+        shortLabel: "Bảo mật",
+        description: "Cam kết xử lý, lưu trữ và bảo vệ dữ liệu người dùng.",
+        help: "Trình bày cách thu thập dữ liệu, mục đích sử dụng và quyền riêng tư.",
     },
     {
-        key: 'refund_policy',
-        label: 'Chính sách hoàn tiền',
-        shortLabel: 'Hoàn tiền',
-        description: 'Điều kiện, phạm vi và quy trình hoàn tiền cho khách hàng.',
-        help: 'Nêu rõ trường hợp được hoàn tiền, thời gian xử lý và các ngoại lệ.',
+        key: "refund_policy",
+        label: "Chính sách hoàn tiền",
+        shortLabel: "Hoàn tiền",
+        description: "Điều kiện, phạm vi và quy trình hoàn tiền cho khách hàng.",
+        help: "Nêu rõ trường hợp được hoàn tiền, thời gian xử lý và các ngoại lệ.",
     },
 ];
 
@@ -159,11 +161,11 @@ const formData = ref<OptionSettingType>({
     terms_of_use: [],
     privacy_policy: [],
     refund_policy: [],
-    recharge_syntax: 'NAP',
+    recharge_syntax: "NAP",
 });
 
 const activeConfig = computed(() => tabs.find((item) => item.key === activeTab.value) ?? tabs[0]);
-const rechargeSyntaxPreview = computed(() => `${(formData.value.recharge_syntax || 'NAP').trim() || 'NAP'}1801`);
+const rechargeSyntaxPreview = computed(() => `${(formData.value.recharge_syntax || "NAP").trim() || "NAP"}1801`);
 
 const loadData = async (): Promise<void> => {
     try {
@@ -172,7 +174,7 @@ const loadData = async (): Promise<void> => {
             terms_of_use: Array.isArray(data.settings.terms_of_use) ? data.settings.terms_of_use : [],
             privacy_policy: Array.isArray(data.settings.privacy_policy) ? data.settings.privacy_policy : [],
             refund_policy: Array.isArray(data.settings.refund_policy) ? data.settings.refund_policy : [],
-            recharge_syntax: typeof data.settings.recharge_syntax === 'string' ? data.settings.recharge_syntax : 'NAP',
+            recharge_syntax: typeof data.settings.recharge_syntax === "string" ? data.settings.recharge_syntax : "NAP",
         };
         editorKey.value += 1;
     } catch (err) {
@@ -197,6 +199,9 @@ const submitForm = async (): Promise<void> => {
 
         const res = await adminSettingService.updateOptions({
             ...formData.value,
+            terms_of_use: await uploadEditorImages(formData.value.terms_of_use),
+            privacy_policy: await uploadEditorImages(formData.value.privacy_policy),
+            refund_policy: await uploadEditorImages(formData.value.refund_policy),
             recharge_syntax: formData.value.recharge_syntax.trim(),
         });
 
@@ -204,11 +209,11 @@ const submitForm = async (): Promise<void> => {
             terms_of_use: Array.isArray(res.settings.terms_of_use) ? res.settings.terms_of_use : [],
             privacy_policy: Array.isArray(res.settings.privacy_policy) ? res.settings.privacy_policy : [],
             refund_policy: Array.isArray(res.settings.refund_policy) ? res.settings.refund_policy : [],
-            recharge_syntax: typeof res.settings.recharge_syntax === 'string' ? res.settings.recharge_syntax : 'NAP',
+            recharge_syntax: typeof res.settings.recharge_syntax === "string" ? res.settings.recharge_syntax : "NAP",
         };
 
         editorKey.value += 1;
-        handleSuccessResponse({ data: { status: true, message: 'Cập nhật cấu hình option thành công' } });
+        handleSuccessResponse({ data: { status: true, message: "Cập nhật cấu hình option thành công" } });
     } catch (err) {
         handleErrorResponse(err);
     } finally {

@@ -4,8 +4,29 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
+        @php
+            $authSettings = \App\Models\Setting::query()
+                ->whereIn('key', ['site_name', 'favicon'])
+                ->pluck('value', 'key');
 
-        <title>@yield('title', 'Xác thực') - {{ config('app.name', 'Laravel') }}</title>
+            $siteName = $authSettings->get('site_name', config('app.name', 'Laravel'));
+            $favicon = $authSettings->get('favicon');
+            $routeTitle = match (\Illuminate\Support\Facades\Route::currentRouteName()) {
+                'auth.login', 'login' => 'Đăng nhập',
+                'auth.register' => 'Đăng ký',
+                'password.request' => 'Quên mật khẩu',
+                'password.reset' => 'Đặt lại mật khẩu',
+                default => trim($__env->yieldContent('title')) ?: 'Xác thực',
+            };
+        @endphp
+
+        <title>{{ $routeTitle }} - {{ $siteName }}</title>
+
+        @if (! empty($favicon))
+            <link rel="icon" href="{{ $favicon }}">
+            <link rel="shortcut icon" href="{{ $favicon }}">
+            <link rel="apple-touch-icon" href="{{ $favicon }}">
+        @endif
 
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=ibm-plex-sans:400,500,600,700|space-grotesk:500,600,700" rel="stylesheet" />
@@ -22,7 +43,7 @@
                     </div>
                     <div class="min-w-0">
                         <div class="truncate font-['Space_Grotesk',sans-serif] text-sm font-semibold tracking-tight text-slate-950 sm:text-base">
-                            {{ \App\Models\Setting::where('key', 'site_name')->first()->value ?? "" }}
+                            {{ $siteName }}
                         </div>
                         <div class="text-[11px] uppercase tracking-[0.22em] text-sky-700">
                             @yield('eyebrow', 'Auth Portal')

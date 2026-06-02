@@ -29,6 +29,7 @@ class UpdateRechargeMethodRequest extends FormRequest
             'bank_name' => ['nullable', 'string', 'max:255'],
             'account_number' => ['nullable', 'string', 'max:255'],
             'account_name' => ['nullable', 'string', 'max:255'],
+            'secret_key' => ['nullable', 'string', 'max:255'],
             'min_amount' => ['required', 'numeric', 'min:0'],
             'max_amount' => ['required', 'numeric', 'gt:min_amount'],
             'bonus_percentage' => ['required', 'integer', 'min:0', 'max:100'],

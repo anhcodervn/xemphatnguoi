@@ -9,7 +9,8 @@ export interface SystemSettingType {
     site_description: string;
     site_active: boolean;
     allow_register: boolean;
-    logo: string;
+    light_logo: string;
+    dark_logo: string;
     favicon: string;
     og_image: string;
     color_primary?: string;
@@ -28,9 +29,6 @@ export interface SystemSettingType {
     meta_pixel_id: string;
     custom_script: string;
     recharge_syntax: string;
-    terms_of_use: unknown[];
-    privacy_policy: unknown[];
-    refund_policy: unknown[];
     [key: string]: unknown;
 }
 
@@ -44,7 +42,8 @@ export interface GeneralSettingType {
 }
 
 export interface BrandingSettingType {
-    logo: string;
+    light_logo: string;
+    dark_logo: string;
     favicon: string;
     og_image: string;
     color_primary: string;
@@ -108,9 +107,101 @@ export interface SeoSettingType {
 }
 
 export interface OptionSettingType {
+    recharge_syntax: string;
     terms_of_use: unknown[];
     privacy_policy: unknown[];
     refund_policy: unknown[];
-    recharge_syntax: string;
     [key: string]: unknown;
 }
+
+export type ContentPageBaseKey =
+    | "contact_page"
+    | "terms_page"
+    | "faq_page"
+    | "privacy_page"
+    | "about_page"
+    | "refund_policy"
+    | "payment_policy"
+    | "api_usage_policy"
+    | "disclaimer"
+    | "system_status"
+    | "system_updates";
+
+export type ContentPageContentKey = `${ContentPageBaseKey}_content`;
+export type ContentPageTitleKey = `${ContentPageBaseKey}_title`;
+export type ContentPageExcerptKey = `${ContentPageBaseKey}_excerpt`;
+export type ContentPageSeoTitleKey = `${ContentPageBaseKey}_seo_title`;
+export type ContentPageSeoDescriptionKey = `${ContentPageBaseKey}_seo_description`;
+export type ContentPagePublishedKey = `${ContentPageBaseKey}_is_published`;
+
+export interface ContentPageSettingsType {
+    contact_page_title: string;
+    contact_page_excerpt: string;
+    contact_page_content: unknown[];
+    contact_page_seo_title: string;
+    contact_page_seo_description: string;
+    contact_page_is_published: boolean;
+    terms_page_title: string;
+    terms_page_excerpt: string;
+    terms_page_content: unknown[];
+    terms_page_seo_title: string;
+    terms_page_seo_description: string;
+    terms_page_is_published: boolean;
+    faq_page_title: string;
+    faq_page_excerpt: string;
+    faq_page_content: unknown[];
+    faq_page_seo_title: string;
+    faq_page_seo_description: string;
+    faq_page_is_published: boolean;
+    privacy_page_title: string;
+    privacy_page_excerpt: string;
+    privacy_page_content: unknown[];
+    privacy_page_seo_title: string;
+    privacy_page_seo_description: string;
+    privacy_page_is_published: boolean;
+    about_page_title: string;
+    about_page_excerpt: string;
+    about_page_content: unknown[];
+    about_page_seo_title: string;
+    about_page_seo_description: string;
+    about_page_is_published: boolean;
+    refund_policy_title: string;
+    refund_policy_excerpt: string;
+    refund_policy_content: unknown[];
+    refund_policy_seo_title: string;
+    refund_policy_seo_description: string;
+    refund_policy_is_published: boolean;
+    payment_policy_title: string;
+    payment_policy_excerpt: string;
+    payment_policy_content: unknown[];
+    payment_policy_seo_title: string;
+    payment_policy_seo_description: string;
+    payment_policy_is_published: boolean;
+    api_usage_policy_title: string;
+    api_usage_policy_excerpt: string;
+    api_usage_policy_content: unknown[];
+    api_usage_policy_seo_title: string;
+    api_usage_policy_seo_description: string;
+    api_usage_policy_is_published: boolean;
+    disclaimer_title: string;
+    disclaimer_excerpt: string;
+    disclaimer_content: unknown[];
+    disclaimer_seo_title: string;
+    disclaimer_seo_description: string;
+    disclaimer_is_published: boolean;
+    system_status_title: string;
+    system_status_excerpt: string;
+    system_status_content: unknown[];
+    system_status_seo_title: string;
+    system_status_seo_description: string;
+    system_status_is_published: boolean;
+    system_updates_title: string;
+    system_updates_excerpt: string;
+    system_updates_content: unknown[];
+    system_updates_seo_title: string;
+    system_updates_seo_description: string;
+    system_updates_is_published: boolean;
+    [key: string]: unknown;
+}
+
+export type ContentPageTabKey = ContentPageBaseKey;

@@ -1,39 +1,48 @@
 <script setup lang="ts">
-import Breadcrumb from '@/components/MasterLayouts/Breadcrumb/index.vue';
-import Editor from '@/components/shared/Editor/index.vue';
-import UploadImage from '@/components/shared/UpladImage/index.vue';
-import { adminSettingService } from '@/services/admin-setting.service';
+import Breadcrumb from "@/components/MasterLayouts/Breadcrumb/index.vue";
+import UploadImage from "@/components/shared/UpladImage/index.vue";
+import { adminSettingService } from "@/services/admin-setting.service";
 import type {
     BrandingSettingType,
     ContactSettingType,
     GeneralSettingType,
     OptionSettingType,
     SeoSettingType,
-} from '@/types/setting.type';
-import { handleErrorResponse, handleSuccessResponse } from '@/utils/response';
-import { computed, onMounted, ref } from 'vue';
+} from "@/types/setting.type";
+import { handleErrorResponse, handleSuccessResponse } from "@/utils/response";
+import { computed, onMounted, ref } from "vue";
 
-type TabKey = 'general' | 'branding' | 'contact' | 'seo' | 'options';
-type PolicyKey = 'terms_of_use' | 'privacy_policy' | 'refund_policy';
+type TabKey = "general" | "branding" | "contact" | "seo" | "options";
 
 const tabs: Array<{ key: TabKey; label: string; description: string }> = [
-    { key: 'general', label: 'Tổng quan', description: 'Tên website, domain và trạng thái vận hành.' },
-    { key: 'branding', label: 'Nhận diện', description: 'Logo, favicon, màu sắc và ảnh chia sẻ.' },
-    { key: 'contact', label: 'Liên hệ', description: 'Thông tin hỗ trợ và liên kết mạng xã hội.' },
-    { key: 'seo', label: 'SEO & chia sẻ', description: 'Metadata, tracking và nội dung hiển thị khi share.' },
-    { key: 'options', label: 'Chính sách', description: 'Cú pháp nạp và nội dung chính sách mặc định.' },
+    {
+        key: "general",
+        label: "Tổng quan",
+        description: "Tên hệ thống, domain và trạng thái vận hành.",
+    },
+    {
+        key: "branding",
+        label: "Nhận diện",
+        description: "Logo sáng/tối, favicon, màu sắc và ảnh chia sẻ.",
+    },
+    {
+        key: "contact",
+        label: "Liên hệ",
+        description: "Các kênh hỗ trợ hiển thị trên website.",
+    },
+    {
+        key: "seo",
+        label: "SEO & chia sẻ",
+        description: "Metadata, robots và script đo lường.",
+    },
+    {
+        key: "options",
+        label: "Nạp tiền",
+        description: "Cấu hình cú pháp chuyển khoản mặc định.",
+    },
 ];
 
-const policyTabs: Array<{ key: PolicyKey; label: string }> = [
-    { key: 'terms_of_use', label: 'Điều khoản sử dụng' },
-    { key: 'privacy_policy', label: 'Chính sách bảo mật' },
-    { key: 'refund_policy', label: 'Chính sách hoàn tiền' },
-];
-
-const activeTab = ref<TabKey>('general');
-const activePolicyTab = ref<PolicyKey>('terms_of_use');
-const editorKey = ref(0);
-
+const activeTab = ref<TabKey>("general");
 const loading = ref(true);
 const saving = ref<Record<TabKey, boolean>>({
     general: false,
@@ -44,53 +53,59 @@ const saving = ref<Record<TabKey, boolean>>({
 });
 
 const generalForm = ref<GeneralSettingType>({
-    site_name: '',
-    site_domain: '',
-    site_description: '',
+    site_name: "",
+    site_domain: "",
+    site_description: "",
     site_active: true,
     allow_register: false,
 });
 
 const brandingForm = ref<BrandingSettingType>({
-    logo: '',
-    favicon: '',
-    og_image: '',
-    color_primary: '#0F172A',
-    color_accent: '#2563EB',
-    color_surface: '#F8FAFC',
+    light_logo: "",
+    dark_logo: "",
+    favicon: "",
+    og_image: "",
+    color_primary: "#0F172A",
+    color_accent: "#2563EB",
+    color_surface: "#F8FAFC",
 });
 
 const contactForm = ref<ContactSettingType>({
-    hotline: '',
-    support_email: '',
-    address: '',
-    facebook: '',
-    zalo: '',
-    youtube: '',
+    hotline: "",
+    support_email: "",
+    address: "",
+    facebook: "",
+    zalo: "",
+    youtube: "",
 });
 
 const seoForm = ref<SeoSettingType>({
-    meta_title: '',
-    meta_description: '',
-    robots: 'index,follow',
-    gtm_id: '',
-    meta_pixel_id: '',
-    custom_script: '',
+    meta_title: "",
+    meta_description: "",
+    robots: "index,follow",
+    gtm_id: "",
+    meta_pixel_id: "",
+    custom_script: "",
 });
 
 const optionForm = ref<OptionSettingType>({
-    terms_of_use: [],
-    privacy_policy: [],
-    refund_policy: [],
-    recharge_syntax: 'NAP',
+    recharge_syntax: "NAP",
 });
 
 const currentTab = computed(() => tabs.find((tab) => tab.key === activeTab.value) ?? tabs[0]);
-const currentPolicyTab = computed(() => policyTabs.find((tab) => tab.key === activePolicyTab.value) ?? policyTabs[0]);
 const siteDomainPreview = computed(() => generalForm.value.site_domain?.trim() || window.location.origin);
-const shareTitlePreview = computed(() => seoForm.value.meta_title?.trim() || generalForm.value.site_name?.trim() || 'Tiêu đề website');
-const shareDescriptionPreview = computed(() => seoForm.value.meta_description?.trim() || generalForm.value.site_description?.trim() || 'Mô tả website sẽ hiển thị ở đây.');
-const rechargeSyntaxPreview = computed(() => `${(optionForm.value.recharge_syntax || 'NAP').trim() || 'NAP'}1801`);
+const shareTitlePreview = computed(
+    () => seoForm.value.meta_title?.trim() || generalForm.value.site_name?.trim() || "Tiêu đề website",
+);
+const shareDescriptionPreview = computed(
+    () =>
+        seoForm.value.meta_description?.trim() ||
+        generalForm.value.site_description?.trim() ||
+        "Mô tả website sẽ hiển thị ở đây.",
+);
+const rechargeSyntaxPreview = computed(
+    () => `${(optionForm.value.recharge_syntax || "NAP").trim() || "NAP"}1801`,
+);
 
 const loadData = async (): Promise<void> => {
     try {
@@ -105,21 +120,10 @@ const loadData = async (): Promise<void> => {
         ]);
 
         generalForm.value = { ...generalForm.value, ...general.settings };
-        brandingForm.value = {
-            ...brandingForm.value,
-            ...branding.settings,
-        };
+        brandingForm.value = { ...brandingForm.value, ...branding.settings };
         contactForm.value = { ...contactForm.value, ...contact.settings };
         seoForm.value = { ...seoForm.value, ...seo.settings };
-        optionForm.value = {
-            ...optionForm.value,
-            ...options.settings,
-            terms_of_use: Array.isArray(options.settings.terms_of_use) ? options.settings.terms_of_use : [],
-            privacy_policy: Array.isArray(options.settings.privacy_policy) ? options.settings.privacy_policy : [],
-            refund_policy: Array.isArray(options.settings.refund_policy) ? options.settings.refund_policy : [],
-        };
-
-        editorKey.value += 1;
+        optionForm.value = { ...optionForm.value, ...options.settings };
     } catch (error) {
         handleErrorResponse(error);
     } finally {
@@ -139,62 +143,45 @@ const withSaving = async (tab: TabKey, callback: () => Promise<void>): Promise<v
 };
 
 const saveGeneral = async (): Promise<void> => {
-    await withSaving('general', async () => {
+    await withSaving("general", async () => {
         const response = await adminSettingService.updateGeneral(generalForm.value);
         generalForm.value = { ...generalForm.value, ...response.settings };
-        handleSuccessResponse({ data: { status: true, message: 'Đã cập nhật thông tin tổng quan.' } });
+        handleSuccessResponse({ data: { status: true, message: "Đã cập nhật cấu hình tổng quan." } });
     });
 };
 
 const saveBranding = async (): Promise<void> => {
-    await withSaving('branding', async () => {
+    await withSaving("branding", async () => {
         const response = await adminSettingService.updateBranding(brandingForm.value);
         brandingForm.value = { ...brandingForm.value, ...response.settings };
-        handleSuccessResponse({ data: { status: true, message: 'Đã cập nhật nhận diện thương hiệu.' } });
+        handleSuccessResponse({ data: { status: true, message: "Đã cập nhật nhận diện thương hiệu." } });
     });
 };
 
 const saveContact = async (): Promise<void> => {
-    await withSaving('contact', async () => {
+    await withSaving("contact", async () => {
         const response = await adminSettingService.updateContact(contactForm.value);
         contactForm.value = { ...contactForm.value, ...response.settings };
-        handleSuccessResponse({ data: { status: true, message: 'Đã cập nhật thông tin liên hệ.' } });
+        handleSuccessResponse({ data: { status: true, message: "Đã cập nhật thông tin liên hệ." } });
     });
 };
 
 const saveSeo = async (): Promise<void> => {
-    await withSaving('seo', async () => {
+    await withSaving("seo", async () => {
         const response = await adminSettingService.updateSeo(seoForm.value);
         seoForm.value = { ...seoForm.value, ...response.settings };
-        handleSuccessResponse({ data: { status: true, message: 'Đã cập nhật cấu hình SEO và chia sẻ.' } });
+        handleSuccessResponse({ data: { status: true, message: "Đã cập nhật cấu hình SEO." } });
     });
 };
 
 const saveOptions = async (): Promise<void> => {
-    await withSaving('options', async () => {
+    await withSaving("options", async () => {
         const response = await adminSettingService.updateOptions({
-            ...optionForm.value,
-            recharge_syntax: optionForm.value.recharge_syntax.trim() || 'NAP',
+            recharge_syntax: optionForm.value.recharge_syntax.trim() || "NAP",
         });
-
-        optionForm.value = {
-            ...optionForm.value,
-            ...response.settings,
-            terms_of_use: Array.isArray(response.settings.terms_of_use) ? response.settings.terms_of_use : [],
-            privacy_policy: Array.isArray(response.settings.privacy_policy) ? response.settings.privacy_policy : [],
-            refund_policy: Array.isArray(response.settings.refund_policy) ? response.settings.refund_policy : [],
-        };
-
-        editorKey.value += 1;
-        handleSuccessResponse({ data: { status: true, message: 'Đã cập nhật cú pháp nạp và chính sách.' } });
+        optionForm.value = { ...optionForm.value, ...response.settings };
+        handleSuccessResponse({ data: { status: true, message: "Đã cập nhật cấu hình nạp tiền." } });
     });
-};
-
-const updatePolicyContent = (field: PolicyKey, value: unknown[]): void => {
-    optionForm.value = {
-        ...optionForm.value,
-        [field]: Array.isArray(value) ? value : [],
-    };
 };
 
 onMounted(async () => {
@@ -204,7 +191,10 @@ onMounted(async () => {
 
 <template>
     <div class="space-y-4">
-        <Breadcrumb title="Cài đặt hệ thống" description="Quản lý cấu hình website, nhận diện thương hiệu và nội dung hiển thị công khai." />
+        <Breadcrumb
+            title="Cấu hình chung"
+            description="Quản lý thông tin vận hành, nhận diện thương hiệu, SEO và cú pháp nạp tiền của hệ thống."
+        />
 
         <section class="overflow-hidden rounded-[10px] border border-slate-200 bg-white shadow-sm">
             <div class="border-b border-slate-200 px-4 py-4">
@@ -240,60 +230,79 @@ onMounted(async () => {
 
             <div v-else class="p-4">
                 <div v-show="activeTab === 'general'" class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
-                    <div class="space-y-4">
-                        <article class="rounded-[10px] border border-slate-200 bg-white p-4">
-                            <div class="mb-4 flex items-start justify-between gap-3">
-                                <div>
-                                    <h3 class="text-sm font-semibold text-slate-900">Thông tin vận hành</h3>
-                                    <p class="text-sm text-slate-500">Tên hiển thị, domain chính và mô tả ngắn của website.</p>
-                                </div>
-
-                                <button
-                                    type="button"
-                                    class="rounded-[10px] bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:opacity-60"
-                                    :disabled="saving.general"
-                                    @click="saveGeneral"
-                                >
-                                    {{ saving.general ? 'Đang lưu...' : 'Lưu tổng quan' }}
-                                </button>
+                    <article class="rounded-[10px] border border-slate-200 bg-white p-4">
+                        <div class="mb-4 flex items-start justify-between gap-3">
+                            <div>
+                                <h3 class="text-sm font-semibold text-slate-900">Thông tin vận hành</h3>
+                                <p class="text-sm text-slate-500">Tên hiển thị, domain chính và trạng thái hệ thống.</p>
                             </div>
 
-                            <div class="grid gap-3 md:grid-cols-2">
-                                <label class="space-y-1 md:col-span-2">
-                                    <span class="text-xs font-semibold text-slate-600">Tên website</span>
-                                    <input v-model="generalForm.site_name" type="text" class="w-full rounded-[10px] border border-slate-200 px-3 py-2 text-sm outline-none focus:border-indigo-400" />
-                                </label>
+                            <button
+                                type="button"
+                                class="rounded-[10px] bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:opacity-60"
+                                :disabled="saving.general"
+                                @click="saveGeneral"
+                            >
+                                {{ saving.general ? "Đang lưu..." : "Lưu tổng quan" }}
+                            </button>
+                        </div>
 
-                                <label class="space-y-1">
-                                    <span class="text-xs font-semibold text-slate-600">Domain</span>
-                                    <input v-model="generalForm.site_domain" type="text" class="w-full rounded-[10px] border border-slate-200 px-3 py-2 text-sm outline-none focus:border-indigo-400" placeholder="https://domain-cua-ban.com" />
-                                </label>
+                        <div class="grid gap-3 md:grid-cols-2">
+                            <label class="space-y-1 md:col-span-2">
+                                <span class="text-xs font-semibold text-slate-600">Tên website</span>
+                                <input
+                                    v-model="generalForm.site_name"
+                                    type="text"
+                                    class="w-full rounded-[10px] border border-slate-200 px-3 py-2 text-sm outline-none focus:border-indigo-400"
+                                />
+                            </label>
 
-                                <label class="space-y-1">
-                                    <span class="text-xs font-semibold text-slate-600">Mô tả ngắn</span>
-                                    <input v-model="generalForm.site_description" type="text" class="w-full rounded-[10px] border border-slate-200 px-3 py-2 text-sm outline-none focus:border-indigo-400" />
-                                </label>
+                            <label class="space-y-1">
+                                <span class="text-xs font-semibold text-slate-600">Domain</span>
+                                <input
+                                    v-model="generalForm.site_domain"
+                                    type="text"
+                                    class="w-full rounded-[10px] border border-slate-200 px-3 py-2 text-sm outline-none focus:border-indigo-400"
+                                    placeholder="https://domain-cua-ban.com"
+                                />
+                            </label>
 
-                                <label class="flex items-center justify-between rounded-[10px] border border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-700">
-                                    <span>Website đang hoạt động</span>
-                                    <input v-model="generalForm.site_active" type="checkbox" class="h-4 w-4 rounded border-slate-300" />
-                                </label>
+                            <label class="space-y-1">
+                                <span class="text-xs font-semibold text-slate-600">Mô tả ngắn</span>
+                                <input
+                                    v-model="generalForm.site_description"
+                                    type="text"
+                                    class="w-full rounded-[10px] border border-slate-200 px-3 py-2 text-sm outline-none focus:border-indigo-400"
+                                />
+                            </label>
 
-                                <label class="flex items-center justify-between rounded-[10px] border border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-700">
-                                    <span>Cho phép đăng ký tài khoản</span>
-                                    <input v-model="generalForm.allow_register" type="checkbox" class="h-4 w-4 rounded border-slate-300" />
-                                </label>
-                            </div>
-                        </article>
-                    </div>
+                            <label
+                                class="flex items-center justify-between rounded-[10px] border border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-700"
+                            >
+                                <span>Website đang hoạt động</span>
+                                <input v-model="generalForm.site_active" type="checkbox" class="h-4 w-4 rounded border-slate-300" />
+                            </label>
+
+                            <label
+                                class="flex items-center justify-between rounded-[10px] border border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-700"
+                            >
+                                <span>Cho phép đăng ký tài khoản</span>
+                                <input
+                                    v-model="generalForm.allow_register"
+                                    type="checkbox"
+                                    class="h-4 w-4 rounded border-slate-300"
+                                />
+                            </label>
+                        </div>
+                    </article>
 
                     <aside class="rounded-[10px] border border-slate-200 bg-slate-50 p-4">
                         <p class="text-xs uppercase tracking-[0.18em] text-slate-400">Preview domain</p>
                         <div class="mt-3 rounded-[10px] border border-slate-200 bg-white p-4">
-                            <p class="text-sm font-semibold text-slate-900">{{ generalForm.site_name || 'Tên website' }}</p>
+                            <p class="text-sm font-semibold text-slate-900">{{ generalForm.site_name || "Tên website" }}</p>
                             <p class="mt-1 text-xs text-slate-500">{{ siteDomainPreview }}</p>
                             <p class="mt-3 text-sm leading-6 text-slate-600">
-                                {{ generalForm.site_description || 'Mô tả website sẽ hiển thị tại đây để đối tác nhận diện nhanh nội dung hệ thống.' }}
+                                {{ generalForm.site_description || "Mô tả website sẽ hiển thị tại đây để đối tác nhận diện nhanh nội dung hệ thống." }}
                             </p>
                         </div>
                     </aside>
@@ -305,7 +314,7 @@ onMounted(async () => {
                             <div class="mb-4 flex items-start justify-between gap-3">
                                 <div>
                                     <h3 class="text-sm font-semibold text-slate-900">Hình ảnh thương hiệu</h3>
-                                    <p class="text-sm text-slate-500">Logo header, favicon và ảnh preview khi chia sẻ website.</p>
+                                    <p class="text-sm text-slate-500">Logo dùng trên nền tối, nền sáng, favicon và ảnh preview khi chia sẻ website.</p>
                                 </div>
 
                                 <button
@@ -314,19 +323,48 @@ onMounted(async () => {
                                     :disabled="saving.branding"
                                     @click="saveBranding"
                                 >
-                                    {{ saving.branding ? 'Đang lưu...' : 'Lưu nhận diện' }}
+                                    {{ saving.branding ? "Đang lưu..." : "Lưu nhận diện" }}
                                 </button>
                             </div>
 
                             <div class="grid gap-4 md:grid-cols-3">
                                 <div class="rounded-[10px] border border-slate-200 p-3">
-                                    <p class="text-sm font-medium text-slate-700">Logo</p>
+                                    <p class="text-sm font-medium text-slate-700">Logo nền tối</p>
                                     <div class="mt-3 flex h-28 items-center justify-center rounded-[10px] bg-slate-50">
-                                        <img v-if="brandingForm.logo" :src="brandingForm.logo" alt="logo" class="h-full w-full object-contain" />
+                                        <img
+                                            v-if="brandingForm.light_logo"
+                                            :src="brandingForm.light_logo"
+                                            alt="logo-light"
+                                            class="h-full w-full object-contain"
+                                        />
                                         <span v-else class="text-xs text-slate-400">320 × 96</span>
                                     </div>
                                     <div class="mt-3">
-                                        <UploadImage :image-src="brandingForm.logo" :compress="true" @uploaded="(url: string) => (brandingForm.logo = url)" />
+                                        <UploadImage
+                                            :image-src="brandingForm.light_logo"
+                                            :compress="true"
+                                            @uploaded="(url: string) => (brandingForm.light_logo = url)"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div class="rounded-[10px] border border-slate-200 p-3">
+                                    <p class="text-sm font-medium text-slate-700">Logo nền sáng</p>
+                                    <div class="mt-3 flex h-28 items-center justify-center rounded-[10px] bg-slate-900">
+                                        <img
+                                            v-if="brandingForm.dark_logo"
+                                            :src="brandingForm.dark_logo"
+                                            alt="logo-dark"
+                                            class="h-full w-full object-contain"
+                                        />
+                                        <span v-else class="text-xs text-slate-400">320 × 96</span>
+                                    </div>
+                                    <div class="mt-3">
+                                        <UploadImage
+                                            :image-src="brandingForm.dark_logo"
+                                            :compress="true"
+                                            @uploaded="(url: string) => (brandingForm.dark_logo = url)"
+                                        />
                                     </div>
                                 </div>
 
@@ -396,63 +434,89 @@ onMounted(async () => {
                                 <p class="text-sm leading-6 text-slate-600">{{ shareDescriptionPreview }}</p>
                             </div>
                         </div>
+
+                        <div class="mt-4 grid gap-3">
+                            <div class="rounded-[10px] border border-slate-200 bg-white p-4">
+                                <p class="text-xs uppercase tracking-[0.18em] text-slate-400">Preview nền sáng</p>
+                                <div class="mt-3 flex h-20 items-center justify-center rounded-[10px] bg-slate-50">
+                                    <img
+                                        v-if="brandingForm.dark_logo"
+                                        :src="brandingForm.dark_logo"
+                                        alt="dark-logo-preview"
+                                        class="h-12 w-auto object-contain"
+                                    />
+                                    <span v-else class="text-xs text-slate-400">Chưa có logo nền sáng</span>
+                                </div>
+                            </div>
+
+                            <div class="rounded-[10px] border border-slate-200 bg-slate-950 p-4">
+                                <p class="text-xs uppercase tracking-[0.18em] text-slate-400">Preview nền tối</p>
+                                <div class="mt-3 flex h-20 items-center justify-center rounded-[10px] bg-slate-900">
+                                    <img
+                                        v-if="brandingForm.light_logo"
+                                        :src="brandingForm.light_logo"
+                                        alt="light-logo-preview"
+                                        class="h-12 w-auto object-contain"
+                                    />
+                                    <span v-else class="text-xs text-slate-500">Chưa có logo nền tối</span>
+                                </div>
+                            </div>
+                        </div>
                     </aside>
                 </div>
 
                 <div v-show="activeTab === 'contact'" class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
-                    <div class="space-y-4">
-                        <article class="rounded-[10px] border border-slate-200 bg-white p-4">
-                            <div class="mb-4 flex items-start justify-between gap-3">
-                                <div>
-                                    <h3 class="text-sm font-semibold text-slate-900">Thông tin hỗ trợ</h3>
-                                    <p class="text-sm text-slate-500">Các kênh liên hệ sẽ được dùng cho landing page và phần footer.</p>
-                                </div>
-
-                                <button
-                                    type="button"
-                                    class="rounded-[10px] bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:opacity-60"
-                                    :disabled="saving.contact"
-                                    @click="saveContact"
-                                >
-                                    {{ saving.contact ? 'Đang lưu...' : 'Lưu liên hệ' }}
-                                </button>
+                    <article class="rounded-[10px] border border-slate-200 bg-white p-4">
+                        <div class="mb-4 flex items-start justify-between gap-3">
+                            <div>
+                                <h3 class="text-sm font-semibold text-slate-900">Thông tin hỗ trợ</h3>
+                                <p class="text-sm text-slate-500">Các kênh liên hệ hiển thị trên landing page và footer.</p>
                             </div>
 
-                            <div class="grid gap-3 md:grid-cols-2">
-                                <label class="space-y-1">
-                                    <span class="text-xs font-semibold text-slate-600">Hotline</span>
-                                    <input v-model="contactForm.hotline" type="text" class="w-full rounded-[10px] border border-slate-200 px-3 py-2 text-sm outline-none focus:border-indigo-400" />
-                                </label>
-                                <label class="space-y-1">
-                                    <span class="text-xs font-semibold text-slate-600">Email hỗ trợ</span>
-                                    <input v-model="contactForm.support_email" type="email" class="w-full rounded-[10px] border border-slate-200 px-3 py-2 text-sm outline-none focus:border-indigo-400" />
-                                </label>
-                                <label class="space-y-1 md:col-span-2">
-                                    <span class="text-xs font-semibold text-slate-600">Địa chỉ</span>
-                                    <textarea v-model="contactForm.address" rows="3" class="w-full rounded-[10px] border border-slate-200 px-3 py-2 text-sm outline-none focus:border-indigo-400" />
-                                </label>
-                                <label class="space-y-1">
-                                    <span class="text-xs font-semibold text-slate-600">Facebook</span>
-                                    <input v-model="contactForm.facebook" type="text" class="w-full rounded-[10px] border border-slate-200 px-3 py-2 text-sm outline-none focus:border-indigo-400" />
-                                </label>
-                                <label class="space-y-1">
-                                    <span class="text-xs font-semibold text-slate-600">Zalo</span>
-                                    <input v-model="contactForm.zalo" type="text" class="w-full rounded-[10px] border border-slate-200 px-3 py-2 text-sm outline-none focus:border-indigo-400" />
-                                </label>
-                                <label class="space-y-1 md:col-span-2">
-                                    <span class="text-xs font-semibold text-slate-600">YouTube</span>
-                                    <input v-model="contactForm.youtube" type="text" class="w-full rounded-[10px] border border-slate-200 px-3 py-2 text-sm outline-none focus:border-indigo-400" />
-                                </label>
-                            </div>
-                        </article>
-                    </div>
+                            <button
+                                type="button"
+                                class="rounded-[10px] bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:opacity-60"
+                                :disabled="saving.contact"
+                                @click="saveContact"
+                            >
+                                {{ saving.contact ? "Đang lưu..." : "Lưu liên hệ" }}
+                            </button>
+                        </div>
+
+                        <div class="grid gap-3 md:grid-cols-2">
+                            <label class="space-y-1">
+                                <span class="text-xs font-semibold text-slate-600">Hotline</span>
+                                <input v-model="contactForm.hotline" type="text" class="w-full rounded-[10px] border border-slate-200 px-3 py-2 text-sm outline-none focus:border-indigo-400" />
+                            </label>
+                            <label class="space-y-1">
+                                <span class="text-xs font-semibold text-slate-600">Email hỗ trợ</span>
+                                <input v-model="contactForm.support_email" type="email" class="w-full rounded-[10px] border border-slate-200 px-3 py-2 text-sm outline-none focus:border-indigo-400" />
+                            </label>
+                            <label class="space-y-1 md:col-span-2">
+                                <span class="text-xs font-semibold text-slate-600">Địa chỉ</span>
+                                <textarea v-model="contactForm.address" rows="3" class="w-full rounded-[10px] border border-slate-200 px-3 py-2 text-sm outline-none focus:border-indigo-400" />
+                            </label>
+                            <label class="space-y-1">
+                                <span class="text-xs font-semibold text-slate-600">Facebook</span>
+                                <input v-model="contactForm.facebook" type="text" class="w-full rounded-[10px] border border-slate-200 px-3 py-2 text-sm outline-none focus:border-indigo-400" />
+                            </label>
+                            <label class="space-y-1">
+                                <span class="text-xs font-semibold text-slate-600">Zalo</span>
+                                <input v-model="contactForm.zalo" type="text" class="w-full rounded-[10px] border border-slate-200 px-3 py-2 text-sm outline-none focus:border-indigo-400" />
+                            </label>
+                            <label class="space-y-1 md:col-span-2">
+                                <span class="text-xs font-semibold text-slate-600">YouTube</span>
+                                <input v-model="contactForm.youtube" type="text" class="w-full rounded-[10px] border border-slate-200 px-3 py-2 text-sm outline-none focus:border-indigo-400" />
+                            </label>
+                        </div>
+                    </article>
 
                     <aside class="rounded-[10px] border border-slate-200 bg-slate-50 p-4">
                         <p class="text-xs uppercase tracking-[0.18em] text-slate-400">Preview footer</p>
                         <div class="mt-3 rounded-[10px] border border-slate-200 bg-white p-4 text-sm text-slate-600">
-                            <p class="font-semibold text-slate-900">{{ contactForm.hotline || 'Hotline' }}</p>
-                            <p class="mt-1">{{ contactForm.support_email || 'support@example.com' }}</p>
-                            <p class="mt-3 leading-6">{{ contactForm.address || 'Địa chỉ hỗ trợ sẽ hiển thị ở đây.' }}</p>
+                            <p class="font-semibold text-slate-900">{{ contactForm.hotline || "Hotline" }}</p>
+                            <p class="mt-1">{{ contactForm.support_email || "support@example.com" }}</p>
+                            <p class="mt-3 leading-6">{{ contactForm.address || "Địa chỉ hỗ trợ sẽ hiển thị ở đây." }}</p>
                         </div>
                     </aside>
                 </div>
@@ -463,7 +527,7 @@ onMounted(async () => {
                             <div class="mb-4 flex items-start justify-between gap-3">
                                 <div>
                                     <h3 class="text-sm font-semibold text-slate-900">SEO mặc định</h3>
-                                    <p class="text-sm text-slate-500">Metadata mặc định cho landing page và các trang public chưa có cấu hình riêng.</p>
+                                    <p class="text-sm text-slate-500">Metadata cho landing page và các trang public chưa có cấu hình riêng.</p>
                                 </div>
 
                                 <button
@@ -472,7 +536,7 @@ onMounted(async () => {
                                     :disabled="saving.seo"
                                     @click="saveSeo"
                                 >
-                                    {{ saving.seo ? 'Đang lưu...' : 'Lưu SEO' }}
+                                    {{ saving.seo ? "Đang lưu..." : "Lưu SEO" }}
                                 </button>
                             </div>
 
@@ -518,81 +582,49 @@ onMounted(async () => {
                             <p class="mt-2 text-sm font-semibold text-slate-900">{{ shareTitlePreview }}</p>
                             <p class="mt-2 text-sm leading-6 text-slate-600">{{ shareDescriptionPreview }}</p>
                             <div class="mt-4 rounded-[10px] border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-500">
-                                Robots: {{ seoForm.robots || 'index,follow' }}
+                                Robots: {{ seoForm.robots || "index,follow" }}
                             </div>
                         </div>
                     </aside>
                 </div>
 
                 <div v-show="activeTab === 'options'" class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
-                    <div class="space-y-4">
-                        <article class="rounded-[10px] border border-slate-200 bg-white p-4">
-                            <div class="mb-4 flex items-start justify-between gap-3">
-                                <div>
-                                    <h3 class="text-sm font-semibold text-slate-900">Cú pháp nạp tiền</h3>
-                                    <p class="text-sm text-slate-500">Nội dung chuyển khoản sẽ ghép theo dạng <code v-pre>{{ recharge_syntax }}{{ user.id }}</code>.</p>
-                                </div>
-
-                                <button
-                                    type="button"
-                                    class="rounded-[10px] bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:opacity-60"
-                                    :disabled="saving.options"
-                                    @click="saveOptions"
-                                >
-                                    {{ saving.options ? 'Đang lưu...' : 'Lưu chính sách' }}
-                                </button>
+                    <article class="rounded-[10px] border border-slate-200 bg-white p-4">
+                        <div class="mb-4 flex items-start justify-between gap-3">
+                            <div>
+                                <h3 class="text-sm font-semibold text-slate-900">Cú pháp nạp tiền</h3>
+                                <p class="text-sm text-slate-500">
+                                    Nội dung chuyển khoản sẽ ghép theo dạng
+                                    <code v-pre>{{ recharge_syntax }}{{ user.id }}</code>.
+                                </p>
                             </div>
 
-                            <label class="space-y-1">
-                                <span class="text-xs font-semibold text-slate-600">Recharge syntax</span>
-                                <input v-model="optionForm.recharge_syntax" type="text" class="w-full rounded-[10px] border border-slate-200 px-3 py-2 text-sm outline-none focus:border-indigo-400" maxlength="50" />
-                            </label>
-
-                            <div class="mt-3 rounded-[10px] border border-indigo-100 bg-indigo-50 px-3 py-3">
-                                <p class="text-xs text-slate-500">Preview nội dung</p>
-                                <p class="mt-1 text-sm font-semibold text-indigo-700">{{ rechargeSyntaxPreview }}</p>
-                            </div>
-                        </article>
-
-                        <article class="rounded-[10px] border border-slate-200 bg-white p-4">
-                            <div class="mb-3 flex flex-wrap gap-2">
-                                <button
-                                    v-for="tab in policyTabs"
-                                    :key="tab.key"
-                                    type="button"
-                                    class="rounded-[10px] border px-3 py-2 text-sm font-medium transition"
-                                    :class="
-                                        activePolicyTab === tab.key
-                                            ? 'border-indigo-600 bg-indigo-600 text-white'
-                                            : 'border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300 hover:text-slate-900'
-                                    "
-                                    @click="activePolicyTab = tab.key"
-                                >
-                                    {{ tab.label }}
-                                </button>
-                            </div>
-
-                            <div class="rounded-[10px] border border-slate-200 p-2">
-                                <Editor :key="`${editorKey}-${activePolicyTab}`" :value="optionForm[activePolicyTab]" @update:value="(value: unknown[]) => updatePolicyContent(activePolicyTab, value)" />
-                            </div>
-                        </article>
-                    </div>
-
-                    <aside class="space-y-3">
-                        <div class="rounded-[10px] border border-slate-200 bg-slate-50 p-4">
-                            <p class="text-xs uppercase tracking-[0.18em] text-slate-400">Tab đang chỉnh</p>
-                            <p class="mt-2 text-sm font-semibold text-slate-900">{{ currentPolicyTab.label }}</p>
-                            <p class="mt-2 text-sm text-slate-600">Dùng để hiển thị nội dung mặc định cho landing page, client panel và các màn hình pháp lý.</p>
+                            <button
+                                type="button"
+                                class="rounded-[10px] bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:opacity-60"
+                                :disabled="saving.options"
+                                @click="saveOptions"
+                            >
+                                {{ saving.options ? "Đang lưu..." : "Lưu cấu hình" }}
+                            </button>
                         </div>
 
-                        <div
-                            v-for="tab in policyTabs"
-                            :key="`${tab.key}-count`"
-                            class="rounded-[10px] border border-slate-200 bg-white px-4 py-3"
-                        >
-                            <p class="text-xs uppercase tracking-[0.18em] text-slate-400">{{ tab.label }}</p>
-                            <p class="mt-2 text-lg font-semibold text-slate-900">{{ optionForm[tab.key].length }}</p>
-                            <p class="text-sm text-slate-500">khối nội dung</p>
+                        <label class="space-y-1">
+                            <span class="text-xs font-semibold text-slate-600">Recharge syntax</span>
+                            <input
+                                v-model="optionForm.recharge_syntax"
+                                type="text"
+                                maxlength="50"
+                                class="w-full rounded-[10px] border border-slate-200 px-3 py-2 text-sm outline-none focus:border-indigo-400"
+                            />
+                        </label>
+                    </article>
+
+                    <aside class="rounded-[10px] border border-slate-200 bg-slate-50 p-4">
+                        <p class="text-xs uppercase tracking-[0.18em] text-slate-400">Preview nội dung</p>
+                        <div class="mt-3 rounded-[10px] border border-indigo-100 bg-indigo-50 px-3 py-3">
+                            <p class="text-xs text-slate-500">Nội dung chuyển khoản mẫu</p>
+                            <p class="mt-1 text-sm font-semibold text-indigo-700">{{ rechargeSyntaxPreview }}</p>
                         </div>
                     </aside>
                 </div>

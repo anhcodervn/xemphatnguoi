@@ -2,7 +2,7 @@
 import { adminRechargeMethodService, type RechargeMethodPayload } from '@/services/admin-recharge-method.service';
 import type { VietQrBank, VietQrBankListResponse } from '@/types/vietqr.type';
 import { handleErrorResponse } from '@/utils/response';
-import { ArrowLeft, Check, ChevronDown, CreditCard, Landmark, Link as LinkIcon, Search, Settings2 } from 'lucide-vue-next';
+import { ArrowLeft, Check, ChevronDown, CreditCard, KeyRound, Landmark, Link as LinkIcon, Search, Settings2 } from 'lucide-vue-next';
 import Swal from 'sweetalert2';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 import { RouterLink, useRoute, useRouter } from 'vue-router';
@@ -36,6 +36,7 @@ const form = ref<RechargeMethodPayload>({
     bank_name: '',
     account_number: '',
     account_name: '',
+    secret_key: '',
     min_amount: 10000,
     max_amount: 50000000,
     bonus_percentage: 0,
@@ -161,6 +162,7 @@ const loadRechargeMethod = async (): Promise<void> => {
             bank_name: data.bank_name ?? '',
             account_number: data.account_number ?? '',
             account_name: data.account_name ?? '',
+            secret_key: data.secret_key ?? '',
             min_amount: Number(data.min_amount),
             max_amount: Number(data.max_amount),
             bonus_percentage: data.bonus_percentage,
@@ -248,7 +250,7 @@ onBeforeUnmount(() => {
                         {{ isEditing ? 'Cập nhật thẻ nhận tiền' : 'Tạo thẻ nhận tiền' }}
                     </h1>
                     <p class="mt-1.5 max-w-2xl text-[13px] leading-5 text-slate-500">
-                        Cấu hình phương thức nạp, tài khoản nhận tiền và mẫu QR VietQR để frontend tự tạo mã thanh toán cho từng đơn nạp.
+                        Cấu hình phương thức nạp, tài khoản nhận tiền, secret hook và mẫu QR VietQR để frontend tự tạo mã thanh toán cho từng đơn nạp.
                     </p>
                 </div>
 
@@ -390,7 +392,7 @@ onBeforeUnmount(() => {
                                 />
                             </div>
 
-                            <div class="space-y-1.5 md:col-span-2">
+                            <div class="space-y-1.5">
                                 <label class="text-sm font-semibold text-slate-700" for="method-account-name">Chủ tài khoản</label>
                                 <input
                                     id="method-account-name"
@@ -399,6 +401,21 @@ onBeforeUnmount(() => {
                                     :class="inputClass"
                                     placeholder="NGUYEN VAN A"
                                 />
+                            </div>
+
+                            <div class="space-y-1.5">
+                                <label class="text-sm font-semibold text-slate-700" for="method-secret-key">Secret key hook</label>
+                                <div class="relative">
+                                    <KeyRound class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                                    <input
+                                        id="method-secret-key"
+                                        v-model="form.secret_key"
+                                        type="text"
+                                        :class="`${inputClass} pl-9`"
+                                        placeholder="callback-secret-key"
+                                    />
+                                </div>
+                                <p class="text-xs text-slate-500">Dùng cho callback/hook của phương thức nạp khi hệ thống cần ký dữ liệu trả về.</p>
                             </div>
                         </div>
                     </article>
@@ -512,8 +529,8 @@ onBeforeUnmount(() => {
 
                         <div class="mt-4 rounded-[8px] border border-slate-200 bg-slate-50 p-3.5 text-[13px] leading-6 text-slate-600">
                             <p>- Chọn ngân hàng để tự điền mã phương thức và tên hiển thị.</p>
+                            <p>- Secret key được giữ ở backend để dùng cho hook/callback theo từng phương thức nạp.</p>
                             <p>- Có thể thay QR template mà không cần sửa code frontend.</p>
-                            <p>- Mỗi phương thức nạp là một cấu hình nhận tiền độc lập.</p>
                         </div>
                     </article>
 

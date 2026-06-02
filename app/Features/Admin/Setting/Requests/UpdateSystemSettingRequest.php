@@ -24,7 +24,8 @@ class UpdateSystemSettingRequest extends FormRequest
             'site_description' => ['nullable', 'string', 'max:2000'],
             'site_active' => ['required', 'boolean'],
             'allow_register' => ['required', 'boolean'],
-            'logo' => ['nullable', 'string', 'max:2048'],
+            'light_logo' => ['nullable', 'string', 'max:2048'],
+            'dark_logo' => ['nullable', 'string', 'max:2048'],
             'favicon' => ['nullable', 'string', 'max:2048'],
             'og_image' => ['nullable', 'string', 'max:2048'],
             'color_primary' => ['nullable', 'string', 'regex:/^#([0-9a-fA-F]{6})$/'],
@@ -43,9 +44,6 @@ class UpdateSystemSettingRequest extends FormRequest
             'meta_pixel_id' => ['nullable', 'string', 'max:100'],
             'custom_script' => ['nullable', 'string'],
             'recharge_syntax' => ['required', 'string', 'max:50'],
-            'terms_of_use' => ['nullable', 'array'],
-            'privacy_policy' => ['nullable', 'array'],
-            'refund_policy' => ['nullable', 'array'],
         ];
     }
 

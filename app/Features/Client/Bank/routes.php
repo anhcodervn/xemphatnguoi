@@ -14,5 +14,6 @@ Route::middleware(['auth:sanctum', 'active-subscription'])
 
         Route::post('save-bank', [BankController::class, 'saveBank'])->name('save-bank');
         Route::put('accounts/{bankAccount}', [BankController::class, 'updateBank'])->name('accounts.update');
+        Route::patch('accounts/{bankAccount}/status', [BankController::class, 'updateStatus'])->name('accounts.status');
         Route::delete('accounts/{bankAccount}', [BankController::class, 'destroyAccount'])->name('accounts.destroy');
     });

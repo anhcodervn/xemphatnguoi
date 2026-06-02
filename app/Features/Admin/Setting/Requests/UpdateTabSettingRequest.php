@@ -27,7 +27,8 @@ class UpdateTabSettingRequest extends FormRequest
                 'allow_register' => ['required', 'boolean'],
             ],
             'branding' => [
-                'logo' => ['nullable', 'string', 'max:2048'],
+                'light_logo' => ['nullable', 'string', 'max:2048'],
+                'dark_logo' => ['nullable', 'string', 'max:2048'],
                 'favicon' => ['nullable', 'string', 'max:2048'],
                 'og_image' => ['nullable', 'string', 'max:2048'],
                 'color_primary' => ['nullable', 'string', 'regex:/^#([0-9a-fA-F]{6})$/'],
@@ -50,6 +51,7 @@ class UpdateTabSettingRequest extends FormRequest
                 'meta_pixel_id' => ['nullable', 'string', 'max:100'],
                 'custom_script' => ['nullable', 'string'],
             ],
+            'content-pages' => $this->contentPageRules(),
             'home-category' => [
                 'category_ids' => ['nullable', 'array'],
                 'category_ids.*' => ['integer'],
@@ -59,6 +61,39 @@ class UpdateTabSettingRequest extends FormRequest
             ],
             default => [],
         };
+    }
+
+    /**
+     * @return array<string, array<int, mixed>>
+     */
+    protected function contentPageRules(): array
+    {
+        $pages = [
+            'contact_page',
+            'terms_page',
+            'faq_page',
+            'privacy_page',
+            'about_page',
+            'refund_policy',
+            'payment_policy',
+            'api_usage_policy',
+            'disclaimer',
+            'system_status',
+            'system_updates',
+        ];
+
+        $rules = [];
+
+        foreach ($pages as $page) {
+            $rules["{$page}_title"] = ['required', 'string', 'max:255'];
+            $rules["{$page}_excerpt"] = ['nullable', 'string', 'max:1000'];
+            $rules["{$page}_content"] = ['nullable', 'array'];
+            $rules["{$page}_seo_title"] = ['nullable', 'string', 'max:255'];
+            $rules["{$page}_seo_description"] = ['nullable', 'string', 'max:1000'];
+            $rules["{$page}_is_published"] = ['required', 'boolean'];
+        }
+
+        return $rules;
     }
 
     /**
@@ -86,7 +121,8 @@ class UpdateTabSettingRequest extends FormRequest
             'site_description' => 'mô tả hệ thống',
             'site_active' => 'trạng thái website',
             'allow_register' => 'trạng thái đăng ký',
-            'logo' => 'logo',
+            'light_logo' => 'logo nền tối',
+            'dark_logo' => 'logo nền sáng',
             'favicon' => 'favicon',
             'og_image' => 'ảnh chia sẻ',
             'hotline' => 'hotline',
