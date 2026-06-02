@@ -49,9 +49,9 @@ Route::middleware('guest')->group(function (): void {
             return view('pages.auth.register');
         })->name('auth.register');
 
-        Route::post('/login', [AuthController::class, 'login'])->name('auth.login.submit');
-        Route::post('/register', [AuthController::class, 'register'])->name('auth.register.submit');
-        Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->name('auth.forgot-password.submit');
+        Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10,1')->name('auth.login.submit');
+        Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:5,1')->name('auth.register.submit');
+        Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:3,1')->name('auth.forgot-password.submit');
         Route::get('/google/redirect', [AuthController::class, 'redirectToGoogle'])->name('auth.google.redirect');
         Route::get('/google/callback', [AuthController::class, 'handleGoogleCallback'])->name('auth.google.callback');
     });
@@ -65,6 +65,7 @@ Route::middleware('guest')->group(function (): void {
     })->name('password.request');
 
     Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])
+        ->middleware('throttle:3,1')
         ->name('password.email');
 
     Route::get('/reset-password/{token}', function (string $token) {

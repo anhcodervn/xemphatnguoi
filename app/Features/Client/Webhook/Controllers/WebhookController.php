@@ -72,6 +72,19 @@ class WebhookController extends Controller
         ]);
     }
 
+    public function secret(Request $request, Webhook $webhook): JsonResponse
+    {
+        $this->ensureWebhookOwnership($request, $webhook);
+
+        return response()->json([
+            'status' => true,
+            'data' => [
+                'id' => $webhook->id,
+                'secret_key' => $webhook->secret_key,
+            ],
+        ]);
+    }
+
     public function dispatch(
         Request $request,
         BankAccount $bankAccount,
@@ -210,7 +223,7 @@ class WebhookController extends Controller
             'bank_account_id' => $webhook->bank_account_id,
             'name' => $webhook->name,
             'url' => $webhook->url,
-            'secret_key' => $webhook->secret_key,
+            'secret_key_masked' => $this->maskSecretKey($webhook->secret_key),
             'event_keyword' => $eventKeyword,
             'status' => $webhook->status,
             'created_at' => $webhook->created_at?->toDateTimeString(),
@@ -233,5 +246,22 @@ class WebhookController extends Controller
             'created_at' => $log->created_at?->toDateTimeString(),
             'updated_at' => $log->updated_at?->toDateTimeString(),
         ];
+    }
+
+    protected function maskSecretKey(?string $secretKey): ?string
+    {
+        if ($secretKey === null || $secretKey === '') {
+            return $secretKey;
+        }
+
+        if (mb_strlen($secretKey) <= 6) {
+            return '******';
+        }
+
+        return sprintf(
+            '%s******%s',
+            mb_substr($secretKey, 0, 3),
+            mb_substr($secretKey, -3),
+        );
     }
 }

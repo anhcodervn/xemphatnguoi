@@ -13,7 +13,7 @@ test('encode bank utility can encode and decode plain text', function () {
     expect($encoded)
         ->not->toBe($plain)
         ->and(EncodeBank::isEncoded($encoded))->toBeTrue()
-        ->and($encoded)->toContain('"v":"v2"')
+        ->and($encoded)->toContain('"v":"v3"')
         ->and(EncodeBank::decode($encoded))->toBe($plain);
 });
 

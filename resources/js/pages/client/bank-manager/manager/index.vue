@@ -401,7 +401,24 @@
                                         <span class="rounded-full bg-slate-100 px-2 py-0.5 font-semibold text-slate-700">
                                             Từ khóa: {{ webhookEventLabel(webhook.event_keyword) }}
                                         </span>
-                                        <span class="truncate">Secret: {{ webhook.secret_key }}</span>
+                                        <span class="inline-flex items-center gap-1.5">
+                                            <span class="truncate">
+                                                Secret:
+                                                {{
+                                                    visibleWebhookSecrets[webhook.id]
+                                                        ? (revealedWebhookSecrets[webhook.id] ?? '')
+                                                        : (webhook.secret_key_masked ?? maskWebhookSecret(''))
+                                                }}
+                                            </span>
+                                            <button
+                                                type="button"
+                                                class="inline-flex h-5 w-5 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition hover:bg-slate-50 hover:text-slate-700"
+                                                :disabled="loadingWebhookSecrets[webhook.id]"
+                                                @click="toggleWebhookSecret(webhook)"
+                                            >
+                                                <component :is="visibleWebhookSecrets[webhook.id] ? EyeOff : Eye" class="h-3 w-3" />
+                                            </button>
+                                        </span>
                                         <span class="truncate">Sign: md5(secret_key + {{ webhook.bank_account_id }})</span>
                                     </div>
                                 </div>
@@ -536,7 +553,7 @@
             </template>
         </Modal>
 
-        <Modal :modelValue="isWebhookLogsOpen" panelClass="max-w-4xl" @update:modelValue="closeWebhookLogs">
+        <Modal :modelValue="isWebhookLogsOpen" panelClass="max-w-6xl" @update:modelValue="closeWebhookLogs">
             <template #header>
                 <div class="border-b border-slate-200 px-4 py-3 pr-12">
                     <div class="flex items-start justify-between gap-3">
@@ -575,40 +592,130 @@
                     Chưa có log gửi webhook nào. Nếu vừa bấm gửi thử, chờ vài giây để queue xử lý rồi tải lại.
                 </div>
 
-                <div v-else class="max-h-[65vh] space-y-2 overflow-y-auto pr-1">
-                    <article v-for="log in webhookLogs" :key="log.id" class="rounded-[8px] border border-slate-200 bg-white px-3 py-3">
-                        <div class="flex flex-wrap items-center gap-2">
-                            <span class="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-700"
-                                >Attempt {{ log.attempt }}</span
-                            >
-                            <span class="rounded-full px-2 py-0.5 text-[10px] font-semibold" :class="webhookLogStatusClass(log.status_code)">
-                                {{ webhookLogStatusLabel(log.status_code) }}
-                            </span>
-                            <span class="text-[11px] text-slate-500">{{ formatDateTime(log.created_at) }}</span>
+                <div v-else class="grid max-h-[70vh] gap-3 lg:grid-cols-[280px_minmax(0,1fr)]">
+                    <div class="overflow-y-auto rounded-[10px] border border-slate-200 bg-slate-50 p-2">
+                        <button
+                            v-for="log in webhookLogs"
+                            :key="log.id"
+                            type="button"
+                            class="flex w-full flex-col gap-2 rounded-[8px] border px-3 py-3 text-left transition"
+                            :class="
+                                selectedWebhookLog?.id === log.id
+                                    ? 'border-slate-900 bg-slate-900 text-white shadow-sm'
+                                    : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
+                            "
+                            @click="selectedWebhookLogId = log.id"
+                        >
+                            <div class="flex flex-wrap items-center gap-2">
+                                <span
+                                    class="rounded-full px-2 py-0.5 text-[10px] font-semibold"
+                                    :class="selectedWebhookLog?.id === log.id ? 'bg-white/15 text-white' : 'bg-slate-100 text-slate-700'"
+                                >
+                                    Attempt {{ log.attempt }}
+                                </span>
+                                <span
+                                    class="rounded-full px-2 py-0.5 text-[10px] font-semibold"
+                                    :class="selectedWebhookLog?.id === log.id ? 'bg-white/15 text-white' : webhookLogStatusClass(log.status_code)"
+                                >
+                                    {{ webhookLogStatusLabel(log.status_code) }}
+                                </span>
+                            </div>
+                            <p class="text-xs font-semibold" :class="selectedWebhookLog?.id === log.id ? 'text-white' : 'text-slate-900'">
+                                {{ formatDateTime(log.created_at) }}
+                            </p>
+                            <p class="text-[11px]" :class="selectedWebhookLog?.id === log.id ? 'text-slate-200' : 'text-slate-500'">
+                                {{ webhookEventLabel(log.event_keyword) }}
+                            </p>
+                        </button>
+                    </div>
+
+                    <div v-if="selectedWebhookLog" class="overflow-y-auto rounded-[10px] border border-slate-200 bg-white p-3">
+                        <div class="grid gap-2 sm:grid-cols-3">
+                            <div class="rounded-[8px] border border-slate-200 bg-slate-50 px-3 py-2.5">
+                                <p class="text-[11px] font-medium text-slate-400">Attempt</p>
+                                <p class="mt-1 text-sm font-bold text-slate-900">{{ selectedWebhookLog.attempt }}</p>
+                            </div>
+                            <div class="rounded-[8px] border border-slate-200 bg-slate-50 px-3 py-2.5">
+                                <p class="text-[11px] font-medium text-slate-400">Trạng thái</p>
+                                <p class="mt-1 text-sm font-bold text-slate-900">{{ webhookLogStatusLabel(selectedWebhookLog.status_code) }}</p>
+                            </div>
+                            <div class="rounded-[8px] border border-slate-200 bg-slate-50 px-3 py-2.5">
+                                <p class="text-[11px] font-medium text-slate-400">Thời gian</p>
+                                <p class="mt-1 text-sm font-bold text-slate-900">{{ formatDateTime(selectedWebhookLog.created_at) }}</p>
+                            </div>
                         </div>
 
-                        <div class="mt-2 text-[11px] text-slate-500">Keyword: {{ webhookEventLabel(log.event_keyword) }}</div>
+                        <div class="mt-3 rounded-[8px] border border-slate-200 bg-slate-50 px-3 py-2.5">
+                            <p class="text-[11px] font-medium text-slate-400">Keyword</p>
+                            <p class="mt-1 text-sm font-semibold text-slate-900">{{ webhookEventLabel(selectedWebhookLog.event_keyword) }}</p>
+                        </div>
 
-                        <div class="mt-3 grid gap-2 xl:grid-cols-2">
+                        <div class="mt-3 grid gap-3 xl:grid-cols-2">
                             <div class="rounded-[8px] bg-slate-50 p-3">
-                                <p class="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">Payload</p>
-                                <pre
-                                    class="mt-2 max-h-64 overflow-auto whitespace-pre-wrap break-all rounded-[6px] bg-white p-2 text-[11px] text-slate-700"
-                                    >{{ log.payload || '-' }}</pre
-                                >
+                                <div class="flex items-center justify-between gap-2">
+                                    <p class="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">Payload</p>
+                                    <div class="flex items-center gap-2">
+                                        <button
+                                            type="button"
+                                            class="inline-flex items-center gap-1 rounded-[6px] border border-slate-200 bg-white px-2 py-1 text-[11px] font-semibold text-slate-600 transition hover:bg-slate-50"
+                                            @click="copyWebhookJson(selectedWebhookLogPayloadText, 'payload')"
+                                        >
+                                            <component :is="copiedWebhookJsonKey === 'payload' ? CheckCheck : Copy" class="h-3.5 w-3.5" />
+                                            {{ copiedWebhookJsonKey === 'payload' ? 'Đã copy' : 'Copy' }}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            class="inline-flex items-center gap-1 rounded-[6px] border border-slate-200 bg-white px-2 py-1 text-[11px] font-semibold text-slate-600 transition hover:bg-slate-50"
+                                            @click="isWebhookPayloadExpanded = !isWebhookPayloadExpanded"
+                                        >
+                                            <component :is="isWebhookPayloadExpanded ? Minimize2 : Maximize2" class="h-3.5 w-3.5" />
+                                            {{ isWebhookPayloadExpanded ? 'Thu gọn' : 'Mở rộng' }}
+                                        </button>
+                                    </div>
+                                </div>
+                                <textarea
+                                    :value="selectedWebhookLogPayloadText"
+                                    readonly
+                                    spellcheck="false"
+                                    class="mt-2 w-full resize-y overflow-auto rounded-[6px] border border-slate-200 bg-white p-2 font-mono text-[11px] leading-5 text-slate-700 outline-none"
+                                    :class="isWebhookPayloadExpanded ? 'min-h-[22rem]' : 'min-h-12'"
+                                ></textarea>
                             </div>
 
                             <div class="rounded-[8px] bg-slate-50 p-3">
-                                <p class="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">
-                                    Response{{ log.status_code ? ` (${log.status_code})` : '' }}
-                                </p>
-                                <pre
-                                    class="mt-2 max-h-64 overflow-auto whitespace-pre-wrap break-all rounded-[6px] bg-white p-2 text-[11px] text-slate-700"
-                                    >{{ log.response || '-' }}</pre
-                                >
+                                <div class="flex items-center justify-between gap-2">
+                                    <p class="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">
+                                        Response{{ selectedWebhookLog.status_code ? ` (${selectedWebhookLog.status_code})` : '' }}
+                                    </p>
+                                    <div class="flex items-center gap-2">
+                                        <button
+                                            type="button"
+                                            class="inline-flex items-center gap-1 rounded-[6px] border border-slate-200 bg-white px-2 py-1 text-[11px] font-semibold text-slate-600 transition hover:bg-slate-50"
+                                            @click="copyWebhookJson(selectedWebhookLogResponseText, 'response')"
+                                        >
+                                            <component :is="copiedWebhookJsonKey === 'response' ? CheckCheck : Copy" class="h-3.5 w-3.5" />
+                                            {{ copiedWebhookJsonKey === 'response' ? 'Đã copy' : 'Copy' }}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            class="inline-flex items-center gap-1 rounded-[6px] border border-slate-200 bg-white px-2 py-1 text-[11px] font-semibold text-slate-600 transition hover:bg-slate-50"
+                                            @click="isWebhookResponseExpanded = !isWebhookResponseExpanded"
+                                        >
+                                            <component :is="isWebhookResponseExpanded ? Minimize2 : Maximize2" class="h-3.5 w-3.5" />
+                                            {{ isWebhookResponseExpanded ? 'Thu gọn' : 'Mở rộng' }}
+                                        </button>
+                                    </div>
+                                </div>
+                                <textarea
+                                    :value="selectedWebhookLogResponseText"
+                                    readonly
+                                    spellcheck="false"
+                                    class="mt-2 w-full resize-y overflow-auto rounded-[6px] border border-slate-200 bg-white p-2 font-mono text-[11px] leading-5 text-slate-700 outline-none"
+                                    :class="isWebhookResponseExpanded ? 'min-h-[22rem]' : 'min-h-12'"
+                                ></textarea>
                             </div>
                         </div>
-                    </article>
+                    </div>
                 </div>
             </div>
 
@@ -695,11 +802,16 @@ import { handleErrorResponse } from '@/utils/response';
 import {
     ArrowLeft,
     CalendarClock,
+    CheckCheck,
     ChevronRight,
+    Copy,
     CreditCard,
     Eye,
+    EyeOff,
     History,
     Lock,
+    Maximize2,
+    Minimize2,
     Pencil,
     Plus,
     RefreshCcw,
@@ -726,8 +838,13 @@ const account = ref<BankAccountType | null>(null);
 const transactions = ref<BankTransactionType[]>([]);
 const webhooks = ref<WebhookType[]>([]);
 const webhookLogs = ref<WebhookLogType[]>([]);
+const visibleWebhookSecrets = ref<Record<number, boolean>>({});
+const revealedWebhookSecrets = ref<Record<number, string>>({});
+const loadingWebhookSecrets = ref<Record<number, boolean>>({});
 const selectedTransaction = ref<BankTransactionType | null>(null);
 const selectedWebhookForLogs = ref<WebhookType | null>(null);
+const selectedWebhookLogId = ref<number | null>(null);
+const copiedWebhookJsonKey = ref<'payload' | 'response' | null>(null);
 const isLoadingAccount = ref(false);
 const isLoadingTransactions = ref(false);
 const isLoadingWebhooks = ref(false);
@@ -737,11 +854,14 @@ const isSavingWebhook = ref(false);
 const isWebhookModalOpen = ref(false);
 const isWebhookLogsOpen = ref(false);
 const isTransactionDetailOpen = ref(false);
+const isWebhookPayloadExpanded = ref(false);
+const isWebhookResponseExpanded = ref(false);
 const editingWebhookId = ref<number | null>(null);
 const dispatchingWebhookId = ref<number | null>(null);
 const dispatchingTransactionId = ref<number | null>(null);
 const transactionLimitOptions = [10, 20, 50, 100];
 const selectedTransactionLimit = ref(20);
+let copiedWebhookJsonTimer: ReturnType<typeof setTimeout> | null = null;
 const hasBankAccess = computed(() => {
     const subscription = userStore.user?.user_subscriptions;
 
@@ -908,6 +1028,54 @@ const webhookLogStatusLabel = (statusCode: number | null): string => {
     return 'Lỗi kết nối';
 };
 
+const toggleWebhookSecret = async (webhook: WebhookType): Promise<void> => {
+    if (visibleWebhookSecrets.value[webhook.id]) {
+        visibleWebhookSecrets.value = {
+            ...visibleWebhookSecrets.value,
+            [webhook.id]: false,
+        };
+
+        return;
+    }
+
+    if (!revealedWebhookSecrets.value[webhook.id]) {
+        loadingWebhookSecrets.value = {
+            ...loadingWebhookSecrets.value,
+            [webhook.id]: true,
+        };
+
+        try {
+            const secretKey = await clientWebhookService.revealSecret(webhook.id);
+
+            revealedWebhookSecrets.value = {
+                ...revealedWebhookSecrets.value,
+                [webhook.id]: secretKey,
+            };
+        } catch (error) {
+            handleErrorResponse(error);
+            return;
+        } finally {
+            loadingWebhookSecrets.value = {
+                ...loadingWebhookSecrets.value,
+                [webhook.id]: false,
+            };
+        }
+    }
+
+    visibleWebhookSecrets.value = {
+        ...visibleWebhookSecrets.value,
+        [webhook.id]: true,
+    };
+};
+
+const maskWebhookSecret = (secret: string): string => {
+    if (secret.length <= 6) {
+        return '••••••';
+    }
+
+    return `${secret.slice(0, 3)}••••••${secret.slice(-3)}`;
+};
+
 const formatDateTime = (value: string | null): string => {
     if (!value) {
         return 'chưa có dữ liệu';
@@ -953,6 +1121,51 @@ const selectedTransactionRawData = computed((): string => {
         return String(rawData);
     }
 });
+
+const selectedWebhookLog = computed<WebhookLogType | null>(() => {
+    if (webhookLogs.value.length === 0) {
+        return null;
+    }
+
+    if (selectedWebhookLogId.value === null) {
+        return webhookLogs.value[0] ?? null;
+    }
+
+    return webhookLogs.value.find((log) => log.id === selectedWebhookLogId.value) ?? webhookLogs.value[0] ?? null;
+});
+
+const formatWebhookJson = (value: string | null): string => {
+    if (!value || value.trim() === '') {
+        return '-';
+    }
+
+    try {
+        return JSON.stringify(JSON.parse(value), null, 2);
+    } catch {
+        return value;
+    }
+};
+
+const selectedWebhookLogPayloadText = computed((): string => {
+    return formatWebhookJson(selectedWebhookLog.value?.payload ?? null);
+});
+
+const selectedWebhookLogResponseText = computed((): string => {
+    return formatWebhookJson(selectedWebhookLog.value?.response ?? null);
+});
+
+const copyWebhookJson = async (value: string, key: 'payload' | 'response'): Promise<void> => {
+    await navigator.clipboard.writeText(value);
+    copiedWebhookJsonKey.value = key;
+
+    if (copiedWebhookJsonTimer) {
+        clearTimeout(copiedWebhookJsonTimer);
+    }
+
+    copiedWebhookJsonTimer = setTimeout(() => {
+        copiedWebhookJsonKey.value = null;
+    }, 1500);
+};
 
 const resetWebhookForm = (): void => {
     Object.assign(webhookForm, defaultWebhookForm());
@@ -1030,8 +1243,14 @@ const loadWebhooks = async (): Promise<void> => {
 
     try {
         webhooks.value = await clientWebhookService.listByBank(currentBankId.value);
+        visibleWebhookSecrets.value = {};
+        revealedWebhookSecrets.value = {};
+        loadingWebhookSecrets.value = {};
     } catch (error) {
         webhooks.value = [];
+        visibleWebhookSecrets.value = {};
+        revealedWebhookSecrets.value = {};
+        loadingWebhookSecrets.value = {};
         handleErrorResponse(error);
     } finally {
         isLoadingWebhooks.value = false;
@@ -1043,8 +1262,12 @@ const loadWebhookLogs = async (webhookId: number): Promise<void> => {
 
     try {
         webhookLogs.value = await clientWebhookService.logs(webhookId);
+        selectedWebhookLogId.value = webhookLogs.value[0]?.id ?? null;
+        isWebhookPayloadExpanded.value = false;
+        isWebhookResponseExpanded.value = false;
     } catch (error) {
         webhookLogs.value = [];
+        selectedWebhookLogId.value = null;
         handleErrorResponse(error);
     } finally {
         isLoadingWebhookLogs.value = false;
@@ -1060,6 +1283,10 @@ const openWebhookLogs = async (webhook: WebhookType): Promise<void> => {
 const closeWebhookLogs = (): void => {
     isWebhookLogsOpen.value = false;
     selectedWebhookForLogs.value = null;
+    selectedWebhookLogId.value = null;
+    copiedWebhookJsonKey.value = null;
+    isWebhookPayloadExpanded.value = false;
+    isWebhookResponseExpanded.value = false;
     webhookLogs.value = [];
 };
 

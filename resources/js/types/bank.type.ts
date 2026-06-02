@@ -42,7 +42,7 @@ export interface WebhookType {
     bank_account_id: number | null;
     name: string | null;
     url: string;
-    secret_key: string;
+    secret_key_masked: string | null;
     event_keyword: string | null;
     status: 'active' | 'inactive';
     created_at: string | null;

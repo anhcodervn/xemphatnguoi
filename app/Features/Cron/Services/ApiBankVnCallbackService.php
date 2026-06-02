@@ -41,9 +41,9 @@ class ApiBankVnCallbackService
 
         $webhook = Webhook::query()
             ->where('bank_account_id', $bankId)
-            ->where('secret_key', $normalizedSecretKey)
             ->where('status', 'active')
-            ->first();
+            ->get()
+            ->first(fn (Webhook $candidate): bool => hash_equals((string) $candidate->secret_key, $normalizedSecretKey));
 
         if (! $webhook instanceof Webhook) {
             return [

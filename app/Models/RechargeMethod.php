@@ -3,10 +3,12 @@
 namespace App\Models;
 
 use Database\Factories\RechargeMethodFactory;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Crypt;
 
 class RechargeMethod extends Model
 {
@@ -58,5 +60,35 @@ class RechargeMethod extends Model
     public function rechargeOrders(): HasMany
     {
         return $this->hasMany(RechargeOrder::class);
+    }
+
+    protected function secretKey(): Attribute
+    {
+        return Attribute::make(
+            get: function (?string $value): ?string {
+                if ($value === null || $value === '') {
+                    return $value;
+                }
+
+                try {
+                    return Crypt::decryptString($value);
+                } catch (\Throwable) {
+                    return $value;
+                }
+            },
+            set: function (?string $value): ?string {
+                if ($value === null || $value === '') {
+                    return $value;
+                }
+
+                try {
+                    Crypt::decryptString($value);
+
+                    return $value;
+                } catch (\Throwable) {
+                    return Crypt::encryptString($value);
+                }
+            },
+        );
     }
 }

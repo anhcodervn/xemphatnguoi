@@ -29,7 +29,6 @@ class RechargeMethodController extends Controller
                         ->orWhere('bank_name', 'like', "%{$search}%")
                         ->orWhere('account_number', 'like', "%{$search}%")
                         ->orWhere('account_name', 'like', "%{$search}%")
-                        ->orWhere('secret_key', 'like', "%{$search}%")
                         ->orWhereHas('bankAccounts', function (Builder $bankAccountQuery) use ($search): void {
                             $bankAccountQuery
                                 ->where('bank_name', 'like', "%{$search}%")

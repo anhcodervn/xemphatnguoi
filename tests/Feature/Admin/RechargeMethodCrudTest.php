@@ -80,8 +80,12 @@ test('authenticated user can create a recharge method with linked bank accounts'
         'code' => 'nap-tu-dong',
         'name' => 'Nap tu dong',
         'is_active' => 1,
-        'secret_key' => 'acb-secret-key',
     ]);
+
+    $createdMethod = RechargeMethod::query()->where('code', 'nap-tu-dong')->firstOrFail();
+
+    expect($createdMethod->secret_key)->toBe('acb-secret-key')
+        ->and($createdMethod->getRawOriginal('secret_key'))->not->toBe('acb-secret-key');
 
     $this->assertDatabaseHas('recharge_method_bank_account', [
         'bank_account_id' => $bankAccount->id,
@@ -159,8 +163,12 @@ test('authenticated user can update a recharge method', function () {
         'id' => $rechargeMethod->id,
         'code' => 'nap-da-cap-nhat',
         'is_active' => 0,
-        'secret_key' => 'mb-secret-key',
     ]);
+
+    $rechargeMethod->refresh();
+
+    expect($rechargeMethod->secret_key)->toBe('mb-secret-key')
+        ->and($rechargeMethod->getRawOriginal('secret_key'))->not->toBe('mb-secret-key');
 });
 
 test('authenticated user can delete a recharge method', function () {

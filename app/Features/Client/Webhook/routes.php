@@ -14,6 +14,7 @@ Route::middleware(['auth:sanctum', 'active-subscription'])
             ->name('bank.transaction.dispatch');
         Route::post('bank/{bankAccount}', [WebhookController::class, 'store'])->name('bank.store');
         Route::get('{webhook}/logs', [WebhookController::class, 'logs'])->name('logs');
+        Route::get('{webhook}/secret', [WebhookController::class, 'secret'])->name('secret');
         Route::put('{webhook}', [WebhookController::class, 'update'])->name('update');
         Route::delete('{webhook}', [WebhookController::class, 'destroy'])->name('destroy');
     });

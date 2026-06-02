@@ -68,7 +68,9 @@ test('client can list bank webhooks scoped by current user and bank account', fu
         ->assertJsonCount(1, 'data')
         ->assertJsonPath('data.0.id', $expectedWebhook->id)
         ->assertJsonPath('data.0.name', 'Webhook ACB')
-        ->assertJsonPath('data.0.event_keyword', 'payment-success');
+        ->assertJsonPath('data.0.event_keyword', 'payment-success')
+        ->assertJsonPath('data.0.secret_key_masked', 'sec******y-1')
+        ->assertJsonMissingPath('data.0.secret_key');
 });
 
 test('client can create webhook for bank account', function () {
@@ -96,7 +98,8 @@ test('client can create webhook for bank account', function () {
         ->assertJsonPath('data.bank_account_id', $bankAccount->id)
         ->assertJsonPath('data.name', 'Webhook thanh toan')
         ->assertJsonPath('data.event_keyword', 'payment-success')
-        ->assertJsonPath('data.status', 'active');
+        ->assertJsonPath('data.status', 'active')
+        ->assertJsonMissingPath('data.secret_key');
 
     $webhook = Webhook::query()->firstOrFail();
 
@@ -139,7 +142,9 @@ test('client can update own webhook', function () {
         ->assertJsonPath('data.name', 'Webhook moi')
         ->assertJsonPath('data.url', 'https://example.com/new')
         ->assertJsonPath('data.event_keyword', 'new-event')
-        ->assertJsonPath('data.status', 'active');
+        ->assertJsonPath('data.status', 'active')
+        ->assertJsonPath('data.secret_key_masked', 'sec******old')
+        ->assertJsonMissingPath('data.secret_key');
 
     $webhook->refresh();
 
@@ -147,6 +152,34 @@ test('client can update own webhook', function () {
         ->and($webhook->url)->toBe('https://example.com/new')
         ->and($webhook->event_keyword)->toBe('new-event')
         ->and($webhook->status)->toBe('active');
+});
+
+test('client can reveal own webhook secret on demand', function () {
+    $user = User::factory()->create();
+    Sanctum::actingAs($user);
+
+    $webhook = Webhook::query()->create([
+        'user_id' => $user->id,
+        'bank_account_id' => BankAccount::query()->create([
+            'bank_name' => 'acb',
+            'account_name' => 'Tai khoan ACB',
+            'account_number' => '001122334455',
+            'username' => 'acb_user',
+            'password' => 'secret-password',
+            'status' => 'active',
+        ])->id,
+        'name' => 'Webhook reveal',
+        'url' => 'https://example.com/reveal',
+        'secret_key' => 'secret-key-reveal',
+        'event_keyword' => 'reveal-event',
+        'status' => 'active',
+    ]);
+
+    $this->getJson("/api/webhook/{$webhook->id}/secret")
+        ->assertSuccessful()
+        ->assertJsonPath('status', true)
+        ->assertJsonPath('data.id', $webhook->id)
+        ->assertJsonPath('data.secret_key', 'secret-key-reveal');
 });
 
 test('client can delete own webhook', function () {

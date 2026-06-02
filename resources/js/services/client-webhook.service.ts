@@ -28,6 +28,11 @@ export const clientWebhookService = {
         return Array.isArray(res.data?.data) ? res.data.data : [];
     },
 
+    async revealSecret(id: string | number): Promise<string> {
+        const res = await api.get(`/api/webhook/${id}/secret`);
+        return String(res.data?.data?.secret_key ?? '');
+    },
+
     async delete(id: string | number) {
         return api.delete(`/api/webhook/${id}`);
     },

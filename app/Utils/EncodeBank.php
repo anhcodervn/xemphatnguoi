@@ -10,11 +10,13 @@ class EncodeBank
 
     private const LEGACY_PREFIX = 'bank:enc:';
 
-    private const VERSION = 'v2';
+    private const VERSION = 'v3';
+
+    private const LEGACY_VERSION = 'v2';
 
     private const CIPHER = 'AES-256-CBC';
 
-    private const KEY = 'e1af337ba9f96d15e66e71c4c14156e80cef73602b8c51572203f77b76999809';
+    private const LEGACY_KEY = 'e1af337ba9f96d15e66e71c4c14156e80cef73602b8c51572203f77b76999809';
 
     public static function encode(?string $value): ?string
     {
@@ -147,7 +149,9 @@ class EncodeBank
     {
         $payload = json_decode(substr($value, strlen(self::PREFIX)), true);
 
-        return is_array($payload) && ($payload['v'] ?? null) === self::VERSION;
+        return is_array($payload)
+            && is_string($payload['v'] ?? null)
+            && in_array($payload['v'], [self::VERSION, self::LEGACY_VERSION], true);
     }
 
     private static function decodeCurrent(string $value): ?string
@@ -166,7 +170,8 @@ class EncodeBank
             return $value;
         }
 
-        $key = self::resolveKey();
+        $version = is_string($payload['v'] ?? null) ? $payload['v'] : self::LEGACY_VERSION;
+        $key = self::resolveKey($version);
         $expectedMac = hash_hmac('sha256', $ivEncoded.'.'.$cipherEncoded, $key);
 
         if (! hash_equals($expectedMac, $mac)) {
@@ -185,9 +190,27 @@ class EncodeBank
         return $plainText === false ? $value : $plainText;
     }
 
-    private static function resolveKey(): string
+    private static function resolveKey(string $version = self::VERSION): string
     {
-        return hash('sha256', self::KEY, true);
+        if ($version === self::LEGACY_VERSION) {
+            return hash('sha256', self::LEGACY_KEY, true);
+        }
+
+        $configuredKey = config('app.key');
+
+        if (! is_string($configuredKey) || $configuredKey === '') {
+            throw new \RuntimeException('APP_KEY chưa được cấu hình để mã hóa dữ liệu ngân hàng.');
+        }
+
+        if (str_starts_with($configuredKey, 'base64:')) {
+            $decoded = base64_decode(substr($configuredKey, 7), true);
+
+            if ($decoded !== false && $decoded !== '') {
+                return hash('sha256', $decoded, true);
+            }
+        }
+
+        return hash('sha256', $configuredKey, true);
     }
 
     private static function transform(mixed $value, bool $encode): mixed
