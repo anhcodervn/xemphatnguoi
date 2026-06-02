@@ -7,12 +7,13 @@ use App\Models\CouponLog;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\DB;
 
 class CouponService
 {
     /**
-     * @param array<string, mixed> $filters
+     * @param  array<string, mixed>  $filters
      */
     public function paginate(array $filters = []): LengthAwarePaginator
     {
@@ -75,7 +76,7 @@ class CouponService
     public function show(Coupon $coupon): Coupon
     {
         return $coupon->load([
-            'logs' => fn (Builder $query) => $query->with([
+            'logs' => fn (HasMany $query) => $query->with([
                 'user:id,full_name,username,email',
                 'admin:id,full_name,username,email',
                 'packageOrder:id,order_code',
@@ -84,7 +85,7 @@ class CouponService
     }
 
     /**
-     * @param array<string, mixed> $payload
+     * @param  array<string, mixed>  $payload
      */
     public function create(array $payload, User $admin): Coupon
     {
@@ -105,7 +106,7 @@ class CouponService
     }
 
     /**
-     * @param array<string, mixed> $payload
+     * @param  array<string, mixed>  $payload
      */
     public function update(Coupon $coupon, array $payload, User $admin): Coupon
     {
@@ -147,7 +148,7 @@ class CouponService
     }
 
     /**
-     * @param array<string, mixed> $filters
+     * @param  array<string, mixed>  $filters
      */
     public function paginateLogs(array $filters = [], ?Coupon $coupon = null): LengthAwarePaginator
     {
@@ -185,7 +186,7 @@ class CouponService
     }
 
     /**
-     * @param array<string, mixed> $payload
+     * @param  array<string, mixed>  $payload
      * @return array<string, mixed>
      */
     protected function normalizePayload(array $payload): array
@@ -210,7 +211,7 @@ class CouponService
     }
 
     /**
-     * @param array<string, mixed>|null $payload
+     * @param  array<string, mixed>|null  $payload
      */
     public function recordLog(
         Coupon $coupon,

@@ -68,6 +68,29 @@ test('admin can create a coupon with usage requirements and log entry', function
     ]);
 });
 
+test('admin can view coupon detail for edit form', function () {
+    $admin = adminUser();
+    $coupon = Coupon::factory()->create([
+        'code' => 'EDIT-COUPON',
+        'name' => 'Coupon sửa',
+    ]);
+
+    $coupon->logs()->create([
+        'admin_id' => $admin->id,
+        'action' => 'updated',
+        'status' => 'success',
+        'note' => 'Đã cập nhật coupon',
+        'payload' => ['source' => 'test'],
+    ]);
+
+    $this->actingAs($admin)
+        ->getJson("/admin-api/coupons/{$coupon->id}")
+        ->assertOk()
+        ->assertJsonPath('status', true)
+        ->assertJsonPath('data.code', 'EDIT-COUPON')
+        ->assertJsonPath('data.logs.0.action', 'updated');
+});
+
 test('admin can update a coupon and keep code normalized', function () {
     $admin = adminUser();
     $coupon = Coupon::factory()->create([
