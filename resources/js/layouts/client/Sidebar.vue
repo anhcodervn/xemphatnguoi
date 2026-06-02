@@ -74,7 +74,7 @@ onMounted(async () => {
     >
         <div class="flex h-full flex-col">
             <div class="flex items-center justify-between border-b border-white/10 px-5 py-5">
-                <div v-if="!siteLogo" class="flex items-center gap-3">
+                <RouterLink to="/" v-if="!siteLogo" class="flex items-center gap-3">
                     <div class="flex h-11 w-11 items-center justify-center rounded-full bg-white px-3 text-[#41b883]">
                         <Menu class="h-5 w-5" />
                     </div>
@@ -82,11 +82,11 @@ onMounted(async () => {
                         <p class="font-semibold">{{ siteName }}</p>
                         <p class="line-clamp-1 text-xs text-white/50">{{ siteDescription }}</p>
                     </div>
-                </div>
+                </RouterLink>
 
-                <div v-else class="flex items-center">
+                <RouterLink to="/" v-else class="flex items-center">
                     <img :src="siteLogo || ''" alt="logo website" />
-                </div>
+                </RouterLink>
 
                 <button type="button" class="rounded-xl p-2 text-white/70 lg:hidden" @click="$emit('close')">
                     <X class="h-4 w-4" />
