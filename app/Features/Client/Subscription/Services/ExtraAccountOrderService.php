@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Models\UserSubscription;
 use App\Support\Enums\ExtraAccountOrderStatus;
 use App\Support\Enums\SubscriptionStatus;
+use App\Utils\SendMessage;
 use Illuminate\Support\Facades\DB;
 
 class ExtraAccountOrderService
@@ -42,7 +43,9 @@ class ExtraAccountOrderService
 
     public function markAsPaid(User $user, ExtraAccountOrder $extraAccountOrder): ExtraAccountOrder
     {
-        return DB::transaction(function () use ($user, $extraAccountOrder): ExtraAccountOrder {
+        $shouldNotify = false;
+
+        $paidOrder = DB::transaction(function () use ($user, $extraAccountOrder, &$shouldNotify): ExtraAccountOrder {
             $lockedOrder = ExtraAccountOrder::query()
                 ->with(['subscription.package'])
                 ->whereKey($extraAccountOrder->id)
@@ -67,7 +70,28 @@ class ExtraAccountOrderService
                 'status' => ExtraAccountOrderStatus::Paid,
             ])->save();
 
-            return $this->applyExtraAccountOrderPaymentAction->handle($lockedOrder);
+            $paidOrder = $this->applyExtraAccountOrderPaymentAction->handle($lockedOrder);
+            $shouldNotify = true;
+
+            return $paidOrder;
         });
+
+        if ($shouldNotify) {
+            $paidOrder->loadMissing('subscription.package');
+
+            SendMessage::sendInfoReport('Người dùng mua thêm extra thành công', [
+                'User ID' => $user->id,
+                'Username' => $user->username,
+                'Order ID' => $paidOrder->id,
+                'Package' => $paidOrder->subscription?->package?->name,
+                'Subscription ID' => $paidOrder->user_subscription_id,
+                'Số lượng extra' => $paidOrder->quantity,
+                'Số tiền' => $paidOrder->price,
+                'Tổng extra hiện tại' => $paidOrder->subscription?->extra_account_limit,
+                'Hiệu lực đến' => $paidOrder->expired_at,
+            ]);
+        }
+
+        return $paidOrder;
     }
 }

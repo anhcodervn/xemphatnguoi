@@ -6,6 +6,7 @@ use App\Features\Client\Wallet\Observers\WalletTransactionObserver;
 use App\Models\ApiKey;
 use App\Models\QueueLog;
 use App\Models\WalletTransaction;
+use App\Utils\SendMessage;
 use Illuminate\Http\Request;
 use Illuminate\Queue\Events\JobFailed;
 use Illuminate\Queue\Events\JobProcessed;
@@ -14,7 +15,9 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
+use Throwable;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -67,41 +70,47 @@ class AppServiceProvider extends ServiceProvider
             $payload = $event->job->payload();
             $jobUuid = $event->job->uuid() ?: Arr::get($payload, 'uuid');
 
-            QueueLog::query()->create([
-                'job_uuid' => is_string($jobUuid) ? $jobUuid : null,
-                'connection' => $event->connectionName,
-                'queue' => $event->job->getQueue(),
-                'job_name' => $event->job->resolveName(),
-                'status' => 'processing',
-                'attempts' => (int) $event->job->attempts(),
-                'payload' => $this->sanitizeQueuePayload($payload),
-                'processing_at' => now(),
-            ]);
+            if ($this->canWriteQueueLogs()) {
+                QueueLog::query()->create([
+                    'job_uuid' => is_string($jobUuid) ? $jobUuid : null,
+                    'connection' => $event->connectionName,
+                    'queue' => $event->job->getQueue(),
+                    'job_name' => $event->job->resolveName(),
+                    'status' => 'processing',
+                    'attempts' => (int) $event->job->attempts(),
+                    'payload' => $this->sanitizeQueuePayload($payload),
+                    'processing_at' => now(),
+                ]);
+            }
         });
 
         Queue::after(function (JobProcessed $event): void {
             $jobUuid = $event->job->uuid() ?: Arr::get($event->job->payload(), 'uuid');
             if (! is_string($jobUuid) || $jobUuid === '') {
-                return;
+                $jobUuid = null;
             }
 
-            QueueLog::query()
-                ->where('job_uuid', $jobUuid)
-                ->where('status', 'processing')
-                ->latest('id')
-                ->limit(1)
-                ->update([
-                    'status' => 'success',
-                    'processed_at' => now(),
-                    'updated_at' => now(),
-                ]);
+            if ($this->canWriteQueueLogs() && is_string($jobUuid) && $jobUuid !== '') {
+                QueueLog::query()
+                    ->where('job_uuid', $jobUuid)
+                    ->where('status', 'processing')
+                    ->latest('id')
+                    ->limit(1)
+                    ->update([
+                        'status' => 'success',
+                        'processed_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+            }
+
+            $this->sendQueueProcessedNotification($event);
         });
 
         Queue::failing(function (JobFailed $event): void {
             $jobUuid = $event->job->uuid() ?: Arr::get($event->job->payload(), 'uuid');
             $errorMessage = $event->exception->getMessage();
 
-            if (is_string($jobUuid) && $jobUuid !== '') {
+            if ($this->canWriteQueueLogs() && is_string($jobUuid) && $jobUuid !== '') {
                 QueueLog::query()
                     ->where('job_uuid', $jobUuid)
                     ->where('status', 'processing')
@@ -114,21 +123,27 @@ class AppServiceProvider extends ServiceProvider
                         'updated_at' => now(),
                     ]);
 
+                $this->sendQueueFailedNotification($event);
+
                 return;
             }
 
-            QueueLog::query()->create([
-                'job_uuid' => null,
-                'connection' => $event->connectionName,
-                'queue' => $event->job->getQueue(),
-                'job_name' => $event->job->resolveName(),
-                'status' => 'failed',
-                'attempts' => (int) $event->job->attempts(),
-                'payload' => $this->sanitizeQueuePayload($event->job->payload()),
-                'error_message' => $this->truncateError($errorMessage),
-                'processing_at' => now(),
-                'failed_at' => now(),
-            ]);
+            if ($this->canWriteQueueLogs()) {
+                QueueLog::query()->create([
+                    'job_uuid' => null,
+                    'connection' => $event->connectionName,
+                    'queue' => $event->job->getQueue(),
+                    'job_name' => $event->job->resolveName(),
+                    'status' => 'failed',
+                    'attempts' => (int) $event->job->attempts(),
+                    'payload' => $this->sanitizeQueuePayload($event->job->payload()),
+                    'error_message' => $this->truncateError($errorMessage),
+                    'processing_at' => now(),
+                    'failed_at' => now(),
+                ]);
+            }
+
+            $this->sendQueueFailedNotification($event);
         });
     }
 
@@ -150,5 +165,51 @@ class AppServiceProvider extends ServiceProvider
     private function truncateError(string $message): string
     {
         return mb_strimwidth($message, 0, 4000, '...');
+    }
+
+    private function canWriteQueueLogs(): bool
+    {
+        static $canWrite;
+
+        if (is_bool($canWrite)) {
+            return $canWrite;
+        }
+
+        try {
+            $canWrite = Schema::hasTable((new QueueLog)->getTable());
+        } catch (Throwable) {
+            $canWrite = false;
+        }
+
+        return $canWrite;
+    }
+
+    private function sendQueueProcessedNotification(JobProcessed $event): void
+    {
+        $payload = $this->sanitizeQueuePayload($event->job->payload());
+
+        SendMessage::sendQueueReport('Task xử lý thành công', [
+            'Job' => $event->job->resolveName(),
+            'Queue' => $event->job->getQueue(),
+            'Connection' => $event->connectionName,
+            'Attempts' => (int) $event->job->attempts(),
+            'Job UUID' => $event->job->uuid() ?: Arr::get($payload, 'uuid'),
+            'Payload' => $payload,
+        ]);
+    }
+
+    private function sendQueueFailedNotification(JobFailed $event): void
+    {
+        $payload = $this->sanitizeQueuePayload($event->job->payload());
+
+        SendMessage::sendQueueReport('Task xử lý thất bại', [
+            'Job' => $event->job->resolveName(),
+            'Queue' => $event->job->getQueue(),
+            'Connection' => $event->connectionName,
+            'Attempts' => (int) $event->job->attempts(),
+            'Job UUID' => $event->job->uuid() ?: Arr::get($payload, 'uuid'),
+            'Lý do lỗi' => $this->truncateError($event->exception->getMessage()),
+            'Payload' => $payload,
+        ]);
     }
 }

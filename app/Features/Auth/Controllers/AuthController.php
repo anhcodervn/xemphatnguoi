@@ -13,6 +13,7 @@ use App\Features\Client\Wallet\Services\WalletService;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Support\MailQueue;
+use App\Utils\SendMessage;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -126,6 +127,16 @@ class AuthController extends Controller
         }
 
         event(new Registered($user));
+        SendMessage::sendInfoReport('Người dùng đăng ký mới', [
+            'Loại đăng ký' => 'form',
+            'User ID' => $user->id,
+            'Username' => $user->username,
+            'Họ tên' => $user->name,
+            'Email' => $user->email,
+            'Số điện thoại' => $user->phone,
+            'Trạng thái' => $user->status,
+            'Vai trò' => $user->role,
+        ]);
 
         return response()->json([
             'status' => true,
@@ -191,6 +202,7 @@ class AuthController extends Controller
 
         try {
             $googleUser = $this->googleAuthService->fetchUser($code);
+            $isNewUser = false;
 
             $user = User::query()
                 ->where('google_id', $googleUser['id'])
@@ -212,6 +224,7 @@ class AuthController extends Controller
                     'email_verified_at' => $googleUser['email_verified'] ? ($user->email_verified_at ?: now()) : $user->email_verified_at,
                 ])->save();
             } else {
+                $isNewUser = true;
                 $user = User::query()->create([
                     'username' => Str::of($googleUser['email'])->before('@')->slug('')->value() ?: null,
                     'email' => $googleUser['email'],
@@ -230,6 +243,18 @@ class AuthController extends Controller
 
             $this->touchLastLogin($user, $request);
             $this->recordUserLogAction->handle($user, 'google_login', 'Đăng nhập bằng Google', $request);
+
+            if ($isNewUser) {
+                SendMessage::sendInfoReport('Người dùng đăng ký mới', [
+                    'Loại đăng ký' => 'google',
+                    'User ID' => $user->id,
+                    'Username' => $user->username,
+                    'Họ tên' => $user->name,
+                    'Email' => $user->email,
+                    'Trạng thái' => $user->status,
+                    'Vai trò' => $user->role,
+                ]);
+            }
 
             return redirect('/');
         } catch (Throwable $exception) {

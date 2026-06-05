@@ -16,6 +16,7 @@ use App\Support\Enums\PackageOrderStatus;
 use App\Support\Enums\PackageStatus;
 use App\Support\Enums\PaymentStatus;
 use App\Support\Enums\SubscriptionStatus;
+use App\Utils\SendMessage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -129,7 +130,9 @@ class PackageCheckoutService
      */
     public function payWithWallet(User $user, PackageOrder $packageOrder): array
     {
-        return DB::transaction(function () use ($user, $packageOrder): array {
+        $shouldNotify = false;
+
+        $result = DB::transaction(function () use ($user, $packageOrder, &$shouldNotify): array {
             $lockedOrder = PackageOrder::query()
                 ->with(['package', 'subscription', 'sourceSubscription'])
                 ->whereKey($packageOrder->id)
@@ -209,12 +212,19 @@ class PackageCheckoutService
             }
 
             $subscription = $this->createUserSubscriptionFromPaidOrderAction->handle($lockedOrder->fresh(['package']));
+            $shouldNotify = true;
 
             return [
                 'order' => $lockedOrder->fresh(['package', 'subscription', 'sourceSubscription']),
                 'subscription' => $subscription->fresh(['package']),
             ];
         });
+
+        if ($shouldNotify) {
+            $this->sendPackagePaymentNotification($user, $result['order'], $result['subscription'], 'wallet');
+        }
+
+        return $result;
     }
 
     private function calculateRemainingCredit(UserSubscription $subscription): float
@@ -366,5 +376,41 @@ class PackageCheckoutService
         }
 
         return sprintf('Mua mới gói qua đơn hàng %s', $packageOrder->order_code);
+    }
+
+    private function sendPackagePaymentNotification(
+        User $user,
+        PackageOrder $order,
+        UserSubscription $subscription,
+        string $paymentMethod,
+    ): void {
+        $quoteType = $this->resolveQuoteType(
+            $order->package,
+            null,
+            $order->sourceSubscription,
+        );
+
+        $title = match ($quoteType) {
+            'renewal' => 'Người dùng gia hạn gói thành công',
+            'upgrade' => 'Người dùng nâng cấp gói thành công',
+            default => 'Người dùng đăng ký gói mới thành công',
+        };
+
+        SendMessage::sendInfoReport($title, [
+            'User ID' => $user->id,
+            'Username' => $user->username,
+            'Package' => $order->package?->name ?? $subscription->package_name,
+            'Order code' => $order->order_code,
+            'Quote type' => $quoteType,
+            'Thanh toán' => $paymentMethod,
+            'Giá gói' => $order->price,
+            'Giảm giá' => $order->discount_amount,
+            'Khấu trừ còn lại' => $order->credit_amount,
+            'Thành tiền' => $order->final_amount,
+            'Subscription ID' => $subscription->id,
+            'Bắt đầu' => $subscription->starts_at,
+            'Hết hạn' => $subscription->expires_at,
+            'Extra slots mang theo' => $subscription->extra_account_limit,
+        ]);
     }
 }

@@ -11,6 +11,7 @@ use App\Models\UserSubscription;
 use App\Support\Enums\PackageOrderStatus;
 use App\Support\Enums\PackageStatus;
 use App\Support\Enums\PaymentStatus;
+use App\Utils\SendMessage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -48,7 +49,9 @@ class PackageOrderService
 
     public function markAsPaid(PackageOrder $packageOrder, ?string $paymentMethod = null): UserSubscription
     {
-        return DB::transaction(function () use ($packageOrder, $paymentMethod): UserSubscription {
+        $shouldNotify = false;
+
+        $subscription = DB::transaction(function () use ($packageOrder, $paymentMethod, &$shouldNotify): UserSubscription {
             $lockedOrder = PackageOrder::query()
                 ->whereKey($packageOrder->id)
                 ->lockForUpdate()
@@ -65,8 +68,31 @@ class PackageOrderService
                 'paid_at' => $lockedOrder->paid_at ?? now(),
             ])->save();
 
-            return $this->createUserSubscriptionFromPaidOrderAction->handle($lockedOrder->fresh(['package']));
+            $subscription = $this->createUserSubscriptionFromPaidOrderAction->handle($lockedOrder->fresh(['package']));
+            $shouldNotify = true;
+
+            return $subscription;
         });
+
+        if ($shouldNotify) {
+            $packageOrder->loadMissing('user', 'package', 'sourceSubscription');
+
+            SendMessage::sendInfoReport('Người dùng đăng ký gói thành công', [
+                'User ID' => $packageOrder->user_id,
+                'Username' => $packageOrder->user?->username,
+                'Package' => $packageOrder->package?->name,
+                'Order code' => $packageOrder->order_code,
+                'Thanh toán' => $paymentMethod ?? $packageOrder->payment_method,
+                'Giá gói' => $packageOrder->price,
+                'Giảm giá' => $packageOrder->discount_amount,
+                'Thành tiền' => $packageOrder->final_amount,
+                'Subscription ID' => $subscription->id,
+                'Bắt đầu' => $subscription->starts_at,
+                'Hết hạn' => $subscription->expires_at,
+            ]);
+        }
+
+        return $subscription;
     }
 
     private function generateOrderCode(): string
