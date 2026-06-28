@@ -8,7 +8,7 @@ import {
     type AdminUserWalletTransaction,
 } from '@/services/admin-user.service';
 import { handleErrorResponse, handleSuccessResponse } from '@/utils/response';
-import { ArrowLeft, Clock3, History, LoaderCircle, Minus, Package, Plus, Wallet, Webhook } from 'lucide-vue-next';
+import { ArrowLeft, Clock3, History, KeyRound, LoaderCircle, Minus, Package, Plus, Wallet, Webhook } from 'lucide-vue-next';
 import { computed, onMounted, reactive, ref } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 
@@ -26,6 +26,7 @@ const userId = Number(route.params.user_id);
 
 const loading = ref(false);
 const adjustingWallet = ref(false);
+const resettingPassword = ref(false);
 const detail = ref<AdminUserDetailResponse | null>(null);
 const activeTab = ref<TabKey>('overview');
 
@@ -33,6 +34,11 @@ const walletForm = reactive({
     type: 'add' as 'add' | 'subtract',
     amount: '',
     note: '',
+});
+
+const passwordForm = reactive({
+    password: '',
+    password_confirmation: '',
 });
 
 const transactionsState = reactive<TabState<AdminUserWalletTransaction>>({
@@ -258,6 +264,45 @@ const submitWalletAdjust = async (): Promise<void> => {
     }
 };
 
+const submitPasswordReset = async (): Promise<void> => {
+    if (passwordForm.password.trim() === '' || passwordForm.password_confirmation.trim() === '') {
+        handleErrorResponse({
+            response: {
+                status: 422,
+                data: {
+                    errors: {
+                        password: ['Vui lòng nhập đầy đủ mật khẩu mới và xác nhận mật khẩu.'],
+                    },
+                },
+            },
+        });
+        return;
+    }
+
+    resettingPassword.value = true;
+
+    try {
+        await adminUserService.resetPassword(userId, {
+            password: passwordForm.password,
+            password_confirmation: passwordForm.password_confirmation,
+        });
+
+        passwordForm.password = '';
+        passwordForm.password_confirmation = '';
+
+        handleSuccessResponse({
+            data: {
+                status: true,
+                message: 'Đã cấp lại mật khẩu cho người dùng.',
+            },
+        });
+    } catch (error) {
+        handleErrorResponse(error);
+    } finally {
+        resettingPassword.value = false;
+    }
+};
+
 const goToTabPage = async (tab: TabKey, page: number): Promise<void> => {
     if (tab === 'transactions') {
         await loadTransactions(page);
@@ -383,73 +428,113 @@ onMounted(async () => {
                         </section>
 
                         <section class="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
-                            <article class="rounded-[10px] border border-slate-200 bg-slate-50 p-4">
-                                <h3 class="text-base font-bold text-slate-950">Điều chỉnh số dư</h3>
-                                <p class="mt-1 text-sm text-slate-500">Cộng hoặc trừ tiền trực tiếp vào ví chính của người dùng.</p>
+                            <div class="space-y-4">
+                                <article class="rounded-[10px] border border-slate-200 bg-slate-50 p-4">
+                                    <h3 class="text-base font-bold text-slate-950">Điều chỉnh số dư</h3>
+                                    <p class="mt-1 text-sm text-slate-500">Cộng hoặc trừ tiền trực tiếp vào ví chính của người dùng.</p>
 
-                                <div class="mt-4 grid gap-3">
-                                    <div class="flex gap-2">
+                                    <div class="mt-4 grid gap-3">
+                                        <div class="flex gap-2">
+                                            <button
+                                                type="button"
+                                                class="inline-flex items-center gap-2 rounded-[8px] px-3 py-2 text-sm font-semibold transition"
+                                                :class="
+                                                    walletForm.type === 'add'
+                                                        ? 'bg-emerald-600 text-white'
+                                                        : 'border border-slate-200 bg-white text-slate-600'
+                                                "
+                                                @click="walletForm.type = 'add'"
+                                            >
+                                                <Plus class="h-4 w-4" />
+                                                Cộng tiền
+                                            </button>
+                                            <button
+                                                type="button"
+                                                class="inline-flex items-center gap-2 rounded-[8px] px-3 py-2 text-sm font-semibold transition"
+                                                :class="
+                                                    walletForm.type === 'subtract'
+                                                        ? 'bg-orange-500 text-white'
+                                                        : 'border border-slate-200 bg-white text-slate-600'
+                                                "
+                                                @click="walletForm.type = 'subtract'"
+                                            >
+                                                <Minus class="h-4 w-4" />
+                                                Trừ tiền
+                                            </button>
+                                        </div>
+
+                                        <label class="grid gap-1">
+                                            <span class="text-sm font-medium text-slate-600">Số tiền</span>
+                                            <input
+                                                v-model="walletForm.amount"
+                                                type="number"
+                                                min="1"
+                                                placeholder="Nhập số tiền"
+                                                class="rounded-[8px] border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none focus:border-[#465fff]"
+                                            />
+                                        </label>
+
+                                        <label class="grid gap-1">
+                                            <span class="text-sm font-medium text-slate-600">Ghi chú</span>
+                                            <textarea
+                                                v-model="walletForm.note"
+                                                rows="3"
+                                                placeholder="Ví dụ: điều chỉnh công nợ, hoàn tiền thủ công..."
+                                                class="rounded-[8px] border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none focus:border-[#465fff]"
+                                            />
+                                        </label>
+
                                         <button
                                             type="button"
-                                            class="inline-flex items-center gap-2 rounded-[8px] px-3 py-2 text-sm font-semibold transition"
-                                            :class="
-                                                walletForm.type === 'add'
-                                                    ? 'bg-emerald-600 text-white'
-                                                    : 'border border-slate-200 bg-white text-slate-600'
-                                            "
-                                            @click="walletForm.type = 'add'"
+                                            class="inline-flex items-center justify-center gap-2 rounded-[8px] bg-[#465fff] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_10px_20px_rgba(70,95,255,0.2)] transition disabled:cursor-not-allowed disabled:opacity-60"
+                                            :disabled="adjustingWallet"
+                                            @click="submitWalletAdjust"
                                         >
-                                            <Plus class="h-4 w-4" />
-                                            Cộng tiền
-                                        </button>
-                                        <button
-                                            type="button"
-                                            class="inline-flex items-center gap-2 rounded-[8px] px-3 py-2 text-sm font-semibold transition"
-                                            :class="
-                                                walletForm.type === 'subtract'
-                                                    ? 'bg-orange-500 text-white'
-                                                    : 'border border-slate-200 bg-white text-slate-600'
-                                            "
-                                            @click="walletForm.type = 'subtract'"
-                                        >
-                                            <Minus class="h-4 w-4" />
-                                            Trừ tiền
+                                            <LoaderCircle v-if="adjustingWallet" class="h-4 w-4 animate-spin" />
+                                            <Wallet v-else class="h-4 w-4" />
+                                            Xác nhận điều chỉnh
                                         </button>
                                     </div>
+                                </article>
 
-                                    <label class="grid gap-1">
-                                        <span class="text-sm font-medium text-slate-600">Số tiền</span>
-                                        <input
-                                            v-model="walletForm.amount"
-                                            type="number"
-                                            min="1"
-                                            placeholder="Nhập số tiền"
-                                            class="rounded-[8px] border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none focus:border-[#465fff]"
-                                        />
-                                    </label>
+                                <article class="rounded-[10px] border border-slate-200 bg-slate-50 p-4">
+                                    <h3 class="text-base font-bold text-slate-950">Cấp lại mật khẩu</h3>
+                                    <p class="mt-1 text-sm text-slate-500">Nhập mật khẩu mới cho người dùng. Sau khi cập nhật, các phiên đăng nhập khác sẽ bị đăng xuất.</p>
 
-                                    <label class="grid gap-1">
-                                        <span class="text-sm font-medium text-slate-600">Ghi chú</span>
-                                        <textarea
-                                            v-model="walletForm.note"
-                                            rows="3"
-                                            placeholder="Ví dụ: điều chỉnh công nợ, hoàn tiền thủ công..."
-                                            class="rounded-[8px] border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none focus:border-[#465fff]"
-                                        />
-                                    </label>
+                                    <div class="mt-4 grid gap-3">
+                                        <label class="grid gap-1">
+                                            <span class="text-sm font-medium text-slate-600">Mật khẩu mới</span>
+                                            <input
+                                                v-model="passwordForm.password"
+                                                type="password"
+                                                placeholder="Nhập mật khẩu mới"
+                                                class="rounded-[8px] border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none focus:border-[#465fff]"
+                                            />
+                                        </label>
 
-                                    <button
-                                        type="button"
-                                        class="inline-flex items-center justify-center gap-2 rounded-[8px] bg-[#465fff] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_10px_20px_rgba(70,95,255,0.2)] transition disabled:cursor-not-allowed disabled:opacity-60"
-                                        :disabled="adjustingWallet"
-                                        @click="submitWalletAdjust"
-                                    >
-                                        <LoaderCircle v-if="adjustingWallet" class="h-4 w-4 animate-spin" />
-                                        <Wallet v-else class="h-4 w-4" />
-                                        Xác nhận điều chỉnh
-                                    </button>
-                                </div>
-                            </article>
+                                        <label class="grid gap-1">
+                                            <span class="text-sm font-medium text-slate-600">Xác nhận mật khẩu</span>
+                                            <input
+                                                v-model="passwordForm.password_confirmation"
+                                                type="password"
+                                                placeholder="Nhập lại mật khẩu mới"
+                                                class="rounded-[8px] border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none focus:border-[#465fff]"
+                                            />
+                                        </label>
+
+                                        <button
+                                            type="button"
+                                            class="inline-flex items-center justify-center gap-2 rounded-[8px] border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-[#465fff] hover:text-[#465fff] disabled:cursor-not-allowed disabled:opacity-60"
+                                            :disabled="resettingPassword"
+                                            @click="submitPasswordReset"
+                                        >
+                                            <LoaderCircle v-if="resettingPassword" class="h-4 w-4 animate-spin" />
+                                            <KeyRound v-else class="h-4 w-4" />
+                                            Cập nhật mật khẩu
+                                        </button>
+                                    </div>
+                                </article>
+                            </div>
 
                             <article class="rounded-[10px] border border-slate-200 bg-white p-4">
                                 <h3 class="text-base font-bold text-slate-950">Thông tin tài khoản</h3>

@@ -185,6 +185,16 @@ export const adminUserService = {
         await api.patch(`/api/admin-api/users/${userId}/status`, { status });
     },
 
+    async resetPassword(
+        userId: number | string,
+        payload: {
+            password: string;
+            password_confirmation: string;
+        },
+    ): Promise<void> {
+        await api.post(`/api/admin-api/users/${userId}/reset-password`, payload);
+    },
+
     async adjustWallet(
         userId: number | string,
         payload: {

@@ -11,6 +11,7 @@ Route::middleware(['auth:sanctum', 'admin'])
         Route::get('/', 'index')->name('index');
         Route::get('{user}', 'show')->name('show');
         Route::patch('{user}/status', 'updateStatus')->name('status.update');
+        Route::post('{user}/reset-password', 'resetPassword')->name('password.reset');
         Route::post('{user}/wallet-adjust', 'walletAdjust')->name('wallet.adjust');
         Route::get('{user}/wallet-transactions', 'walletTransactions')->name('wallet-transactions.index');
         Route::get('{user}/package-orders', 'packageOrders')->name('package-orders.index');

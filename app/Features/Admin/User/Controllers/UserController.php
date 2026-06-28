@@ -7,8 +7,10 @@ use App\Features\Admin\User\Actions\ListAdminUsersAction;
 use App\Features\Admin\User\Actions\ListUserLogsAction;
 use App\Features\Admin\User\Actions\ListUserPackageOrdersAction;
 use App\Features\Admin\User\Actions\ListUserWalletTransactionsAction;
+use App\Features\Admin\User\Actions\ResetAdminUserPasswordAction;
 use App\Features\Admin\User\Actions\ShowAdminUserAction;
 use App\Features\Admin\User\Actions\UpdateAdminUserStatusAction;
+use App\Features\Admin\User\Requests\AdminResetUserPasswordRequest;
 use App\Features\Admin\User\Requests\AdminUserIndexRequest;
 use App\Features\Admin\User\Requests\AdminUserRelatedListRequest;
 use App\Features\Admin\User\Requests\AdminUserStatusRequest;
@@ -54,6 +56,18 @@ class UserController extends Controller
         return response()->json(ApiResponse::success(
             'Điều chỉnh số dư ví thành công.',
             $action->handle($user, $request->validated(), $this->admin($request)),
+        ));
+    }
+
+    public function resetPassword(
+        AdminResetUserPasswordRequest $request,
+        User $user,
+        ResetAdminUserPasswordAction $action,
+    ): JsonResponse {
+        $action->handle($user, $request->validated(), $this->admin($request), $request);
+
+        return response()->json(ApiResponse::success(
+            'Cấp lại mật khẩu người dùng thành công.',
         ));
     }
 
