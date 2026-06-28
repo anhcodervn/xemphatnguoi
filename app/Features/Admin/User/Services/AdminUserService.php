@@ -5,13 +5,12 @@ namespace App\Features\Admin\User\Services;
 use App\Features\Admin\PackageOrder\Resources\AdminPackageOrderResource;
 use App\Features\Admin\User\Resources\AdminUserResource;
 use App\Features\Admin\WalletTransaction\Resources\AdminWalletTransactionResource;
-use App\Features\Admin\Webhook\Resources\AdminWebhookResource;
+use App\Models\CronUsageCounter;
 use App\Models\PackageOrder;
 use App\Models\User;
 use App\Models\UserLog;
 use App\Models\Wallet;
 use App\Models\WalletTransaction;
-use App\Models\Webhook;
 use App\Support\Enums\SubscriptionStatus;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -57,23 +56,26 @@ class AdminUserService
                         ->orderByDesc('expires_at');
                 },
             ])
-            ->withCount(['packageOrders', 'webhooks', 'apiKeys', 'accounts'])
+            ->withCount(['packageOrders', 'cronJobs', 'cronAlertChannels'])
             ->findOrFail($user->id);
 
         $wallet = $user->wallet;
         $currentSubscription = $user->userSubscriptions->first();
+        $runsToday = (int) CronUsageCounter::query()
+            ->where('user_id', $user->id)
+            ->whereDate('date', today()->toDateString())
+            ->value('total_runs');
 
         return [
             'user' => $user,
             'wallet' => $wallet,
             'current_subscription' => $currentSubscription,
             'stats' => [
-                'total_recharge' => (float) $user->rechargeOrders()->where('status', 'paid')->sum('total_amount'),
                 'total_spent' => $wallet instanceof Wallet ? (float) $wallet->total_spent : 0.0,
                 'package_order_count' => $user->package_orders_count,
-                'webhook_count' => $user->webhooks_count,
-                'api_key_count' => $user->api_keys_count,
-                'account_count' => $user->accounts_count,
+                'cron_job_count' => $user->cron_jobs_count,
+                'alert_channel_count' => $user->cron_alert_channels_count,
+                'runs_today' => $runsToday,
             ],
             'latest_login' => [
                 'at' => $user->last_login_at?->toISOString(),
@@ -146,44 +148,6 @@ class AdminUserService
         return [
             'data' => AdminPackageOrderResource::collection($orders->getCollection())->resolve(),
             'meta' => $this->paginationMeta($orders),
-        ];
-    }
-
-    /**
-     * @param  array<string, mixed>  $filters
-     * @return array<string, mixed>
-     */
-    public function paginateUserWebhooks(User $user, array $filters = []): array
-    {
-        $perPage = (int) ($filters['per_page'] ?? 15);
-
-        $webhooks = Webhook::query()
-            ->where('user_id', $user->id)
-            ->with(['user', 'bankAccount'])
-            ->withCount([
-                'logs as success_logs_count' => fn (HasMany $query) => $query->whereBetween('status_code', [200, 299]),
-                'logs as failed_logs_count' => fn (HasMany $query) => $query->where(function (Builder $builder): void {
-                    $builder->whereNull('status_code')->orWhere('status_code', '>=', 400);
-                }),
-            ])
-            ->withMax('logs', 'created_at')
-            ->when(filled($filters['search'] ?? null), function (Builder $query) use ($filters): void {
-                $search = trim((string) $filters['search']);
-                $query->where(function (Builder $builder) use ($search): void {
-                    $builder
-                        ->where('url', 'like', "%{$search}%")
-                        ->orWhere('name', 'like', "%{$search}%");
-                });
-            })
-            ->when(filled($filters['status'] ?? null), fn (Builder $query) => $query->where('status', $filters['status']))
-            ->when(filled($filters['event'] ?? null), fn (Builder $query) => $query->where('event_keyword', $filters['event']))
-            ->latest('id')
-            ->paginate($perPage)
-            ->withQueryString();
-
-        return [
-            'data' => AdminWebhookResource::collection($webhooks->getCollection())->resolve(),
-            'meta' => $this->paginationMeta($webhooks),
         ];
     }
 

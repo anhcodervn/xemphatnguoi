@@ -2,7 +2,6 @@
 
 namespace App\Features\Client\Profile\Services;
 
-use App\Features\Client\ApiKey\Services\ApiKeyEligibilityService;
 use App\Features\Client\Profile\Resources\UserLogResource;
 use App\Features\Client\Profile\Resources\WalletTransactionResource;
 use App\Models\User;
@@ -10,25 +9,16 @@ use Illuminate\Database\Eloquent\Builder;
 
 class ProfileService
 {
-    public function __construct(
-        private readonly ApiKeyEligibilityService $apiKeyEligibilityService,
-    ) {
-    }
-
     public function profile(User $user): User
     {
         $profile = $user->fresh() ?? $user;
         $profile->loadMissing('userSubscriptions.package');
 
-        $apiAccess = $this->apiKeyEligibilityService->summary($profile);
-
-        $profile->setAttribute('api_access', $apiAccess);
-
         return $profile;
     }
 
     /**
-     * @param array{search?:string,action?:string,per_page?:int} $filters
+     * @param  array{search?:string,action?:string,per_page?:int}  $filters
      * @return array<string, mixed>
      */
     public function userLogs(User $user, array $filters = []): array
@@ -63,7 +53,7 @@ class ProfileService
     }
 
     /**
-     * @param array{search?:string,type?:string,per_page?:int} $filters
+     * @param  array{search?:string,type?:string,per_page?:int}  $filters
      * @return array<string, mixed>
      */
     public function walletTransactions(User $user, array $filters = []): array

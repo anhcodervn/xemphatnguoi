@@ -5,35 +5,35 @@
         $settings = $systemSettings ?? [];
         $hotline = $settings['hotline'] ?? '';
         $supportEmail = $settings['support_email'] ?? '';
-        $heroDescription = 'Hệ thống cung cấp API kiểm tra thanh toán giao dịch ngân hàng. Tích hợp dễ dàng, bảo mật cao, dữ liệu chính xác, nâng cao hiệu quả kinh doanh của bạn.';
+        $heroDescription = 'Tạo và quản lý HTTP Cron Jobs theo lịch, chạy qua queue, theo dõi logs, kiểm soát quota theo gói và nhận cảnh báo khi task lỗi.';
 
         $socialLinks = array_filter([
             ['label' => 'Facebook', 'url' => $settings['facebook'] ?? ''],
             ['label' => 'Zalo', 'url' => $settings['zalo'] ?? ''],
             ['label' => 'YouTube', 'url' => $settings['youtube'] ?? ''],
-        ], fn($item) => !empty($item['url']));
+        ], fn ($item) => ! empty($item['url']));
 
         $developerStats = [
-            ['label' => 'Luồng tích hợp', 'value' => 'API + Webhook'],
-            ['label' => 'Ngân hàng hỗ trợ', 'value' => 'ACB / MB / VCB'],
-            ['label' => 'Đối soát', 'value' => '24/7'],
-            ['label' => 'Mô hình', 'value' => 'Tạo lệnh nạp'],
+            ['label' => 'Lịch chạy', 'value' => 'Interval + Cron expression'],
+            ['label' => 'Queue', 'value' => 'cron-low / default / high'],
+            ['label' => 'Cảnh báo', 'value' => 'Discord / Telegram / Webhook'],
+            ['label' => 'Giám sát', 'value' => 'Logs + quota + retry'],
         ];
 
         $features = [
-            ['icon' => 'bx bx-arrow-left-right', 'title' => 'Tạo lệnh nạp linh hoạt', 'content' => 'Đối tác chỉ cần gửi bank_id và số tiền. Hệ thống tự sinh order_code và nội dung chuyển khoản để đối soát.'],
-            ['icon' => 'bx bx-credit-card-front', 'title' => 'Kết nối API banking', 'content' => 'Hỗ trợ liên kết tài khoản ngân hàng đã cấp quyền, theo dõi giao dịch tập trung và kiểm soát request an toàn.'],
-            ['icon' => 'bx bx-bolt-circle', 'title' => 'Webhook realtime', 'content' => 'Gửi callback ngay khi lệnh nạp đổi trạng thái, phù hợp cho website, app, game và hệ thống thu hộ.'],
-            ['icon' => 'bx bx-check-shield', 'title' => 'Bảo mật theo IP', 'content' => 'API key có whitelist IP, xoay key và secret, phân quyền rõ theo từng nhóm endpoint được cấp phép.'],
-            ['icon' => 'bx bx-chart-line', 'title' => 'Đối soát tự động', 'content' => 'Quét giao dịch 24/7, so khớp số tiền và nội dung chuyển khoản để xác nhận trạng thái đơn nạp nhanh chóng.'],
-            ['icon' => 'bx bx-shield-quarter', 'title' => 'Quản trị tập trung', 'content' => 'Theo dõi queue, webhook, bank account, giao dịch và cấu hình thương hiệu từ cùng một dashboard.'],
+            ['icon' => 'bx bx-timer', 'title' => 'Lập lịch linh hoạt', 'content' => 'Tạo task theo phút, theo số giây hoặc cron expression tùy gói. Hệ thống tự tính lần chạy kế tiếp và khóa chống chạy trùng.'],
+            ['icon' => 'bx bx-link-external', 'title' => 'HTTP request đa cấu hình', 'content' => 'Hỗ trợ GET, POST, PUT, PATCH, DELETE với query params, headers, body JSON, form hoặc raw.'],
+            ['icon' => 'bx bx-pulse', 'title' => 'Logs dễ theo dõi', 'content' => 'Lưu request/response preview, thời gian chạy, status code, lỗi timeout, SSL, DNS hoặc body mismatch một cách gọn gàng.'],
+            ['icon' => 'bx bx-bell', 'title' => 'Cảnh báo thông minh', 'content' => 'Gửi cảnh báo khi task lỗi, timeout, lệch status code hoặc hồi phục qua Discord, Telegram, Webhook, Email.'],
+            ['icon' => 'bx bx-shield-quarter', 'title' => 'Bảo vệ SSRF', 'content' => 'Chặn localhost, private IP, metadata IP, scheme lạ, port nguy hiểm và redirect sang mạng nội bộ trước khi request.'],
+            ['icon' => 'bx bx-layer', 'title' => 'Giới hạn theo gói', 'content' => 'Quản lý số lượng cron jobs, khoảng cách chạy tối thiểu, retention logs, quota theo ngày/tháng và độ ưu tiên queue.'],
         ];
 
         $faqs = [
-            ['question' => 'Hệ thống này phù hợp với ai?', 'answer' => 'Phù hợp với website, app, game hoặc cổng dịch vụ cần tạo lệnh nạp qua chuyển khoản và xác nhận giao dịch tự động.'],
-            ['question' => 'Khách hàng có cần tự lưu tài khoản ngân hàng của họ không?', 'answer' => 'Không cần. Đối tác chỉ cần gọi API tạo lệnh nạp trên hệ thống của bạn, sau đó hiển thị lại thông tin bank và nội dung chuyển khoản cho người dùng cuối.'],
-            ['question' => 'Cách xác nhận lệnh nạp thành công là gì?', 'answer' => 'Hệ thống quét giao dịch của bank account đã cấp quyền, so khớp theo bank_id, số tiền và nội dung chuyển khoản tự sinh cho từng lệnh.'],
-            ['question' => 'Có thể nhận kết quả theo thời gian thực không?', 'answer' => 'Có. Đối tác có thể polling API trạng thái lệnh hoặc đăng ký webhook để nhận callback ngay khi trạng thái thay đổi.'],
+            ['question' => 'AutoCron phù hợp với ai?', 'answer' => 'Phù hợp với đội vận hành, developer, agency hoặc doanh nghiệp cần ping endpoint định kỳ, kiểm tra healthcheck, đồng bộ dữ liệu hay chạy tác vụ HTTP theo lịch.'],
+            ['question' => 'Có thể chạy thủ công một task ngay lập tức không?', 'answer' => 'Có. Với gói cho phép run now, người dùng có thể bấm chạy ngay để kiểm tra nhanh cấu hình mà không cần đợi lịch kế tiếp.'],
+            ['question' => 'Task lỗi có được retry không?', 'answer' => 'Có. Tùy giới hạn gói, mỗi cron job có thể cấu hình số lần retry và thời gian chờ giữa các lần thử lại.'],
+            ['question' => 'Tại sao một URL có thể bị chặn?', 'answer' => 'Hệ thống áp dụng SSRF protection để chặn localhost, private IP, metadata IP, redirect nguy hiểm hoặc port nhạy cảm nhằm bảo vệ hạ tầng và người dùng.'],
         ];
 
         $packages = \App\Models\Package::query()->get();
@@ -50,11 +50,11 @@
                 <div>
                     <div class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-cyan-200 backdrop-blur-sm">
                         <span class="h-2 w-2 rounded-full bg-cyan-400"></span>
-                        API BANK VIỆT NAM
+                        AutoCron / HTTP Cron SaaS
                     </div>
 
                     <h1 class="font-tech mt-6 max-w-4xl text-4xl font-black leading-[1.08] tracking-tight text-white sm:text-5xl lg:text-[3.9rem]">
-                        Tạo lệnh nạp, quét giao dịch và xác nhận chuyển khoản tự động
+                        Thuê và quản lý HTTP Cron Jobs theo lịch trong một dashboard gọn, rõ và an toàn
                     </h1>
 
                     <p class="mt-5 max-w-2xl text-base leading-8 text-slate-300 sm:text-lg">
@@ -62,11 +62,11 @@
                     </p>
 
                     <div class="mt-8 flex flex-col gap-3 sm:flex-row">
-                        <a href="{{ route('auth.register') }}" class="text-white inline-flex items-center justify-center rounded-full bg-cyan-400 px-6 py-3 text-sm font-semibold text-slate-950 shadow-[0_18px_40px_rgba(34,211,238,0.18)] transition hover:bg-cyan-300 sm:min-w-[176px]">
-                            Dùng thử ngay
+                        <a href="{{ route('auth.register') }}" class="inline-flex items-center justify-center rounded-full bg-cyan-400 px-6 py-3 text-sm font-semibold text-slate-950 shadow-[0_18px_40px_rgba(34,211,238,0.18)] transition hover:bg-cyan-300 sm:min-w-[176px]">
+                            Bắt đầu ngay
                         </a>
                         <a href="#features" class="inline-flex items-center justify-center rounded-full border border-white/10 bg-white/5 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/10 sm:min-w-[176px]">
-                            Xem tài liệu API
+                            Xem tính năng
                         </a>
                     </div>
 
@@ -86,24 +86,24 @@
                     <div class="rounded-[14px] border border-white/10 bg-slate-900/60 p-5">
                         <div class="flex items-start justify-between gap-3">
                             <div>
-                                <p class="font-mono-tech text-xs uppercase tracking-[0.24em] text-cyan-200">DEVELOPER FLOW</p>
-                                <p class="mt-2 text-lg font-semibold text-white">Tạo lệnh nạp qua API</p>
+                                <p class="font-mono-tech text-xs uppercase tracking-[0.24em] text-cyan-200">RUNNER FLOW</p>
+                                <p class="mt-2 text-lg font-semibold text-white">Dispatch đúng lịch, xử lý qua queue</p>
                             </div>
-                            <span class="rounded-full bg-emerald-400/15 px-3 py-1 text-xs font-semibold text-emerald-200">Webhook ready</span>
+                            <span class="rounded-full bg-emerald-400/15 px-3 py-1 text-xs font-semibold text-emerald-200">SSRF protected</span>
                         </div>
 
                         <div class="mt-4 rounded-[12px] border border-white/10 bg-[#020617] p-4 font-mono-tech text-xs leading-6 text-slate-200">
-                            <p class="text-cyan-300">POST /api/v1/recharge-orders</p>
+                            <p class="text-cyan-300">POST https://api.example.com/sync</p>
                             <p class="mt-3 text-slate-400">{</p>
-                            <p class="pl-4">"bank_id": 25,</p>
-                            <p class="pl-4">"amount": 100000</p>
+                            <p class="pl-4">"job": "inventory-sync",</p>
+                            <p class="pl-4">"source": "autocron"</p>
                             <p class="text-slate-400">}</p>
                         </div>
 
                         <div class="mt-3 flex flex-wrap gap-2">
                             <span class="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2.5 py-1 text-[11px] font-semibold text-emerald-200">200 OK</span>
-                            <span class="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-2.5 py-1 text-[11px] font-semibold text-cyan-200">JSON</span>
-                            <span class="rounded-full border border-blue-400/20 bg-blue-400/10 px-2.5 py-1 text-[11px] font-semibold text-blue-200">Live</span>
+                            <span class="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-2.5 py-1 text-[11px] font-semibold text-cyan-200">Queue driven</span>
+                            <span class="rounded-full border border-blue-400/20 bg-blue-400/10 px-2.5 py-1 text-[11px] font-semibold text-blue-200">Alert ready</span>
                         </div>
 
                         <div class="mt-4 grid gap-3 sm:grid-cols-2">
@@ -123,9 +123,9 @@
     <section id="features" class="bg-white px-4 py-14 sm:px-6 lg:px-8">
         <div class="mx-auto max-w-7xl">
             <div class="mx-auto max-w-2xl text-center">
-                <h2 class="font-tech text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">Một nền tảng API banking gọn, rõ và dễ tích hợp</h2>
+                <h2 class="font-tech text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">Một nền tảng AutoCron gọn, rõ và dễ mở rộng</h2>
                 <p class="mt-4 text-base leading-7 text-slate-600">
-                    Tập trung vào luồng tạo lệnh nạp, quét giao dịch và xác nhận chuyển khoản tự động cho hệ thống đối tác.
+                    Tập trung vào luồng tạo cron job, dispatch theo lịch, chạy HTTP request, ghi logs và cảnh báo khi có sự cố.
                 </p>
             </div>
 
@@ -148,9 +148,9 @@
     <section id="pricing" class="bg-slate-50 px-4 py-14 sm:px-6 lg:px-8">
         <div class="mx-auto max-w-7xl">
             <div class="mx-auto max-w-2xl text-center">
-                <h2 class="font-tech text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">Gói dịch vụ linh hoạt cho từng mô hình tích hợp</h2>
+                <h2 class="font-tech text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">Gói dịch vụ linh hoạt theo nhu cầu vận hành</h2>
                 <p class="mt-4 text-base leading-7 text-slate-600">
-                    Chọn gói phù hợp để mở quyền dashboard, API key, webhook và các tính năng quản trị dành cho đối tác.
+                    Chọn gói phù hợp để mở số lượng cron jobs, nâng quota, tăng retention logs và bật các kênh cảnh báo nâng cao.
                 </p>
             </div>
 
@@ -188,29 +188,29 @@
     <section class="bg-white px-4 py-14 sm:px-6 lg:px-8">
         <div class="mx-auto grid max-w-7xl gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
             <div class="rounded-[14px] border border-slate-200 bg-white p-6 shadow-sm">
-                <p class="font-mono-tech text-sm uppercase tracking-[0.22em] text-sky-500">Quy trình tích hợp</p>
+                <p class="font-mono-tech text-sm uppercase tracking-[0.22em] text-sky-500">Quy trình vận hành</p>
                 <div class="mt-6 grid gap-4 md:grid-cols-2">
                     <div class="rounded-[12px] border border-slate-200 bg-slate-50 p-4">
-                        <p class="text-sm font-semibold text-slate-950">1. Tạo API key và whitelist IP</p>
-                        <p class="mt-2 text-sm leading-6 text-slate-600">Khách hàng có gói đang hoạt động sẽ tạo API key trong profile và giới hạn IP được phép gọi hệ thống.</p>
+                        <p class="text-sm font-semibold text-slate-950">1. Chọn gói phù hợp</p>
+                        <p class="mt-2 text-sm leading-6 text-slate-600">Người dùng được cấp giới hạn số lượng cron jobs, khoảng chạy tối thiểu, logs retention và quota theo gói.</p>
                     </div>
                     <div class="rounded-[12px] border border-slate-200 bg-slate-50 p-4">
-                        <p class="text-sm font-semibold text-slate-950">2. Lấy danh sách bank account</p>
-                        <p class="mt-2 text-sm leading-6 text-slate-600">Đối tác dùng API để lấy bank_id khả dụng, sau đó chọn đúng ngân hàng cần tạo lệnh nạp.</p>
+                        <p class="text-sm font-semibold text-slate-950">2. Tạo HTTP Cron Job</p>
+                        <p class="mt-2 text-sm leading-6 text-slate-600">Cấu hình URL, method, headers, body, lịch chạy, expected status code và điều kiện cảnh báo cho từng task.</p>
                     </div>
                     <div class="rounded-[12px] border border-slate-200 bg-slate-50 p-4">
-                        <p class="text-sm font-semibold text-slate-950">3. Tạo lệnh nạp</p>
-                        <p class="mt-2 text-sm leading-6 text-slate-600">Hệ thống sinh order_code và nội dung chuyển khoản riêng cho từng lệnh, không cần đối tác tự viết logic đối soát.</p>
+                        <p class="text-sm font-semibold text-slate-950">3. Dispatch qua queue</p>
+                        <p class="mt-2 text-sm leading-6 text-slate-600">Scheduler kiểm tra cron jobs đến hạn, khóa chống chạy trùng rồi đẩy vào queue đúng priority của package.</p>
                     </div>
                     <div class="rounded-[12px] border border-slate-200 bg-slate-50 p-4">
-                        <p class="text-sm font-semibold text-slate-950">4. Polling hoặc webhook</p>
-                        <p class="mt-2 text-sm leading-6 text-slate-600">Khi giao dịch khớp, trạng thái lệnh đổi tự động và hệ thống có thể callback sang webhook của đối tác.</p>
+                        <p class="text-sm font-semibold text-slate-950">4. Ghi log và gửi cảnh báo</p>
+                        <p class="mt-2 text-sm leading-6 text-slate-600">Sau mỗi lần chạy, hệ thống lưu log preview, cập nhật thống kê và gửi cảnh báo nếu task fail hoặc vừa hồi phục.</p>
                     </div>
                 </div>
             </div>
 
             <div class="rounded-[14px] border border-slate-200 bg-white p-6 shadow-sm">
-                <p class="font-mono-tech text-sm uppercase tracking-[0.22em] text-sky-500">Kênh liên hệ</p>
+                <p class="font-mono-tech text-sm uppercase tracking-[0.22em] text-sky-500">Kênh hỗ trợ</p>
                 <div class="mt-4 space-y-3 text-sm text-slate-600">
                     <div class="rounded-[12px] border border-slate-200 bg-slate-50 p-4">
                         <p class="font-semibold text-slate-950">Email hỗ trợ</p>
@@ -242,7 +242,7 @@
             <div class="mx-auto max-w-2xl text-center">
                 <h2 class="font-tech text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">Câu hỏi thường gặp</h2>
                 <p class="mt-4 text-base leading-7 text-slate-600">
-                    Một số câu hỏi phổ biến khi dùng hệ thống API banking và tạo lệnh nạp tự động.
+                    Một số câu hỏi phổ biến khi dùng AutoCron để chạy HTTP cron jobs cho hệ thống.
                 </p>
             </div>
 
@@ -259,12 +259,12 @@
 
     <section class="bg-white px-4 pb-16 pt-14 sm:px-6 lg:px-8">
         <div class="mx-auto max-w-7xl rounded-[18px] bg-slate-950 px-6 py-10 text-center text-white shadow-[0_24px_80px_rgba(15,23,42,0.14)]">
-            <p class="font-mono-tech text-sm uppercase tracking-[0.3em] text-sky-300">Sẵn sàng tích hợp?</p>
+            <p class="font-mono-tech text-sm uppercase tracking-[0.3em] text-sky-300">Sẵn sàng triển khai?</p>
             <h2 class="font-tech mt-4 text-2xl font-bold tracking-tight sm:text-3xl">
-                Tạo tài khoản và bắt đầu cấu hình API, webhook, bank account ngay hôm nay.
+                Tạo tài khoản và bắt đầu cấu hình HTTP Cron Jobs, alerts và quota ngay hôm nay.
             </h2>
             <div class="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
-                <a href="{{ route('auth.register') }}" class="text-white inline-flex items-center justify-center rounded-full bg-cyan-400 px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300">
+                <a href="{{ route('auth.register') }}" class="inline-flex items-center justify-center rounded-full bg-cyan-400 px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300">
                     Tạo tài khoản
                 </a>
                 <a href="{{ route('auth.login') }}" class="inline-flex items-center justify-center rounded-full border border-white/12 bg-white/5 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/10">

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { CircleUserRound, History, KeyRound, WalletCards } from 'lucide-vue-next';
 
-type TabKey = 'profile' | 'password' | 'api-keys' | 'user-log' | 'wallet-log';
+type TabKey = 'profile' | 'password' | 'user-log' | 'wallet-log';
 
 defineProps<{
     modelValue: TabKey;
@@ -14,7 +14,6 @@ const emit = defineEmits<{
 const tabs: Array<{ key: TabKey; label: string; description: string; icon: unknown }> = [
     { key: 'profile', label: 'Thông tin user', description: 'Hồ sơ và trạng thái tài khoản', icon: CircleUserRound },
     { key: 'password', label: 'Đổi mật khẩu', description: 'Bảo mật và phiên đăng nhập', icon: KeyRound },
-    { key: 'api-keys', label: 'API key', description: 'Tạo key tích hợp theo gói đang dùng', icon: KeyRound },
     { key: 'user-log', label: 'Lịch sử người dùng', description: 'Nhật ký thao tác theo tài khoản', icon: History },
     { key: 'wallet-log', label: 'Lịch sử dòng tiền', description: 'Biến động số dư và giao dịch', icon: WalletCards },
 ];
@@ -22,7 +21,7 @@ const tabs: Array<{ key: TabKey; label: string; description: string; icon: unkno
 
 <template>
     <div class="border-b border-slate-200 bg-white px-3 py-3">
-        <div class="grid gap-2 md:grid-cols-2 xl:grid-cols-5">
+        <div class="grid gap-2 md:grid-cols-2 xl:grid-cols-4">
             <button
                 v-for="tab in tabs"
                 :key="tab.key"

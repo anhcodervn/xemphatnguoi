@@ -18,8 +18,7 @@ class QueuedResetPasswordNotification extends Notification implements ShouldQueu
 
     public function __construct(
         public string $token,
-    ) {
-    }
+    ) {}
 
     public function via(object $notifiable): array
     {
@@ -35,7 +34,7 @@ class QueuedResetPasswordNotification extends Notification implements ShouldQueu
         ], false);
 
         return (new MailMessage)
-            ->subject('Yêu cầu đặt lại mật khẩu')
+            ->subject('Hệ thống Auto Cron')
             ->view('emails.reset-password', [
                 'name' => $notifiable->name ?? $notifiable->username ?? 'bạn',
                 'resetUrl' => $resetUrl,

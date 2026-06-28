@@ -5,8 +5,8 @@ import { adminSeoService } from "@/services/admin-seo.service";
 import type { AdminSeoPostPayload, SeoPostStatus, SeoRobotsValue } from "@/types/admin-seo.type";
 import { uploadEditorImages } from "@/utils/editor-image-upload";
 import { handleErrorResponse, handleSuccessResponse } from "@/utils/response";
-import { computed, onMounted, reactive, ref } from "vue";
 import { Eye, Save } from "lucide-vue-next";
+import { computed, onMounted, reactive, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 const route = useRoute();
@@ -20,26 +20,26 @@ const editingId = computed(() => {
 });
 
 const form = reactive<AdminSeoPostPayload>({
-    title: "Hướng dẫn tạo lệnh nạp qua API recharge-orders",
-    slug: "huong-dan-tao-lenh-nap-qua-api-recharge-orders",
+    title: "Hướng dẫn tạo HTTP cron job đầu tiên trên AutoCron",
+    slug: "huong-dan-tao-http-cron-job-dau-tien-tren-autocron",
     seo_category_id: null,
-    excerpt: "Bài viết hướng dẫn tạo recharge order, nhận order_code và xử lý callback xác nhận giao dịch.",
+    excerpt: "Bài viết hướng dẫn tạo HTTP cron job, cấu hình lịch chạy và theo dõi logs trong AutoCron.",
     content: [
         {
             type: "paragraph",
             children: [
                 {
-                    text: "Bài viết này hướng dẫn luồng tạo lệnh nạp, sinh order_code và xác nhận giao dịch khi webhook callback trả về thành công.",
+                    text: "Bài viết này hướng dẫn luồng tạo cron job, thiết lập method, URL, timeout và cách theo dõi kết quả chạy ngay trong dashboard.",
                 },
             ],
         },
     ],
-    seo_title: "Hướng dẫn tạo lệnh nạp qua API recharge-orders | ApibankVN",
-    seo_description: "Từng bước tích hợp recharge-orders, sinh QR, theo dõi callback và đối soát order tự động.",
-    canonical_url: "https://apibankvn.com/blog/huong-dan-tao-lenh-nap-qua-api-recharge-orders",
+    seo_title: "Hướng dẫn tạo HTTP cron job đầu tiên | AutoCron",
+    seo_description: "Từng bước tạo HTTP cron job, cấu hình lịch chạy, logs và alerts trong AutoCron.",
+    canonical_url: "https://autocron.example/blog/huong-dan-tao-http-cron-job-dau-tien-tren-autocron",
     robots: "index,follow",
-    focus_keyword: "recharge orders api",
-    cover_alt: "Minh họa quy trình tạo lệnh nạp qua API",
+    focus_keyword: "http cron jobs",
+    cover_alt: "Minh họa quy trình tạo HTTP cron job trên AutoCron",
     article_schema: true,
     breadcrumb_schema: true,
     status: "draft",
@@ -62,9 +62,7 @@ const seoScore = computed(() => {
     return Math.min(score, 100);
 });
 
-const pageTitle = computed(() =>
-    editingId.value ? "Cập nhật bài viết SEO" : "Tạo bài viết SEO",
-);
+const pageTitle = computed(() => (editingId.value ? "Cập nhật bài viết SEO" : "Tạo bài viết SEO"));
 
 const fetchMeta = async (): Promise<void> => {
     const response = await adminSeoService.listPosts();
@@ -142,10 +140,7 @@ onMounted(async () => {
 
 <template>
     <div class="space-y-4">
-        <Breadcrumb
-            :title="pageTitle"
-            description="Soạn bài với title, canonical, robots, schema và preview metadata trước khi publish."
-        >
+        <Breadcrumb :title="pageTitle" description="Soạn bài với title, canonical, robots, schema và preview metadata trước khi publish.">
             <template #actions>
                 <div class="flex flex-wrap gap-2">
                     <a
@@ -205,9 +200,7 @@ onMounted(async () => {
 
                 <article class="rounded-[14px] border border-slate-200 bg-white p-5 shadow-sm">
                     <h2 class="text-lg font-semibold text-slate-950">Nội dung chính</h2>
-                    <p class="mt-1 text-sm text-slate-500">
-                        Nội dung nên có heading rõ ràng, trả lời đúng search intent và tránh lặp lại đoạn văn giữa nhiều bài.
-                    </p>
+                    <p class="mt-1 text-sm text-slate-500">Nội dung nên có heading rõ ràng, bám đúng search intent và tránh lặp ý giữa nhiều bài viết.</p>
                     <div class="mt-5">
                         <Editor v-model="form.content" />
                     </div>
@@ -270,7 +263,7 @@ onMounted(async () => {
                         <label class="flex items-center justify-between rounded-[12px] border border-slate-200 px-4 py-3">
                             <span>
                                 <span class="block text-sm font-medium text-slate-900">Article schema</span>
-                                <span class="mt-1 block text-xs text-slate-500">BlogPosting/Article cho bài viết public.</span>
+                                <span class="mt-1 block text-xs text-slate-500">BlogPosting hoặc Article cho bài viết public.</span>
                             </span>
                             <input v-model="form.article_schema" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-violet-600 focus:ring-violet-500" />
                         </label>

@@ -2,6 +2,7 @@
 
 namespace App\Features\Client\Package\Services;
 
+use App\Features\Cron\Support\CronPackageCatalog;
 use App\Models\Package;
 use App\Models\User;
 use App\Models\UserSubscription;
@@ -63,9 +64,14 @@ class PackageService
             'order_id' => $subscription->order_id,
             'package_name' => $subscription->package_name,
             'package_price' => (string) $subscription->package_price,
+            'package_limits' => CronPackageCatalog::resolve(
+                overrides: is_array($subscription->package_limits) ? $subscription->package_limits : null,
+                package: $package,
+                subscription: $subscription,
+            ),
             'base_account_limit' => $subscription->base_account_limit,
             'extra_account_limit' => $subscription->extra_account_limit,
-            'used_account' => $subscription->used_account,
+            'used_account' => $user->cronJobs()->count(),
             'starts_at' => $subscription->starts_at?->toISOString(),
             'expires_at' => $subscription->expires_at?->toISOString(),
             'status' => $subscription->status->value,
@@ -83,6 +89,10 @@ class PackageService
                 'request_per_minute' => $package->request_per_minute,
                 'concurrent_limit' => $package->concurrent_limit,
                 'features' => $package->features,
+                'package_limits' => CronPackageCatalog::resolve(
+                    overrides: is_array($package->package_limits) ? $package->package_limits : null,
+                    package: $package,
+                ),
                 'status' => $package->status->value,
             ],
         ];

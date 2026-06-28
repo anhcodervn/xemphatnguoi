@@ -54,7 +54,6 @@ export type AdminUserDetailResponse = {
         id: number;
         balance: number;
         hold_balance: number;
-        total_recharge: number;
         total_spent: number;
     } | null;
     current_package: {
@@ -66,12 +65,11 @@ export type AdminUserDetailResponse = {
         status: string | null;
     } | null;
     stats: {
-        total_recharge: number;
         total_spent: number;
         package_order_count: number;
-        webhook_count: number;
-        api_key_count: number;
-        account_count: number;
+        cron_job_count: number;
+        alert_channel_count: number;
+        runs_today: number;
     };
     latest_login: {
         at: string | null;
@@ -122,22 +120,6 @@ export type AdminUserPackageOrder = {
     started_at: string | null;
     expired_at: string | null;
     status: string | null;
-    created_at: string | null;
-};
-
-export type AdminUserWebhook = {
-    id: number;
-    user: {
-        id: number;
-        name: string;
-        email: string | null;
-    } | null;
-    url: string;
-    event_keyword: string | null;
-    status: string;
-    last_called_at: string | null;
-    success_count: number;
-    failed_count: number;
     created_at: string | null;
 };
 
@@ -193,12 +175,6 @@ export const adminUserService = {
         return response.data.data;
     },
 
-    async webhooks(userId: number | string, params: Record<string, unknown> = {}): Promise<PaginatedAdminUserRelation<AdminUserWebhook>> {
-        const response = await api.get(`/api/admin-api/users/${userId}/webhooks`, { params });
-
-        return response.data.data;
-    },
-
     async logs(userId: number | string, params: Record<string, unknown> = {}): Promise<PaginatedAdminUserRelation<AdminUserLog>> {
         const response = await api.get(`/api/admin-api/users/${userId}/logs`, { params });
 
@@ -221,7 +197,6 @@ export const adminUserService = {
             id: number;
             balance: number;
             hold_balance: number;
-            total_recharge: number;
             total_spent: number;
         };
         transaction: {

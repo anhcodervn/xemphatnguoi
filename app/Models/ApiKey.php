@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 class ApiKey extends Model
@@ -13,24 +14,27 @@ class ApiKey extends Model
     use HasFactory;
 
     public const STATUS_ACTIVE = 'active';
+
     public const STATUS_INACTIVE = 'inactive';
+
     public const STATUS_EXPIRED = 'expired';
+
     public const STATUS_REVOKED = 'revoked';
 
     protected $fillable = [
         'user_id',
         'name',
         'api_key',
-        'api_secret',
+        'api_secret_hash',
         'permissions',
         'ip_whitelist',
+        'status',
         'last_used_at',
         'expired_at',
-        'status',
     ];
 
     protected $hidden = [
-        'api_secret',
+        'api_secret_hash',
     ];
 
     protected function casts(): array
@@ -48,29 +52,48 @@ class ApiKey extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function apiLogs(): HasMany
+    public function logs(): HasMany
     {
         return $this->hasMany(ApiLog::class);
     }
 
-    public function rechargeClientOrders(): HasMany
+    public function matchesSecret(string $secret): bool
     {
-        return $this->hasMany(RechargeClient::class);
+        return Hash::check($secret, (string) $this->api_secret_hash);
+    }
+
+    public function allowsPermission(string $permission): bool
+    {
+        return in_array($permission, $this->permissions ?? [], true);
+    }
+
+    public function allowsIp(?string $ipAddress): bool
+    {
+        $ipWhitelist = array_values(array_filter($this->ip_whitelist ?? [], static fn (mixed $value): bool => is_string($value) && trim($value) !== ''));
+
+        if ($ipWhitelist === [] || in_array('*', $ipWhitelist, true)) {
+            return true;
+        }
+
+        if ($ipAddress === null || $ipAddress === '') {
+            return false;
+        }
+
+        return in_array(trim($ipAddress), $ipWhitelist, true);
     }
 
     public function isActive(): bool
     {
-        return $this->status === self::STATUS_ACTIVE && ! $this->isExpired();
-    }
+        if ($this->status !== self::STATUS_ACTIVE) {
+            return false;
+        }
 
-    public function isExpired(): bool
-    {
-        return $this->expired_at !== null && $this->expired_at->isPast();
+        return $this->expired_at === null || $this->expired_at->isFuture();
     }
 
     public function markExpiredIfNeeded(): void
     {
-        if (! $this->isExpired() || $this->status === self::STATUS_EXPIRED) {
+        if ($this->expired_at === null || ! $this->expired_at->isPast() || $this->status === self::STATUS_EXPIRED) {
             return;
         }
 
@@ -79,59 +102,14 @@ class ApiKey extends Model
         ])->saveQuietly();
     }
 
-    public function matchesSecret(string $secret): bool
-    {
-        if ($secret === '') {
-            return false;
-        }
-
-        if (($info = password_get_info($this->api_secret))['algo'] !== null && password_verify($secret, $this->api_secret)) {
-            return true;
-        }
-
-        return hash_equals($this->api_secret, $secret);
-    }
-
-    public function allowsPermission(string $permission): bool
-    {
-        $permissions = $this->permissions ?? [];
-
-        if ($permissions === [] || $permission === '') {
-            return false;
-        }
-
-        foreach ($permissions as $grantedPermission) {
-            if (! is_string($grantedPermission) || $grantedPermission === '') {
-                continue;
-            }
-
-            if ($grantedPermission === '*' || $grantedPermission === $permission || Str::is($grantedPermission, $permission)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     /**
-     * @param  array<int, string>|null  $whitelist
+     * @return array{api_key:string, api_secret:string}
      */
-    public function allowsIp(?string $ip, ?array $whitelist = null): bool
+    public static function generateCredentials(): array
     {
-        $ipWhitelist = $whitelist ?? $this->ip_whitelist ?? [];
-
-        if ($ipWhitelist === []) {
-            return true;
-        }
-
-        if (in_array('*', $ipWhitelist, true)) {
-            return true;
-        }
-
-        if ($ip === null || $ip === '') {
-            return false;
-        }
-
-        return in_array($ip, $ipWhitelist, true);
+        return [
+            'api_key' => 'ak_'.Str::lower(Str::random(28)),
+            'api_secret' => 'sk_'.Str::random(40),
+        ];
     }
 }

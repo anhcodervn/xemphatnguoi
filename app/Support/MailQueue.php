@@ -6,6 +6,8 @@ use App\Jobs\SendSystemMailJob;
 
 class MailQueue
 {
+    public const DEFAULT_SUBJECT = 'Hệ thống Auto Cron';
+
     /**
      * @param  array<int, string>  $messageLines
      */
@@ -20,7 +22,7 @@ class MailQueue
     ): void {
         SendSystemMailJob::dispatch(
             to: $to,
-            subjectText: $subjectText,
+            subjectText: self::DEFAULT_SUBJECT,
             title: $title,
             messageLines: $messageLines,
             ctaText: $ctaText,

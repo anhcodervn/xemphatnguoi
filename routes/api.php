@@ -11,16 +11,28 @@ if (file_exists(base_path('app/Features/Auth/routes.php'))) {
     require base_path('app/Features/Auth/routes.php');
 }
 
-if (file_exists(base_path('app/Features/Client/Subscription/routes.php'))) {
-    require base_path('app/Features/Client/Subscription/routes.php');
-}
-
 if (file_exists(base_path('app/Features/Client/Package/routes.php'))) {
     require base_path('app/Features/Client/Package/routes.php');
 }
 
-if (file_exists(base_path('app/Features/Client/Recharge/routes.php'))) {
-    require base_path('app/Features/Client/Recharge/routes.php');
+if (file_exists(base_path('app/Features/Client/CronJob/routes.php'))) {
+    require base_path('app/Features/Client/CronJob/routes.php');
+}
+
+if (file_exists(base_path('app/Features/Client/CronAlert/routes.php'))) {
+    require base_path('app/Features/Client/CronAlert/routes.php');
+}
+
+if (file_exists(base_path('app/Features/Client/ApiKey/routes.php'))) {
+    require base_path('app/Features/Client/ApiKey/routes.php');
+}
+
+if (file_exists(base_path('app/Features/Cron/routes.php'))) {
+    require base_path('app/Features/Cron/routes.php');
+}
+
+if (file_exists(base_path('app/Features/Recharge/routes.php'))) {
+    require base_path('app/Features/Recharge/routes.php');
 }
 
 if (file_exists(base_path('app/Features/Api/V1/routes.php'))) {
@@ -30,7 +42,7 @@ if (file_exists(base_path('app/Features/Api/V1/routes.php'))) {
 Route::prefix('')->group(function (): void {
     Route::get('/system-settings', function (SettingStore $settingStore) {
         $defaults = [
-            'site_name' => config('app.name', 'Nạp Tiền Tự Động'),
+            'site_name' => config('app.name', 'AutoCron'),
             'site_domain' => '',
             'site_description' => '',
             'site_active' => true,
@@ -51,7 +63,6 @@ Route::prefix('')->group(function (): void {
             'gtm_id' => '',
             'meta_pixel_id' => '',
             'custom_script' => '',
-            'recharge_syntax' => 'NAP',
             'contact_page_content' => [],
             'terms_page_content' => [],
             'faq_page_content' => [],
@@ -100,16 +111,12 @@ Route::prefix('')->group(function (): void {
     });
 })->middleware('auth:sanctum');
 
-if (file_exists(base_path('app/Features/Client/Bank/routes.php'))) {
-    require base_path('app/Features/Client/Bank/routes.php');
-}
-
-if (file_exists(base_path('app/Features/Client/Webhook/routes.php'))) {
-    require base_path('app/Features/Client/Webhook/routes.php');
-}
-
 if (file_exists(base_path('app/Features/Client/Profile/routes.php'))) {
     require base_path('app/Features/Client/Profile/routes.php');
+}
+
+if (file_exists(base_path('app/Features/Client/Wallet/routes.php'))) {
+    require base_path('app/Features/Client/Wallet/routes.php');
 }
 
 if (file_exists(base_path('app/Features/Client/Notification/routes.php'))) {
@@ -122,6 +129,10 @@ if (file_exists(base_path('app/Features/Client/Upload/routes.php'))) {
 
 if (file_exists(base_path('app/Features/Client/Contact/routes.php'))) {
     require base_path('app/Features/Client/Contact/routes.php');
+}
+
+if (file_exists(base_path('app/Features/Admin/CronJob/routes.php'))) {
+    require base_path('app/Features/Admin/CronJob/routes.php');
 }
 
 if (file_exists(base_path('app/Features/Admin/PackageOrder/routes.php'))) {
@@ -140,16 +151,12 @@ if (file_exists(base_path('app/Features/Admin/Setting/routes.php'))) {
     require base_path('app/Features/Admin/Setting/routes.php');
 }
 
-if (file_exists(base_path('app/Features/Admin/Deposit/routes.php'))) {
-    require base_path('app/Features/Admin/Deposit/routes.php');
+if (file_exists(base_path('app/Features/Admin/RechargeConfig/routes.php'))) {
+    require base_path('app/Features/Admin/RechargeConfig/routes.php');
 }
 
-if (file_exists(base_path('app/Features/Admin/Recharge/routes.php'))) {
-    require base_path('app/Features/Admin/Recharge/routes.php');
-}
-
-if (file_exists(base_path('app/Features/Admin/Webhook/routes.php'))) {
-    require base_path('app/Features/Admin/Webhook/routes.php');
+if (file_exists(base_path('app/Features/Admin/RechargeHistory/routes.php'))) {
+    require base_path('app/Features/Admin/RechargeHistory/routes.php');
 }
 
 if (file_exists(base_path('app/Features/Admin/User/routes.php'))) {
@@ -176,22 +183,14 @@ if (file_exists(base_path('app/Features/Admin/Feedback/routes.php'))) {
     require base_path('app/Features/Admin/Feedback/routes.php');
 }
 
-if (file_exists(base_path('app/Features/Admin/Bank/routes.php'))) {
-    require base_path('app/Features/Admin/Bank/routes.php');
-}
-
-if (file_exists(base_path('app/Features/Admin/ApiKey/routes.php'))) {
-    require base_path('app/Features/Admin/ApiKey/routes.php');
-}
-
-if (file_exists(base_path('app/Features/Admin/ApiLog/routes.php'))) {
-    require base_path('app/Features/Admin/ApiLog/routes.php');
-}
-
-if (file_exists(base_path('app/Features/Client/ApiKey/routes.php'))) {
-    require base_path('app/Features/Client/ApiKey/routes.php');
-}
-
 if (file_exists(base_path('app/Features/Admin/Seo/routes.php'))) {
     require base_path('app/Features/Admin/Seo/routes.php');
+}
+
+if (file_exists(base_path('app/Features/BlogPost/routes.php'))) {
+    require base_path('app/Features/BlogPost/routes.php');
+}
+
+if (file_exists(base_path('app/Features/Api/Auth/routes.php'))) {
+    require base_path('app/Features/Api/Auth/routes.php');
 }

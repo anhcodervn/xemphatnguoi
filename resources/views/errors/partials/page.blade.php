@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     @php
         $settings = $systemSettings ?? [];
-        $siteName = $settings['site_name'] ?? config('app.name', 'ApibankVN');
+        $siteName = $settings['site_name'] ?? config('app.name', 'AutoCron');
         $favicon = $settings['favicon'] ?? null;
         $logo = $settings['light_logo'] ?: ($settings['dark_logo'] ?: null);
         $theme = [
@@ -57,11 +57,11 @@
     @endif
 
     <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=ibm-plex-sans:400,500,600,700|space-grotesk:500,700" rel="stylesheet" />
+    <link href="https://fonts.bunny.net/css?family=be-vietnam-pro:400,500,600,700|space-grotesk:500,700" rel="stylesheet" />
     @vite(['resources/css/app.css'])
 </head>
 
-<body class="{{ $theme['surface'] }} min-h-screen font-['IBM_Plex_Sans'] text-slate-900">
+<body class="{{ $theme['surface'] }} min-h-screen font-['Be_Vietnam_Pro',sans-serif] text-slate-900">
     <div class="relative isolate min-h-screen overflow-hidden">
         <div class="absolute inset-0 {{ $theme['halo'] }}"></div>
         <div class="absolute inset-0 bg-[linear-gradient(to_right,rgba(148,163,184,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.08)_1px,transparent_1px)] bg-[size:72px_72px] opacity-50"></div>
@@ -82,7 +82,7 @@
                                 <img src="{{ $logo }}" alt="{{ $siteName }}" class="mb-6 h-10 w-auto object-contain sm:h-11">
                             @endif
 
-                            <h1 class="font-['Space_Grotesk'] text-4xl font-bold tracking-tight sm:text-5xl {{ $theme['title'] }}">
+                            <h1 class="font-['Space_Grotesk',_'Be_Vietnam_Pro',sans-serif] text-4xl font-bold tracking-tight sm:text-5xl {{ $theme['title'] }}">
                                 {{ $headline }}
                             </h1>
 

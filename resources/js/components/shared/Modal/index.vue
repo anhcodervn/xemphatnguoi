@@ -4,6 +4,7 @@
             <div v-if="modelValue" class="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/50 p-4" @click.self="close">
                 <Transition name="scale">
                     <div
+                        v-if="modelValue"
                         class="relative flex max-h-[calc(100vh-2rem)] w-full flex-col overflow-hidden rounded-lg bg-white shadow-xl"
                         :class="panelClass ?? 'max-w-md'"
                     >

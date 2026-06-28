@@ -43,7 +43,6 @@ class UpdateSystemSettingRequest extends FormRequest
             'gtm_id' => ['nullable', 'string', 'max:100'],
             'meta_pixel_id' => ['nullable', 'string', 'max:100'],
             'custom_script' => ['nullable', 'string'],
-            'recharge_syntax' => ['required', 'string', 'max:50'],
         ];
     }
 
@@ -55,7 +54,6 @@ class UpdateSystemSettingRequest extends FormRequest
         return [
             'site_name.required' => 'Vui lòng nhập tên hệ thống.',
             'support_email.email' => 'Email hỗ trợ không đúng định dạng.',
-            'recharge_syntax.required' => 'Vui lòng nhập cú pháp nạp tiền.',
             'color_primary.regex' => 'Màu chính phải đúng mã HEX.',
             'color_accent.regex' => 'Màu nhấn phải đúng mã HEX.',
             'color_surface.regex' => 'Màu nền phải đúng mã HEX.',

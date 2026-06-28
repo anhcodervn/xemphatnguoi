@@ -7,7 +7,7 @@ export const useSidebarStore = defineStore('user', {
 
   actions: {
     toggleIsOpen(status: boolean) {
-      this.isOpen = !this.isOpen;
+      this.isOpen = status;
     }
   }
 })

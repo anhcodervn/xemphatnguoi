@@ -20,7 +20,7 @@ class PublicContentPageController extends Controller
         return [
             'gioi-thieu' => [
                 'fallback_title' => 'Giới thiệu',
-                'fallback_description' => 'Thông tin tổng quan về hệ thống, năng lực vận hành và định hướng sản phẩm.',
+                'fallback_description' => 'Thông tin tổng quan về AutoCron, cách nền tảng vận hành và nhóm người dùng phù hợp.',
                 'title_key' => 'about_page_title',
                 'excerpt_key' => 'about_page_excerpt',
                 'content_key' => 'about_page_content',
@@ -30,7 +30,7 @@ class PublicContentPageController extends Controller
             ],
             'lien-he' => [
                 'fallback_title' => 'Liên hệ',
-                'fallback_description' => 'Thông tin hỗ trợ, hướng dẫn gửi yêu cầu và cách kết nối với đội ngũ vận hành.',
+                'fallback_description' => 'Thông tin hỗ trợ, cách gửi yêu cầu và các kênh kết nối với đội ngũ vận hành AutoCron.',
                 'title_key' => 'contact_page_title',
                 'excerpt_key' => 'contact_page_excerpt',
                 'content_key' => 'contact_page_content',
@@ -40,7 +40,7 @@ class PublicContentPageController extends Controller
             ],
             'dieu-khoan-su-dung' => [
                 'fallback_title' => 'Điều khoản sử dụng',
-                'fallback_description' => 'Các quy định khi sử dụng dịch vụ, API và trách nhiệm của người dùng.',
+                'fallback_description' => 'Các quy định khi sử dụng dịch vụ AutoCron, trách nhiệm người dùng và giới hạn hệ thống.',
                 'title_key' => 'terms_page_title',
                 'excerpt_key' => 'terms_page_excerpt',
                 'content_key' => 'terms_page_content',
@@ -50,7 +50,7 @@ class PublicContentPageController extends Controller
             ],
             'chinh-sach-bao-mat' => [
                 'fallback_title' => 'Chính sách bảo mật',
-                'fallback_description' => 'Cách hệ thống thu thập, lưu trữ, bảo vệ và xử lý dữ liệu của người dùng.',
+                'fallback_description' => 'Cách AutoCron thu thập, lưu trữ, bảo vệ và xử lý dữ liệu của người dùng.',
                 'title_key' => 'privacy_page_title',
                 'excerpt_key' => 'privacy_page_excerpt',
                 'content_key' => 'privacy_page_content',
@@ -79,8 +79,8 @@ class PublicContentPageController extends Controller
                 'published_key' => 'payment_policy_is_published',
             ],
             'chinh-sach-su-dung-api' => [
-                'fallback_title' => 'Chính sách sử dụng API',
-                'fallback_description' => 'Quy định về API key, webhook, quota, bảo mật và giới hạn sử dụng.',
+                'fallback_title' => 'Chính sách sử dụng dịch vụ',
+                'fallback_description' => 'Quy định về HTTP Cron Jobs, quota, cảnh báo, queue và các giới hạn sử dụng trên AutoCron.',
                 'title_key' => 'api_usage_policy_title',
                 'excerpt_key' => 'api_usage_policy_excerpt',
                 'content_key' => 'api_usage_policy_content',
@@ -90,7 +90,7 @@ class PublicContentPageController extends Controller
             ],
             'mien-tru-trach-nhiem' => [
                 'fallback_title' => 'Miễn trừ trách nhiệm',
-                'fallback_description' => 'Các giới hạn trách nhiệm của hệ thống khi cung cấp công cụ hỗ trợ API banking.',
+                'fallback_description' => 'Các giới hạn trách nhiệm của AutoCron khi cung cấp công cụ lập lịch và gửi HTTP request tự động.',
                 'title_key' => 'disclaimer_title',
                 'excerpt_key' => 'disclaimer_excerpt',
                 'content_key' => 'disclaimer_content',
@@ -100,7 +100,7 @@ class PublicContentPageController extends Controller
             ],
             'cau-hoi-thuong-gap' => [
                 'fallback_title' => 'Câu hỏi thường gặp',
-                'fallback_description' => 'Những câu hỏi phổ biến về gói dịch vụ, API, webhook và xử lý giao dịch.',
+                'fallback_description' => 'Những câu hỏi phổ biến về gói dịch vụ, quota, logs, alerts và vận hành HTTP Cron Jobs.',
                 'title_key' => 'faq_page_title',
                 'excerpt_key' => 'faq_page_excerpt',
                 'content_key' => 'faq_page_content',
@@ -110,7 +110,7 @@ class PublicContentPageController extends Controller
             ],
             'trang-thai-he-thong' => [
                 'fallback_title' => 'Trạng thái hệ thống',
-                'fallback_description' => 'Thông tin trạng thái vận hành, độ ổn định dịch vụ và các ghi chú gián đoạn nếu có.',
+                'fallback_description' => 'Thông tin vận hành, độ ổn định dịch vụ và các thông báo gián đoạn nếu có.',
                 'title_key' => 'system_status_title',
                 'excerpt_key' => 'system_status_excerpt',
                 'content_key' => 'system_status_content',
@@ -136,7 +136,7 @@ class PublicContentPageController extends Controller
         $page = $this->pageMap()[$slug] ?? abort(404);
 
         $systemSettings = $settingStore->getMany([
-            'site_name' => config('app.name', 'Nạp Tiền Tự Động'),
+            'site_name' => config('app.name', 'AutoCron'),
             'site_domain' => '',
             'site_description' => '',
             'support_email' => '',
@@ -163,7 +163,7 @@ class PublicContentPageController extends Controller
 
         $pageTitle = (string) ($systemSettings[$page['title_key']] ?: $page['fallback_title']);
         $pageDescription = (string) ($systemSettings[$page['excerpt_key']] ?: $page['fallback_description']);
-        $pageMetaTitle = (string) ($systemSettings[$page['seo_title_key']] ?: $pageTitle.' | '.($systemSettings['site_name'] ?: config('app.name', 'Nạp Tiền Tự Động')));
+        $pageMetaTitle = (string) ($systemSettings[$page['seo_title_key']] ?: $pageTitle.' | '.($systemSettings['site_name'] ?: config('app.name', 'AutoCron')));
         $pageMetaDescription = (string) ($systemSettings[$page['seo_description_key']] ?: $pageDescription);
         $content = is_array($systemSettings[$page['content_key']] ?? null) ? $systemSettings[$page['content_key']] : [];
 

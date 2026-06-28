@@ -1,17 +1,23 @@
 <?php
 
-use App\Features\Api\V1\Controllers\V1Controller;
+use App\Features\Api\V1\Controllers\CronJobController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')
+    ->middleware(['api-key.auth', 'api-key.log'])
     ->name('api.v1.')
-    ->middleware(['auth:api-key', 'api-key.log'])
-    ->controller(V1Controller::class)
     ->group(function (): void {
-        Route::get('/', 'index')->name('index');
-        Route::get('/me', 'me')->middleware('api-key.permission:profile.read')->name('me');
-        Route::get('/list-bank-accounts', 'listBankAccounts')->middleware('api-key.permission:bank-accounts.read')->name('bank-accounts.index');
-        Route::post('/transactions', 'listTransactions')->middleware('api-key.permission:transactions.read')->name('transactions.index');
-        Route::post('/recharge-orders', 'storeRechargeOrder')->middleware('api-key.permission:recharge.create')->name('recharge-orders.store');
-        Route::get('/recharge-orders/{orderCode}', 'showRechargeOrder')->middleware('api-key.permission:recharge.read')->name('recharge-orders.show');
+        Route::controller(CronJobController::class)
+            ->prefix('cron-jobs')
+            ->name('cron-jobs.')
+            ->group(function (): void {
+                Route::get('/', 'index')->middleware('api-key.permission:cron-jobs.read')->name('index');
+                Route::post('/', 'store')->middleware('api-key.permission:cron-jobs.write')->name('store');
+                Route::get('/{cronJob}', 'show')->middleware('api-key.permission:cron-jobs.read')->name('show');
+                Route::patch('/{cronJob}', 'update')->middleware('api-key.permission:cron-jobs.write')->name('update');
+                Route::delete('/{cronJob}', 'destroy')->middleware('api-key.permission:cron-jobs.write')->name('destroy');
+                Route::post('/{cronJob}/pause', 'pause')->middleware('api-key.permission:cron-jobs.write')->name('pause');
+                Route::post('/{cronJob}/resume', 'resume')->middleware('api-key.permission:cron-jobs.write')->name('resume');
+                Route::get('/{cronJob}/logs', 'logs')->middleware('api-key.permission:cron-logs.read')->name('logs');
+            });
     });

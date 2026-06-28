@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue';
-import { RouterLink, useRoute } from 'vue-router';
+import { useRoute } from 'vue-router';
 import Header from './admin/header/index.vue';
 import { resolveAdminPageTitle } from './admin/sidebar/navigation';
 import Sidebar from './admin/sidebar/index.vue';

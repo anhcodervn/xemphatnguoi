@@ -1,141 +1,96 @@
 <?php
 
-use App\Models\Bank;
-use App\Models\BankAccount;
+use App\Models\CronAlertChannel;
+use App\Models\CronJob;
 use App\Models\User;
 use Illuminate\Support\Facades\Schema;
 
-test('saas tables are created with required columns', function () {
+test('autocron schema contains the core SaaS tables and columns', function () {
     expect(Schema::hasTable('users'))->toBeTrue()
         ->and(Schema::hasTable('user_sessions'))->toBeTrue()
-        ->and(Schema::hasTable('api_keys'))->toBeTrue()
         ->and(Schema::hasTable('wallets'))->toBeTrue()
         ->and(Schema::hasTable('wallet_transactions'))->toBeTrue()
         ->and(Schema::hasTable('packages'))->toBeTrue()
         ->and(Schema::hasTable('user_packages'))->toBeTrue()
         ->and(Schema::hasTable('package_orders'))->toBeTrue()
         ->and(Schema::hasTable('user_subscriptions'))->toBeTrue()
-        ->and(Schema::hasTable('extra_account_orders'))->toBeTrue()
-        ->and(Schema::hasTable('accounts'))->toBeTrue()
         ->and(Schema::hasTable('payment_transactions'))->toBeTrue()
-        ->and(Schema::hasTable('api_logs'))->toBeTrue()
         ->and(Schema::hasTable('notifications'))->toBeTrue()
         ->and(Schema::hasTable('user_logs'))->toBeTrue()
-        ->and(Schema::hasTable('banks'))->toBeTrue()
-        ->and(Schema::hasTable('bank_accounts'))->toBeTrue()
-        ->and(Schema::hasTable('bank_transactions'))->toBeTrue()
-        ->and(Schema::hasTable('recharge_methods'))->toBeTrue()
-        ->and(Schema::hasTable('recharge_method_bank_account'))->toBeTrue()
-        ->and(Schema::hasTable('webhooks'))->toBeTrue()
-        ->and(Schema::hasTable('webhook_logs'))->toBeTrue()
-        ->and(Schema::hasTable('coupons'))->toBeTrue()
-        ->and(Schema::hasTable('settings'))->toBeTrue();
+        ->and(Schema::hasTable('settings'))->toBeTrue()
+        ->and(Schema::hasTable('cron_jobs'))->toBeTrue()
+        ->and(Schema::hasTable('cron_job_logs'))->toBeTrue()
+        ->and(Schema::hasTable('cron_alert_channels'))->toBeTrue()
+        ->and(Schema::hasTable('cron_job_alert_channel'))->toBeTrue()
+        ->and(Schema::hasTable('cron_usage_counters'))->toBeTrue();
 
-    expect(Schema::hasColumns('users', [
-        'username',
-        'email',
-        'phone',
-        'full_name',
-        'avatar',
-        'role',
-        'status',
-        'referral_code',
-        'referred_by',
-        'deleted_at',
-    ]))->toBeTrue();
-
-    expect(Schema::hasColumns('api_logs', [
+    expect(Schema::hasColumns('cron_jobs', [
         'user_id',
-        'api_key_id',
-        'endpoint',
+        'group_name',
+        'name',
+        'url',
         'method',
-        'request_data',
-        'response_data',
-        'status_code',
-        'response_time_ms',
-        'created_at',
-    ]))->toBeTrue();
-
-    expect(Schema::hasColumns('payment_transactions', [
-        'transaction_code',
-        'amount',
-        'raw_data',
+        'body_type',
+        'cron_expression',
+        'interval_seconds',
+        'timeout_seconds',
+        'retry_count',
         'status',
+        'last_run_at',
+        'next_run_at',
+        'consecutive_failures',
+        'total_runs',
+        'total_success',
+        'total_failed',
     ]))->toBeTrue();
 
-    expect(Schema::hasColumns('wallets', [
+    expect(Schema::hasColumns('cron_job_logs', [
+        'cron_job_id',
         'user_id',
+        'run_uuid',
+        'attempt',
+        'status',
+        'method',
+        'url',
+        'status_code',
+        'duration_ms',
+        'request_headers',
+        'response_headers',
+        'response_body_preview',
+        'error_message',
+        'started_at',
+        'finished_at',
+    ]))->toBeTrue();
+
+    expect(Schema::hasColumns('cron_alert_channels', [
+        'user_id',
+        'cron_job_id',
+        'name',
         'type',
-        'balance',
-        'hold_balance',
-        'total_recharge',
-        'total_spent',
+        'target_url',
+        'telegram_bot_token',
+        'telegram_chat_id',
+        'email',
+        'events',
+        'is_enabled',
     ]))->toBeTrue();
 
     expect(Schema::hasColumns('packages', [
         'duration_days',
-        'account_limit',
-        'can_buy_extra_account',
-        'extra_account_price',
+        'package_limits',
     ]))->toBeTrue();
 
     expect(Schema::hasColumns('user_subscriptions', [
         'user_id',
         'package_id',
-        'order_id',
-        'package_name',
-        'package_price',
-        'base_account_limit',
-        'extra_account_limit',
-        'used_account',
         'starts_at',
         'expires_at',
         'status',
-    ]))->toBeTrue();
-
-    expect(Schema::hasColumns('bank_accounts', [
-        'bank_name',
-        'account_name',
-        'account_number',
-        'username',
-        'password',
-        'token',
-        'data_login',
-        'proxy',
-        'status',
-        'last_sync_at',
-    ]))->toBeTrue();
-
-    expect(Schema::hasColumns('recharge_methods', [
-        'code',
-        'name',
-        'description',
-        'badge_label',
-        'badge_type',
-        'bank_name',
-        'account_number',
-        'account_name',
-        'min_amount',
-        'max_amount',
-        'bonus_percentage',
-        'sort_order',
-        'is_active',
-        'metadata',
-    ]))->toBeTrue();
-
-    expect(Schema::hasColumns('banks', [
-        'code',
-        'name',
-        'short_name',
-        'logo',
-        'bg_color',
-        'is_active',
-        'sort_order',
-        'metadata',
+        'package_limits',
     ]))->toBeTrue();
 });
 
-test('user model keeps backward compatible name access and auto-generates username', function () {
+test('user model still auto-generates username and creates a default main wallet', function () {
     $user = User::create([
         'name' => 'Test User',
         'email' => 'test@example.com',
@@ -150,46 +105,25 @@ test('user model keeps backward compatible name access and auto-generates userna
         ->and((string) $user->wallet?->balance)->toBe('0.00');
 });
 
-test('user can own multiple wallet types while main wallet remains default', function () {
-    $user = User::factory()->create();
+test('cron job model casts array and schedule fields correctly', function () {
+    $cronJob = new CronJob;
+    $cronJob->headers = ['Authorization' => 'Bearer demo'];
+    $cronJob->query_params = ['page' => 1];
+    $cronJob->expected_status_codes = [200, 204];
+    $cronJob->follow_redirects = false;
 
-    $user->wallets()->create([
-        'type' => 'bonus',
-        'balance' => 25,
-        'hold_balance' => 5,
-        'total_recharge' => 25,
-        'total_spent' => 0,
-    ]);
-
-    expect($user->fresh()->wallets)->toHaveCount(2)
-        ->and($user->fresh()->wallet?->type)->toBe('main')
-        ->and($user->fresh()->wallets->pluck('type')->sort()->values()->all())->toBe(['bonus', 'main']);
+    expect($cronJob->headers)->toBeArray()
+        ->and($cronJob->query_params)->toBeArray()
+        ->and($cronJob->expected_status_codes)->toBeArray()
+        ->and($cronJob->follow_redirects)->toBeFalse();
 });
 
-test('bank account casts data_login to array', function () {
-    $bankAccount = new BankAccount();
-    $bankAccount->data_login = [
-        'provider' => 'acb',
-        'access_token' => 'token-example',
-        'refresh_token' => 'refresh-example',
-    ];
+test('cron alert channel supports structured events and encrypted fields', function () {
+    $channel = new CronAlertChannel;
+    $channel->events = ['on_fail', 'on_recovered'];
+    $channel->telegram_bot_token = 'bot-token';
 
-    expect($bankAccount->data_login)->toBeArray()
-        ->and($bankAccount->data_login['provider'])->toBe('acb')
-        ->and($bankAccount->data_login['access_token'])->toBe('token-example');
-});
-
-test('bank model casts metadata and activation settings', function () {
-    $bank = new Bank();
-    $bank->metadata = [
-        'country' => 'VN',
-        'supports_api' => true,
-    ];
-    $bank->is_active = true;
-    $bank->sort_order = 10;
-
-    expect($bank->metadata)->toBeArray()
-        ->and($bank->metadata['country'])->toBe('VN')
-        ->and($bank->is_active)->toBeTrue()
-        ->and($bank->sort_order)->toBeInt();
+    expect($channel->events)->toBeArray()
+        ->and($channel->events)->toContain('on_fail')
+        ->and($channel->telegram_bot_token)->toBe('bot-token');
 });

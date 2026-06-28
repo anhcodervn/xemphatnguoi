@@ -11,7 +11,7 @@
                             </p>
                         </div>
 
-                        <ol class="grid grid-cols-3 gap-2 text-center sm:min-w-[320px]">
+                        <ol class="grid gap-2 text-center sm:grid-cols-3 xl:min-w-[320px]">
                             <li v-for="step in steps" :key="step.number" class="flex flex-col items-center gap-2 text-xs font-semibold">
                                 <div class="flex w-full items-center gap-2">
                                     <div

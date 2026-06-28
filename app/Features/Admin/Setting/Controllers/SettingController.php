@@ -53,7 +53,6 @@ class SettingController extends Controller
                 'custom_script' => '',
             ],
             'options' => [
-                'recharge_syntax' => 'NAP',
                 'terms_of_use' => [],
                 'privacy_policy' => [],
                 'refund_policy' => [],
@@ -101,7 +100,7 @@ class SettingController extends Controller
                 'payment_policy_seo_title' => '',
                 'payment_policy_seo_description' => '',
                 'payment_policy_is_published' => true,
-                'api_usage_policy_title' => 'Chính sách sử dụng API',
+                'api_usage_policy_title' => 'Chính sách sử dụng dịch vụ',
                 'api_usage_policy_excerpt' => '',
                 'api_usage_policy_content' => [],
                 'api_usage_policy_seo_title' => '',
@@ -145,7 +144,6 @@ class SettingController extends Controller
             ...$this->tabDefaults()['branding'],
             ...$this->tabDefaults()['contact'],
             ...$this->tabDefaults()['seo'],
-            'recharge_syntax' => (string) $this->tabDefaults()['options']['recharge_syntax'],
         ];
     }
 
@@ -188,7 +186,6 @@ class SettingController extends Controller
                 'custom_script' => 'custom_script',
             ],
             'options' => [
-                'recharge_syntax' => 'recharge_syntax',
                 'terms_of_use' => 'terms_of_use',
                 'privacy_policy' => 'privacy_policy',
                 'refund_policy' => 'refund_policy',
@@ -253,10 +250,6 @@ class SettingController extends Controller
         $branding = $this->readTab($settingStore, $this->tabDefaults()['branding'], $this->tabStorageMap()['branding']);
         $contact = $this->readTab($settingStore, $this->tabDefaults()['contact'], $this->tabStorageMap()['contact']);
         $seo = $this->readTab($settingStore, $this->tabDefaults()['seo'], $this->tabStorageMap()['seo']);
-        $options = Arr::only(
-            $this->readTab($settingStore, $this->tabDefaults()['options'], $this->tabStorageMap()['options']),
-            ['recharge_syntax'],
-        );
 
         return [
             ...$this->defaultSystem(),
@@ -264,7 +257,6 @@ class SettingController extends Controller
             ...$branding,
             ...$contact,
             ...$seo,
-            ...$options,
         ];
     }
 
@@ -322,18 +314,10 @@ class SettingController extends Controller
             ...$request->validated(),
         ];
 
-        $payload['recharge_syntax'] = trim((string) $payload['recharge_syntax']) ?: 'NAP';
-
         foreach (['general', 'branding', 'contact', 'seo'] as $tab) {
             $tabPayload = Arr::only($payload, array_keys($this->tabDefaults()[$tab]));
             $this->writeTab($settingStore, $tabPayload, $this->tabStorageMap()[$tab]);
         }
-
-        $this->writeTab(
-            $settingStore,
-            Arr::only($payload, ['recharge_syntax']),
-            Arr::only($this->tabStorageMap()['options'], ['recharge_syntax']),
-        );
 
         return response()->json([
             'status' => true,
@@ -349,16 +333,14 @@ class SettingController extends Controller
     {
         $payload = [
             ...$this->tabDefaults()['options'],
-            ...Arr::only($request->validated(), ['terms_of_use', 'privacy_policy', 'refund_policy', 'recharge_syntax']),
+            ...Arr::only($request->validated(), ['terms_of_use', 'privacy_policy', 'refund_policy']),
         ];
-
-        $payload['recharge_syntax'] = trim((string) $payload['recharge_syntax']) ?: 'NAP';
 
         $this->writeTab($settingStore, $payload, $this->tabStorageMap()['options']);
 
         return response()->json([
             'status' => true,
-            'message' => 'Cập nhật cấu hình nạp tiền thành công.',
+            'message' => 'Cập nhật nội dung pháp lý thành công.',
             'data' => [
                 'tab' => 'options',
                 'settings' => $payload,

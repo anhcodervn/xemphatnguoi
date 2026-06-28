@@ -33,8 +33,8 @@
     @vite(['resources/css/app.css'])
 
     <style>
-        body { font-family: 'IBM Plex Sans', sans-serif; }
-        .font-tech { font-family: 'Space Grotesk', sans-serif; }
+        body { font-family: 'Be Vietnam Pro', 'IBM Plex Sans', sans-serif; }
+        .font-tech { font-family: 'Space Grotesk', 'Be Vietnam Pro', sans-serif; }
         .font-mono-tech { font-family: 'JetBrains Mono', monospace; }
     </style>
 </head>

@@ -320,9 +320,34 @@ class AuthController extends Controller
 
     protected function touchLastLogin(User $user, Request $request): void
     {
+        $previousLoginIp = is_string($user->last_login_ip) ? trim($user->last_login_ip) : '';
+        $currentLoginIp = is_string($request->ip()) ? trim((string) $request->ip()) : '';
+
         $user->forceFill([
             'last_login_at' => now(),
-            'last_login_ip' => $request->ip(),
+            'last_login_ip' => $currentLoginIp !== '' ? $currentLoginIp : $request->ip(),
         ])->save();
+
+        if (
+            $previousLoginIp !== ''
+            && $currentLoginIp !== ''
+            && $previousLoginIp !== $currentLoginIp
+            && is_string($user->email)
+            && trim($user->email) !== ''
+        ) {
+            $this->mailQueue->dispatch(
+                to: $user->email,
+                subjectText: 'Đăng nhập từ IP mới',
+                title: 'Phát hiện đăng nhập từ IP mới',
+                messageLines: [
+                    sprintf('Tài khoản của bạn vừa đăng nhập từ IP mới: %s', $currentLoginIp),
+                    sprintf('IP đăng nhập trước đó: %s', $previousLoginIp),
+                    sprintf('Thời gian: %s', now()->format('d/m/Y H:i:s')),
+                    sprintf('Thiết bị: %s', (string) ($request->userAgent() ?: 'Không xác định')),
+                ],
+                ctaText: 'Vào hệ thống',
+                ctaUrl: url('/'),
+            );
+        }
     }
 }

@@ -8,6 +8,7 @@ use App\Features\Client\Package\Services\PackageCheckoutService;
 use App\Features\Client\Profile\Actions\RecordUserLogAction;
 use App\Features\Client\Subscription\Requests\StorePackageOrderRequest;
 use App\Features\Client\Wallet\Services\WalletService;
+use App\Features\Cron\Support\CronPackageCatalog;
 use App\Http\Controllers\Controller;
 use App\Models\Package;
 use App\Models\PackageOrder;
@@ -45,6 +46,7 @@ class PackageController extends Controller
                 'request_per_minute',
                 'concurrent_limit',
                 'features',
+                'package_limits',
                 'status',
             ]);
 
@@ -69,6 +71,10 @@ class PackageController extends Controller
                     'active_subscription_count' => $activeSubscriptions->count(),
                     'latest_order_count' => $latestOrders->count(),
                     'wallet_balance' => $this->walletService->getWalletInfo($user)['balance'],
+                ],
+                'limits_catalog' => [
+                    'defaults' => CronPackageCatalog::defaults(),
+                    'presets' => CronPackageCatalog::presets(),
                 ],
                 'latest_orders' => $latestOrders,
             ],

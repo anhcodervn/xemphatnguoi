@@ -97,6 +97,26 @@ class User extends Authenticatable implements CanResetPassword, JWTSubject
         return $this->hasMany(self::class, 'referred_by');
     }
 
+    public function cronJobs(): HasMany
+    {
+        return $this->hasMany(CronJob::class);
+    }
+
+    public function cronJobLogs(): HasMany
+    {
+        return $this->hasMany(CronJobLog::class);
+    }
+
+    public function cronAlertChannels(): HasMany
+    {
+        return $this->hasMany(CronAlertChannel::class);
+    }
+
+    public function cronUsageCounters(): HasMany
+    {
+        return $this->hasMany(CronUsageCounter::class);
+    }
+
     public function userSessions(): HasMany
     {
         return $this->hasMany(UserSession::class);

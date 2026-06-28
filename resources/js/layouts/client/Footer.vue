@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, onMounted } from "vue";
 import { useSystemSetting } from "@/composables/useSystemSetting";
+import { computed, onMounted } from "vue";
 
 type FooterLink = {
     label: string;
@@ -18,8 +18,8 @@ const footerLinkGroups = computed<FooterLinkGroup[]>(() => [
     {
         title: "Giới thiệu",
         links: [
-            { label: "Về chúng tôi", href: "/gioi-thieu" },
-            { label: "Tin tức", href: "/blog" },
+            { label: "Về AutoCron", href: "/gioi-thieu" },
+            { label: "Blog", href: "/blog" },
             { label: "Liên hệ", href: "/lien-he" },
             { label: "Câu hỏi thường gặp", href: "/cau-hoi-thuong-gap" },
         ],
@@ -31,7 +31,7 @@ const footerLinkGroups = computed<FooterLinkGroup[]>(() => [
             { label: "Chính sách bảo mật", href: "/chinh-sach-bao-mat" },
             { label: "Chính sách hoàn tiền", href: "/chinh-sach-hoan-tien" },
             { label: "Chính sách thanh toán", href: "/chinh-sach-thanh-toan" },
-            { label: "Chính sách sử dụng API", href: "/chinh-sach-su-dung-api" },
+            { label: "Chính sách sử dụng dịch vụ", href: "/chinh-sach-su-dung-api" },
             { label: "Miễn trừ trách nhiệm", href: "/mien-tru-trach-nhiem" },
         ],
     },
@@ -54,12 +54,12 @@ onMounted(async () => {
         <div class="mx-auto grid w-full max-w-[1200px] gap-8 px-3 py-8 lg:grid-cols-[minmax(0,1.2fr)_repeat(3,minmax(0,1fr))]">
             <div class="space-y-3">
                 <h2 class="text-lg font-bold tracking-tight text-slate-950">
-                    {{ settings.site_name || "Nạp Tiền Tự Động" }}
+                    {{ settings.site_name || "AutoCron" }}
                 </h2>
                 <p class="max-w-md text-sm leading-6 text-slate-600">
                     {{
                         settings.site_description ||
-                        "Nền tảng hỗ trợ quản lý API banking, webhook, tạo lệnh nạp và theo dõi giao dịch tập trung."
+                        "Nền tảng SaaS giúp tạo, chạy và giám sát HTTP Cron Jobs theo lịch với quota, log và cảnh báo rõ ràng."
                     }}
                 </p>
                 <div class="flex flex-wrap gap-3 text-sm text-slate-500">

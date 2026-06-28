@@ -34,7 +34,6 @@ class ProfileResource extends JsonResource
                 'has_2fa' => false,
                 'email_verified' => $this->email_verified_at !== null,
             ],
-            'api_access' => $this->getAttribute('api_access'),
         ];
     }
 }

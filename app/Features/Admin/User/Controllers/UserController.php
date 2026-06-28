@@ -7,7 +7,6 @@ use App\Features\Admin\User\Actions\ListAdminUsersAction;
 use App\Features\Admin\User\Actions\ListUserLogsAction;
 use App\Features\Admin\User\Actions\ListUserPackageOrdersAction;
 use App\Features\Admin\User\Actions\ListUserWalletTransactionsAction;
-use App\Features\Admin\User\Actions\ListUserWebhooksAction;
 use App\Features\Admin\User\Actions\ShowAdminUserAction;
 use App\Features\Admin\User\Actions\UpdateAdminUserStatusAction;
 use App\Features\Admin\User\Requests\AdminUserIndexRequest;
@@ -70,14 +69,6 @@ class UserController extends Controller
         AdminUserRelatedListRequest $request,
         User $user,
         ListUserPackageOrdersAction $action,
-    ): JsonResponse {
-        return response()->json(ApiResponse::success(data: $action->handle($user, $request->validated())));
-    }
-
-    public function webhooks(
-        AdminUserRelatedListRequest $request,
-        User $user,
-        ListUserWebhooksAction $action,
     ): JsonResponse {
         return response()->json(ApiResponse::success(data: $action->handle($user, $request->validated())));
     }

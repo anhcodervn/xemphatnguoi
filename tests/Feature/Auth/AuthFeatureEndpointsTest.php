@@ -1,6 +1,7 @@
 <?php
 
 use App\Jobs\SaveUserLogJob;
+use App\Jobs\SendSystemMailJob;
 use App\Models\User;
 use App\Models\Wallet;
 use Illuminate\Support\Facades\Queue;
@@ -87,6 +88,33 @@ test('users can log in through the auth api endpoint and receive a sanctum token
     Queue::assertPushed(SaveUserLogJob::class, fn (SaveUserLogJob $job): bool => $job->userId === $user->id && $job->action === 'api_login');
 });
 
+test('users receive email when logging in from a new ip address', function () {
+    Queue::fake();
+
+    $user = User::factory()->create([
+        'username' => 'ip_login_user',
+        'email' => 'ip-login@example.com',
+        'password' => 'password',
+        'last_login_ip' => '1.1.1.1',
+    ]);
+
+    $this->withServerVariables([
+        'REMOTE_ADDR' => '2.2.2.2',
+        'HTTP_USER_AGENT' => 'PHPUnit Browser',
+    ])->postJson(route('auth.login.submit'), [
+        'login' => 'ip-login@example.com',
+        'password' => 'password',
+    ])->assertOk();
+
+    Queue::assertPushed(SendSystemMailJob::class, function (SendSystemMailJob $job) use ($user): bool {
+        return $job->to === $user->email
+            && $job->subjectText === 'Hệ thống Auto Cron'
+            && $job->title === 'Phát hiện đăng nhập từ IP mới'
+            && collect($job->messageLines)->contains(fn (string $line): bool => str_contains($line, '2.2.2.2'))
+            && collect($job->messageLines)->contains(fn (string $line): bool => str_contains($line, '1.1.1.1'));
+    });
+});
+
 test('login rejects invalid credentials under the shared login field', function () {
     User::factory()->create([
         'username' => 'wrongtarget',
@@ -104,7 +132,7 @@ test('login rejects invalid credentials under the shared login field', function 
         ->assertJsonValidationErrors(['login']);
 });
 
-test('forgot password demo returns a preview reset url for known users', function () {
+test('forgot password endpoint returns generic success message for known users', function () {
     $user = User::factory()->create([
         'email' => 'forgot@example.com',
     ]);
@@ -117,11 +145,8 @@ test('forgot password demo returns a preview reset url for known users', functio
         ->assertOk()
         ->assertJson([
             'status' => true,
+            'message' => 'Nếu email tồn tại trong hệ thống, liên kết đặt lại mật khẩu đã được gửi.',
         ]);
-
-    expect($response->json('preview_reset_url'))
-        ->toBeString()
-        ->toContain('/reset-password/');
 });
 
 test('users can register through the auth web submit endpoint', function () {
@@ -153,4 +178,5 @@ test('users can register through the auth web submit endpoint', function () {
         ->and($response->json('user.wallet.balance'))->toBe('0.00');
 
     Queue::assertPushed(SaveUserLogJob::class, fn (SaveUserLogJob $job): bool => $job->userId === $user?->id && $job->action === 'register');
+    Queue::assertPushed(SendSystemMailJob::class, fn (SendSystemMailJob $job): bool => $job->to === 'blade@example.com' && $job->subjectText === 'Hệ thống Auto Cron');
 });

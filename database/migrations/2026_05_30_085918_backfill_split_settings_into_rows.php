@@ -19,7 +19,6 @@ return new class extends Migration
         $options = $this->decodeRow($rows->get('options'));
         $homeCategory = $this->decodeRow($rows->get('home-category'));
         $sliderImages = $this->decodeRow($rows->get('slider-images'));
-        $rechargeSyntax = $this->stringRow($rows->get('recharge_syntax'));
 
         $payload = [
             'site_name' => $system['site_name'] ?? $general['site_name'] ?? '',
@@ -45,7 +44,6 @@ return new class extends Migration
             'gtm_id' => $system['gtm_id'] ?? $seo['gtm_id'] ?? '',
             'meta_pixel_id' => $system['meta_pixel_id'] ?? $seo['meta_pixel_id'] ?? '',
             'custom_script' => $system['custom_script'] ?? $seo['custom_script'] ?? '',
-            'recharge_syntax' => trim((string) ($system['recharge_syntax'] ?? $options['recharge_syntax'] ?? $rechargeSyntax ?? 'NAP')) ?: 'NAP',
             'terms_of_use' => $system['terms_of_use'] ?? $options['terms_of_use'] ?? [],
             'privacy_policy' => $system['privacy_policy'] ?? $options['privacy_policy'] ?? [],
             'refund_policy' => $system['refund_policy'] ?? $options['refund_policy'] ?? [],
@@ -113,8 +111,7 @@ return new class extends Migration
             'terms_of_use',
             'privacy_policy',
             'refund_policy',
-            'recharge_syntax',
-        ]), ['terms_of_use', 'privacy_policy', 'refund_policy', 'recharge_syntax']);
+        ]), ['terms_of_use', 'privacy_policy', 'refund_policy']);
 
         $system = [
             ...$general,
@@ -149,16 +146,6 @@ return new class extends Migration
                 ],
             );
         }
-
-        DB::table('settings')->updateOrInsert(
-            ['key' => 'recharge_syntax'],
-            [
-                'value' => (string) ($options['recharge_syntax'] ?? 'NAP'),
-                'type' => 'string',
-                'updated_at' => now(),
-                'created_at' => optional($rows->get('recharge_syntax'))->created_at ?? now(),
-            ],
-        );
     }
 
     /**
@@ -173,11 +160,6 @@ return new class extends Migration
         $decoded = json_decode((string) $row->value, true);
 
         return is_array($decoded) ? $decoded : [];
-    }
-
-    protected function stringRow(?object $row): ?string
-    {
-        return $row?->value !== null ? (string) $row->value : null;
     }
 
     protected function detectType(mixed $value): string

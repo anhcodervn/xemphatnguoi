@@ -28,7 +28,6 @@ export interface SystemSettingType {
     gtm_id: string;
     meta_pixel_id: string;
     custom_script: string;
-    recharge_syntax: string;
     [key: string]: unknown;
 }
 
@@ -107,10 +106,9 @@ export interface SeoSettingType {
 }
 
 export interface OptionSettingType {
-    recharge_syntax: string;
-    terms_of_use: unknown[];
-    privacy_policy: unknown[];
-    refund_policy: unknown[];
+    terms_of_use?: unknown[];
+    privacy_policy?: unknown[];
+    refund_policy?: unknown[];
     [key: string]: unknown;
 }
 

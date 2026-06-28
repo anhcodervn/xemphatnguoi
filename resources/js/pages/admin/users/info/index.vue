@@ -6,14 +6,13 @@ import {
     type AdminUserLog,
     type AdminUserPackageOrder,
     type AdminUserWalletTransaction,
-    type AdminUserWebhook,
 } from '@/services/admin-user.service';
 import { handleErrorResponse, handleSuccessResponse } from '@/utils/response';
-import { ArrowLeft, Blocks, Globe, History, KeyRound, LoaderCircle, Minus, Package, Plus, Shield, Wallet } from 'lucide-vue-next';
+import { ArrowLeft, Clock3, History, LoaderCircle, Minus, Package, Plus, Wallet, Webhook } from 'lucide-vue-next';
 import { computed, onMounted, reactive, ref } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 
-type TabKey = 'overview' | 'transactions' | 'orders' | 'webhooks' | 'logs';
+type TabKey = 'overview' | 'transactions' | 'orders' | 'logs';
 
 type TabState<T> = {
     loading: boolean;
@@ -50,13 +49,6 @@ const ordersState = reactive<TabState<AdminUserPackageOrder>>({
     meta: { current_page: 1, last_page: 1, per_page: 10, total: 0 },
 });
 
-const webhooksState = reactive<TabState<AdminUserWebhook>>({
-    loading: false,
-    loaded: false,
-    items: [],
-    meta: { current_page: 1, last_page: 1, per_page: 10, total: 0 },
-});
-
 const logsState = reactive<TabState<AdminUserLog>>({
     loading: false,
     loaded: false,
@@ -71,17 +63,14 @@ const tabs = [
     { key: 'logs' as const, label: 'Hoạt động' },
 ];
 
-const formatNumber = (value: number): string => {
-    return new Intl.NumberFormat('vi-VN').format(value);
-};
+const formatNumber = (value: number): string => new Intl.NumberFormat('vi-VN').format(value);
 
-const formatCurrency = (value: number | null | undefined): string => {
-    return new Intl.NumberFormat('vi-VN', {
+const formatCurrency = (value: number | null | undefined): string =>
+    new Intl.NumberFormat('vi-VN', {
         style: 'currency',
         currency: 'VND',
         maximumFractionDigits: 0,
     }).format(value ?? 0);
-};
 
 const formatDate = (value: string | null, includeTime = false): string => {
     if (!value) {
@@ -94,14 +83,6 @@ const formatDate = (value: string | null, includeTime = false): string => {
         year: 'numeric',
         ...(includeTime ? { hour: '2-digit', minute: '2-digit' } : {}),
     }).format(new Date(value));
-};
-
-const webhookEventLabel = (eventKeyword: string | null): string => {
-    if (!eventKeyword || eventKeyword.trim() === '') {
-        return 'Tất cả giao dịch tiền vào';
-    }
-
-    return eventKeyword;
 };
 
 const initials = computed(() => {
@@ -122,16 +103,10 @@ const statCards = computed(() => {
 
     return [
         {
-            label: 'Tổng nạp',
-            value: formatCurrency(detail.value.stats.total_recharge),
-            icon: Wallet,
-            iconClass: 'bg-emerald-50 text-emerald-600',
-        },
-        {
             label: 'Tổng chi',
             value: formatCurrency(detail.value.stats.total_spent),
-            icon: Blocks,
-            iconClass: 'bg-blue-50 text-blue-600',
+            icon: Wallet,
+            iconClass: 'bg-emerald-50 text-emerald-600',
         },
         {
             label: 'Đơn mua gói',
@@ -140,22 +115,22 @@ const statCards = computed(() => {
             iconClass: 'bg-violet-50 text-violet-600',
         },
         {
-            label: 'Webhook',
-            value: formatNumber(detail.value.stats.webhook_count),
-            icon: Globe,
+            label: 'Cron jobs',
+            value: formatNumber(detail.value.stats.cron_job_count),
+            icon: Clock3,
+            iconClass: 'bg-sky-50 text-sky-600',
+        },
+        {
+            label: 'Alert channels',
+            value: formatNumber(detail.value.stats.alert_channel_count),
+            icon: Webhook,
             iconClass: 'bg-amber-50 text-amber-600',
         },
         {
-            label: 'API key',
-            value: formatNumber(detail.value.stats.api_key_count),
-            icon: KeyRound,
+            label: 'Runs hôm nay',
+            value: formatNumber(detail.value.stats.runs_today),
+            icon: History,
             iconClass: 'bg-slate-100 text-slate-700',
-        },
-        {
-            label: 'Tài khoản con',
-            value: formatNumber(detail.value.stats.account_count),
-            icon: Shield,
-            iconClass: 'bg-rose-50 text-rose-600',
         },
     ];
 });
@@ -204,19 +179,6 @@ const loadOrders = async (page = 1): Promise<void> => {
     }
 };
 
-const loadWebhooks = async (page = 1): Promise<void> => {
-    webhooksState.loading = true;
-
-    try {
-        const response = await adminUserService.webhooks(userId, { page, per_page: 10 });
-        applyTabResponse(webhooksState, response);
-    } catch (error) {
-        handleErrorResponse(error);
-    } finally {
-        webhooksState.loading = false;
-    }
-};
-
 const loadLogs = async (page = 1): Promise<void> => {
     logsState.loading = true;
 
@@ -239,10 +201,6 @@ const openTab = async (tab: TabKey): Promise<void> => {
 
     if (tab === 'orders' && !ordersState.loaded) {
         await loadOrders();
-    }
-
-    if (tab === 'webhooks' && !webhooksState.loaded) {
-        await loadWebhooks();
     }
 
     if (tab === 'logs' && !logsState.loaded) {
@@ -270,8 +228,9 @@ const submitWalletAdjust = async (): Promise<void> => {
     adjustingWallet.value = true;
 
     try {
+        const operation = walletForm.type;
         const response = await adminUserService.adjustWallet(userId, {
-            type: walletForm.type,
+            type: operation,
             amount,
             note: walletForm.note || undefined,
         });
@@ -286,7 +245,7 @@ const submitWalletAdjust = async (): Promise<void> => {
         handleSuccessResponse({
             data: {
                 status: true,
-                message: walletForm.type === 'add' ? 'Đã cộng tiền cho người dùng.' : 'Đã trừ tiền khỏi người dùng.',
+                message: operation === 'add' ? 'Đã cộng tiền cho người dùng.' : 'Đã trừ tiền khỏi người dùng.',
             },
         });
 
@@ -306,10 +265,6 @@ const goToTabPage = async (tab: TabKey, page: number): Promise<void> => {
 
     if (tab === 'orders') {
         await loadOrders(page);
-    }
-
-    if (tab === 'webhooks') {
-        await loadWebhooks(page);
     }
 
     if (tab === 'logs') {
@@ -605,48 +560,6 @@ onMounted(async () => {
                                 class="rounded-[10px] border border-slate-200 px-4 py-10 text-center text-sm text-slate-500"
                             >
                                 Chưa có đơn mua gói.
-                            </div>
-                        </div>
-                    </div>
-
-                    <div v-else-if="activeTab === 'webhooks'" class="space-y-4">
-                        <div v-if="webhooksState.loading" class="flex items-center gap-2 text-sm text-slate-500">
-                            <LoaderCircle class="h-4 w-4 animate-spin" />
-                            Đang tải webhook...
-                        </div>
-                        <div v-else class="grid gap-3">
-                            <article
-                                v-for="item in webhooksState.items"
-                                :key="item.id"
-                                class="rounded-[10px] border border-slate-200 bg-slate-50 px-4 py-4"
-                            >
-                                <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                                    <div class="min-w-0">
-                                        <p class="truncate text-sm font-bold text-slate-950">{{ item.url }}</p>
-                                        <p class="mt-1 text-sm text-slate-500">{{ webhookEventLabel(item.event_keyword) }}</p>
-                                    </div>
-                                    <span
-                                        class="inline-flex rounded-[8px] px-2.5 py-1 text-xs font-semibold"
-                                        :class="
-                                            item.status === 'active'
-                                                ? 'border border-emerald-200 bg-emerald-50 text-emerald-700'
-                                                : 'border border-slate-200 bg-slate-100 text-slate-600'
-                                        "
-                                    >
-                                        {{ item.status }}
-                                    </span>
-                                </div>
-                                <div class="mt-3 grid gap-2 text-sm text-slate-600 sm:grid-cols-3">
-                                    <p>Success: {{ item.success_count }}</p>
-                                    <p>Failed: {{ item.failed_count }}</p>
-                                    <p>Gọi gần nhất: {{ formatDate(item.last_called_at, true) }}</p>
-                                </div>
-                            </article>
-                            <div
-                                v-if="webhooksState.items.length === 0"
-                                class="rounded-[10px] border border-slate-200 px-4 py-10 text-center text-sm text-slate-500"
-                            >
-                                Chưa có webhook nào.
                             </div>
                         </div>
                     </div>

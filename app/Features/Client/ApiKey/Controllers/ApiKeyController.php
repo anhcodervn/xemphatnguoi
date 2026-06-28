@@ -2,12 +2,10 @@
 
 namespace App\Features\Client\ApiKey\Controllers;
 
-use App\Features\Client\ApiKey\Requests\ApiKeyIndexRequest;
 use App\Features\Client\ApiKey\Requests\StoreApiKeyRequest;
 use App\Features\Client\ApiKey\Requests\UpdateApiKeyRequest;
 use App\Features\Client\ApiKey\Resources\ApiKeyResource;
-use App\Features\Client\ApiKey\Services\ApiKeyService;
-use App\Features\Client\Profile\Actions\RecordUserLogAction;
+use App\Features\Cron\Services\CronPlanService;
 use App\Http\Controllers\Controller;
 use App\Models\ApiKey;
 use App\Models\User;
@@ -15,129 +13,121 @@ use App\Support\ApiPermissionCatalog;
 use App\Utils\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Illuminate\Support\Facades\Hash;
 
 class ApiKeyController extends Controller
 {
     public function __construct(
-        private readonly RecordUserLogAction $recordUserLogAction,
+        private readonly CronPlanService $cronPlanService,
     ) {}
 
-    public function index(ApiKeyIndexRequest $request, ApiKeyService $apiKeyService): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        /** @var User|null $user */
-        $user = $request->user();
-        abort_unless($user instanceof User, 401);
+        $user = $this->user($request);
+        $keys = $user->apiKeys()->withCount('logs')->latest('id')->get();
 
-        return response()->json(ApiResponse::success(data: $apiKeyService->paginate($user, $request->validated())));
+        return response()->json(ApiResponse::success(data: [
+            'data' => ApiKeyResource::collection($keys)->resolve(),
+            'meta' => [
+                'current_page' => 1,
+                'last_page' => 1,
+                'per_page' => $keys->count(),
+                'total' => $keys->count(),
+            ],
+            'permissions' => ApiPermissionCatalog::all(),
+        ]));
     }
 
-    public function store(StoreApiKeyRequest $request, ApiKeyService $apiKeyService): JsonResponse
+    public function permissions(Request $request): JsonResponse
     {
-        /** @var User|null $user */
-        $user = $request->user();
-        abort_unless($user instanceof User, 401);
+        $subscription = $this->cronPlanService->activeSubscription($this->user($request));
 
-        $result = $apiKeyService->create($user, $request->validated());
-        $this->recordUserLogAction->handle($user, 'api_key_create', 'Tạo API key mới', $request);
+        return response()->json(ApiResponse::success(data: [
+            'permissions' => ApiPermissionCatalog::all(),
+            'note' => $subscription !== null
+                ? 'API key dùng cho bộ endpoint AutoCron V1.'
+                : 'Bạn cần gói đang hoạt động để tạo API key.',
+        ]));
+    }
+
+    public function store(StoreApiKeyRequest $request): JsonResponse
+    {
+        $user = $this->user($request);
+        $this->cronPlanService->requireActiveSubscription($user);
+
+        if ($user->apiKeys()->exists()) {
+            return response()->json(ApiResponse::error('Mỗi tài khoản chỉ có một API key duy nhất. Hãy dùng chức năng đổi secret nếu cần cập nhật thông tin tích hợp.'), 422);
+        }
+
+        $credentials = ApiKey::generateCredentials();
+
+        $apiKey = $user->apiKeys()->create([
+            'name' => $request->validated('name'),
+            'api_key' => $credentials['api_key'],
+            'api_secret_hash' => Hash::make($credentials['api_secret']),
+            'permissions' => $request->validated('permissions'),
+            'ip_whitelist' => $request->validated('ip_whitelist', []),
+            'expired_at' => $request->validated('expired_at'),
+            'status' => ApiKey::STATUS_ACTIVE,
+        ]);
 
         return response()->json(ApiResponse::success(
-            message: 'API key created successfully.',
+            message: 'Tạo API key thành công.',
             data: [
-                'api_key' => ApiKeyResource::make($result['api_key'])->resolve(),
-                'api_secret' => $result['plain_secret'],
-                'permission_catalog' => ApiPermissionCatalog::selfService(),
+                'api_key' => ApiKeyResource::make($apiKey->loadCount('logs'))->resolve(),
+                'api_secret' => $credentials['api_secret'],
+                'permission_catalog' => ApiPermissionCatalog::all(),
             ],
         ), 201);
     }
 
-    public function update(UpdateApiKeyRequest $request, ApiKey $apiKey, ApiKeyService $apiKeyService): JsonResponse
+    public function update(UpdateApiKeyRequest $request, ApiKey $apiKey): JsonResponse
     {
-        /** @var User|null $user */
-        $user = $request->user();
-        abort_unless($user instanceof User, 401);
+        $apiKey = $this->ownedKey($apiKey, $this->user($request));
 
-        $this->ensureOwnership($user, $apiKey);
-
-        $apiKey = $apiKeyService->update($apiKey, $request->validated());
-        $this->recordUserLogAction->handle($user, 'api_key_update', 'Cập nhật cấu hình API key', $request);
+        $payload = $request->validated();
+        $apiKey->fill($payload);
+        $apiKey->save();
 
         return response()->json(ApiResponse::success(
-            message: 'API key updated successfully.',
+            message: 'Cập nhật API key thành công.',
             data: [
-                'api_key' => ApiKeyResource::make($apiKey)->resolve(),
+                'api_key' => ApiKeyResource::make($apiKey->fresh()->loadCount('logs'))->resolve(),
             ],
         ));
     }
 
-    public function destroy(Request $request, ApiKey $apiKey, ApiKeyService $apiKeyService): JsonResponse
+    public function rotateSecret(ApiKey $apiKey, Request $request): JsonResponse
     {
-        /** @var User|null $user */
-        $user = $request->user();
-        abort_unless($user instanceof User, 401);
+        $apiKey = $this->ownedKey($apiKey, $this->user($request));
+        $credentials = ApiKey::generateCredentials();
 
-        $this->ensureOwnership($user, $apiKey);
-
-        $apiKey = $apiKeyService->revoke($apiKey);
-        $this->recordUserLogAction->handle($user, 'api_key_revoke', 'Thu hồi API key', $request);
+        $apiKey->forceFill([
+            'api_secret_hash' => Hash::make($credentials['api_secret']),
+            'status' => ApiKey::STATUS_ACTIVE,
+        ])->save();
 
         return response()->json(ApiResponse::success(
-            message: 'API key revoked successfully.',
+            message: 'Đổi API secret thành công.',
             data: [
-                'api_key' => ApiKeyResource::make($apiKey)->resolve(),
+                'api_key' => ApiKeyResource::make($apiKey->fresh()->loadCount('logs'))->resolve(),
+                'api_secret' => $credentials['api_secret'],
             ],
         ));
     }
 
-    public function rotateSecret(Request $request, ApiKey $apiKey, ApiKeyService $apiKeyService): JsonResponse
+    private function ownedKey(ApiKey $apiKey, User $user): ApiKey
     {
-        /** @var User|null $user */
+        abort_unless($apiKey->user_id === $user->id, 404);
+
+        return $apiKey;
+    }
+
+    private function user(Request $request): User
+    {
+        /** @var User $user */
         $user = $request->user();
-        abort_unless($user instanceof User, 401);
 
-        $this->ensureOwnership($user, $apiKey);
-
-        $result = $apiKeyService->rotateSecret($apiKey);
-        $this->recordUserLogAction->handle($user, 'api_key_rotate', 'Đổi API key và API secret', $request);
-
-        return response()->json(ApiResponse::success(
-            message: 'API credentials rotated successfully.',
-            data: [
-                'api_key' => ApiKeyResource::make($result['api_key'])->resolve(),
-                'api_secret' => $result['plain_secret'],
-            ],
-        ));
-    }
-
-    public function logs(Request $request, ApiKey $apiKey, ApiKeyService $apiKeyService): JsonResponse
-    {
-        /** @var User|null $user */
-        $user = $request->user();
-        abort_unless($user instanceof User, 401);
-
-        $this->ensureOwnership($user, $apiKey);
-
-        $validated = $request->validate([
-            'search' => ['nullable', 'string', 'max:255'],
-            'status_code' => ['nullable', 'integer', 'between:100,599'],
-            'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
-        ]);
-
-        return response()->json(ApiResponse::success(data: $apiKeyService->logs($apiKey, $validated)));
-    }
-
-    public function permissions(): JsonResponse
-    {
-        return response()->json(ApiResponse::success(data: [
-            'permissions' => ApiPermissionCatalog::selfService(),
-            'note' => 'Only V1 permissions can be self-assigned here. Future V2 / V3 permissions must be granted by admin.',
-        ]));
-    }
-
-    private function ensureOwnership(User $user, ApiKey $apiKey): void
-    {
-        if ((int) $apiKey->user_id !== (int) $user->id) {
-            throw new NotFoundHttpException;
-        }
+        return $user;
     }
 }

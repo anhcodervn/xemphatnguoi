@@ -8,7 +8,17 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-Schedule::command('bank:sync-transactions')
-    ->everyMinute()
+Schedule::command('cron:dispatch-due')
+    ->everySecond()
+    ->withoutOverlapping()
+    ->onOneServer();
+
+Schedule::command('cron:prune-logs')
+    ->daily()
+    ->withoutOverlapping()
+    ->onOneServer();
+
+Schedule::command('cron:reset-usage-quota')
+    ->daily()
     ->withoutOverlapping()
     ->onOneServer();

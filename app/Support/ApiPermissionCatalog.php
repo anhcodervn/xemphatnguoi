@@ -5,66 +5,76 @@ namespace App\Support;
 class ApiPermissionCatalog
 {
     /**
-     * @return array<int, array<string, mixed>>
+     * @return array<int, array{
+     *     key:string,
+     *     group:string,
+     *     version:string,
+     *     label:string,
+     *     description:string,
+     *     endpoints:array<int, string>,
+     *     self_service:bool
+     * }>
      */
     public static function all(): array
     {
         return [
             [
-                'key' => '*',
-                'group' => 'admin',
-                'version' => 'global',
-                'label' => 'Full access',
-                'description' => 'Allows this API key to call every published API endpoint.',
-                'endpoints' => ['*'],
-                'self_service' => false,
-            ],
-            [
-                'key' => 'profile.read',
-                'group' => 'profile',
+                'key' => 'cron-jobs.read',
+                'group' => 'cron',
                 'version' => 'v1',
-                'label' => 'Read profile',
-                'description' => 'Read basic account profile, wallet, and subscription summary.',
-                'endpoints' => ['GET /api/v1/me'],
+                'label' => 'Xem cron jobs',
+                'description' => 'Đọc danh sách cron job và chi tiết từng cron job.',
+                'endpoints' => [
+                    'GET /api/v1/cron-jobs',
+                    'GET /api/v1/cron-jobs/{cron_job}',
+                ],
                 'self_service' => true,
             ],
             [
-                'key' => 'bank-accounts.read',
-                'group' => 'bank',
+                'key' => 'cron-jobs.write',
+                'group' => 'cron',
                 'version' => 'v1',
-                'label' => 'List bank accounts',
-                'description' => 'Read the bank accounts that are available for transaction synchronization.',
-                'endpoints' => ['GET /api/v1/list-bank-accounts'],
+                'label' => 'Quản lý cron jobs',
+                'description' => 'Tạo, cập nhật, xóa, pause và resume cron job.',
+                'endpoints' => [
+                    'POST /api/v1/cron-jobs',
+                    'PATCH /api/v1/cron-jobs/{cron_job}',
+                    'DELETE /api/v1/cron-jobs/{cron_job}',
+                    'POST /api/v1/cron-jobs/{cron_job}/pause',
+                    'POST /api/v1/cron-jobs/{cron_job}/resume',
+                ],
                 'self_service' => true,
             ],
             [
-                'key' => 'transactions.read',
-                'group' => 'bank',
+                'key' => 'cron-logs.read',
+                'group' => 'cron',
                 'version' => 'v1',
-                'label' => 'Read bank transactions',
-                'description' => 'Read and synchronize transactions for a specific bank account by bank_id.',
-                'endpoints' => ['POST /api/v1/transactions'],
-                'self_service' => true,
-            ],
-            [
-                'key' => 'recharge.create',
-                'group' => 'recharge',
-                'version' => 'v1',
-                'label' => 'Create recharge order',
-                'description' => 'Create a partner recharge order on this system and wait for bank transfer matching.',
-                'endpoints' => ['POST /api/v1/recharge-orders'],
-                'self_service' => true,
-            ],
-            [
-                'key' => 'recharge.read',
-                'group' => 'recharge',
-                'version' => 'v1',
-                'label' => 'Read recharge order',
-                'description' => 'Read partner recharge order status, payment instructions, and transfer content.',
-                'endpoints' => ['GET /api/v1/recharge-orders/{orderCode}'],
+                'label' => 'Xem cron logs',
+                'description' => 'Đọc log theo từng cron job.',
+                'endpoints' => [
+                    'GET /api/v1/cron-jobs/{cron_job}/logs',
+                ],
                 'self_service' => true,
             ],
         ];
+    }
+
+    /**
+     * @return array<string, array{
+     *     key:string,
+     *     group:string,
+     *     version:string,
+     *     label:string,
+     *     description:string,
+     *     endpoints:array<int, string>,
+     *     self_service:bool
+     * }>
+     */
+    public static function keyed(): array
+    {
+        return collect(self::all())
+            ->keyBy('key')
+            ->all();
     }
 
     /**
@@ -72,65 +82,6 @@ class ApiPermissionCatalog
      */
     public static function keys(): array
     {
-        return array_values(array_map(
-            static fn (array $permission): string => (string) $permission['key'],
-            self::all(),
-        ));
-    }
-
-    /**
-     * @return array<string, array<string, mixed>>
-     */
-    public static function map(): array
-    {
-        $permissions = [];
-
-        foreach (self::all() as $permission) {
-            $permissions[(string) $permission['key']] = $permission;
-        }
-
-        return $permissions;
-    }
-
-    /**
-     * @return array<int, array<string, mixed>>
-     */
-    public static function selfService(): array
-    {
-        return array_values(array_filter(
-            self::all(),
-            static fn (array $permission): bool => (bool) ($permission['self_service'] ?? false),
-        ));
-    }
-
-    /**
-     * @return array<int, string>
-     */
-    public static function selfServiceKeys(): array
-    {
-        return array_values(array_map(
-            static fn (array $permission): string => (string) $permission['key'],
-            self::selfService(),
-        ));
-    }
-
-    /**
-     * @param  array<int, string>|null  $keys
-     * @return array<int, array<string, mixed>>
-     */
-    public static function resolve(?array $keys): array
-    {
-        if ($keys === null || $keys === []) {
-            return [];
-        }
-
-        $map = self::map();
-
-        return array_values(array_filter(
-            array_map(
-                static fn (string $key): ?array => $map[$key] ?? null,
-                $keys,
-            ),
-        ));
+        return array_values(array_map(static fn (array $permission): string => $permission['key'], self::all()));
     }
 }

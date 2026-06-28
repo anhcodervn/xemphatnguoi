@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import type { ClientProfilePaginationMeta, UserLogItem } from '@/types/client-profile.type';
-import { ChevronLeft, ChevronRight } from 'lucide-vue-next';
 import { formatTime } from '@/utils/helpers/format';
+import { ChevronLeft, ChevronRight } from 'lucide-vue-next';
 
-defineProps<{
+const props = defineProps<{
     filters: {
         search: string;
         action: string;
@@ -15,6 +15,8 @@ defineProps<{
 
 const emit = defineEmits<{
     'change-page': [page: number];
+    'update:search': [value: string];
+    'update:action': [value: string];
 }>();
 
 const actionOptions = [
@@ -45,22 +47,24 @@ const getStatusLabel = (status: string): string => statusLabels[status] ?? 'Khô
     <div class="space-y-3">
         <div class="flex flex-col gap-2 rounded-[10px] bg-slate-50/80 p-3 md:flex-row md:items-center">
             <input
-                v-model="filters.search"
+                :value="props.filters.search"
                 type="text"
                 class="w-full rounded-[8px] border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
-                placeholder="Search IP, thiết bị, trình duyệt..."
+                placeholder="Tìm theo IP, thiết bị, trình duyệt..."
+                @input="emit('update:search', ($event.target as HTMLInputElement).value)"
             />
 
             <select
-                v-model="filters.action"
+                :value="props.filters.action"
                 class="rounded-[8px] border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-blue-300 focus:ring-2 focus:ring-blue-100 md:w-[220px]"
+                @change="emit('update:action', ($event.target as HTMLSelectElement).value)"
             >
                 <option v-for="option in actionOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
             </select>
         </div>
 
         <div class="overflow-hidden rounded-[10px] border border-slate-200/80">
-            <div v-if="loading" class="bg-slate-50 px-4 py-10 text-center text-sm text-slate-500">Đang tải lịch sử người dùng...</div>
+            <div v-if="props.loading" class="bg-slate-50 px-4 py-10 text-center text-sm text-slate-500">Đang tải lịch sử người dùng...</div>
 
             <div v-else class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-slate-200 text-sm">
@@ -76,7 +80,7 @@ const getStatusLabel = (status: string): string => statusLabels[status] ?? 'Khô
                     </thead>
 
                     <tbody class="divide-y divide-slate-100 bg-white">
-                        <tr v-for="item in logs" :key="item.id" class="align-top">
+                        <tr v-for="item in props.logs" :key="item.id" class="align-top">
                             <td class="px-4 py-3 font-medium text-slate-700">{{ formatTime(item.time, 'H:i:s d/m/Y') }}</td>
                             <td class="px-4 py-3">
                                 <p class="font-semibold text-slate-900">{{ item.label }}</p>
@@ -91,7 +95,7 @@ const getStatusLabel = (status: string): string => statusLabels[status] ?? 'Khô
                             </td>
                         </tr>
 
-                        <tr v-if="logs.length === 0">
+                        <tr v-if="props.logs.length === 0">
                             <td colspan="6" class="px-4 py-8 text-center text-sm text-slate-500">Không có log nào khớp bộ lọc hiện tại.</td>
                         </tr>
                     </tbody>
@@ -100,24 +104,24 @@ const getStatusLabel = (status: string): string => statusLabels[status] ?? 'Khô
         </div>
 
         <div class="flex flex-col gap-2 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
-            <p>Hiển thị {{ logs.length }} / {{ meta.total }} bản ghi</p>
+            <p>Hiển thị {{ props.logs.length }} / {{ props.meta.total }} bản ghi</p>
             <div class="flex items-center gap-2">
                 <button
                     type="button"
                     class="rounded-[10px] border border-slate-200 bg-white px-2.5 py-1.5"
-                    :class="meta.current_page <= 1 ? 'cursor-not-allowed text-slate-300' : 'text-slate-600'"
-                    :disabled="meta.current_page <= 1"
-                    @click="emit('change-page', meta.current_page - 1)"
+                    :class="props.meta.current_page <= 1 ? 'cursor-not-allowed text-slate-300' : 'text-slate-600'"
+                    :disabled="props.meta.current_page <= 1"
+                    @click="emit('change-page', props.meta.current_page - 1)"
                 >
                     <ChevronLeft class="h-4 w-4" />
                 </button>
-                <span class="rounded-[10px] bg-slate-900 px-3 py-1.5 font-semibold text-white">{{ meta.current_page }} / {{ meta.last_page }}</span>
+                <span class="rounded-[10px] bg-slate-900 px-3 py-1.5 font-semibold text-white">{{ props.meta.current_page }} / {{ props.meta.last_page }}</span>
                 <button
                     type="button"
                     class="rounded-[10px] border border-slate-200 bg-white px-2.5 py-1.5"
-                    :class="meta.current_page >= meta.last_page ? 'cursor-not-allowed text-slate-300' : 'text-slate-600'"
-                    :disabled="meta.current_page >= meta.last_page"
-                    @click="emit('change-page', meta.current_page + 1)"
+                    :class="props.meta.current_page >= props.meta.last_page ? 'cursor-not-allowed text-slate-300' : 'text-slate-600'"
+                    :disabled="props.meta.current_page >= props.meta.last_page"
+                    @click="emit('change-page', props.meta.current_page + 1)"
                 >
                     <ChevronRight class="h-4 w-4" />
                 </button>

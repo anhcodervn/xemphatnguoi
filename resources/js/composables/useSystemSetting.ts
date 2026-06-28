@@ -3,7 +3,7 @@ import type { SystemSettingType } from "@/types/setting.type";
 import { ref } from "vue";
 
 const defaultSettings: SystemSettingType = {
-    site_name: "Nạp Tiền Tự Động",
+    site_name: "AutoCron",
     site_domain: "",
     site_description: "",
     site_active: true,
@@ -24,7 +24,6 @@ const defaultSettings: SystemSettingType = {
     gtm_id: "",
     meta_pixel_id: "",
     custom_script: "",
-    recharge_syntax: "NAP",
 };
 
 const settings = ref<SystemSettingType>({ ...defaultSettings });
@@ -42,6 +41,7 @@ export const useSystemSetting = () => {
         }
 
         loading.value = true;
+
         try {
             const response = await clientSystemSettingService.get();
             settings.value = { ...defaultSettings, ...response };

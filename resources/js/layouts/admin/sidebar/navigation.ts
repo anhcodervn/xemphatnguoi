@@ -1,14 +1,15 @@
 import {
+    BellRing,
     BookMarked,
-    KeyRound,
-    Landmark,
     LayoutDashboard,
     ListChecks,
     Mail,
     Package,
+    ReceiptText,
     Settings,
     Users,
-    Webhook,
+    WalletCards,
+    Zap,
     type LucideIcon,
 } from "lucide-vue-next";
 
@@ -33,6 +34,36 @@ export const adminMenuGroups: AdminMenuGroup[] = [
         href: "/admin",
     },
     {
+        key: "cron-jobs",
+        label: "Cron Jobs",
+        icon: Zap,
+        children: [
+            {
+                label: "Tất cả cron jobs",
+                href: "/admin/cron-jobs",
+            },
+            {
+                label: "Nhật ký hệ thống",
+                href: "/admin/system-logs",
+            },
+        ],
+    },
+    {
+        key: "recharge",
+        label: "Quản lý nạp tiền",
+        icon: WalletCards,
+        children: [
+            {
+                label: "Cấu hình nạp tiền",
+                href: "/admin/recharge/config",
+            },
+            {
+                label: "Lịch sử nạp tiền",
+                href: "/admin/recharge/history",
+            },
+        ],
+    },
+    {
         key: "users",
         label: "Quản lý người dùng",
         icon: Users,
@@ -44,21 +75,6 @@ export const adminMenuGroups: AdminMenuGroup[] = [
             {
                 label: "Lịch sử dòng tiền",
                 href: "/admin/users/wallet-transactions",
-            },
-        ],
-    },
-    {
-        key: "notifications",
-        label: "Quản lý thông báo",
-        icon: Users,
-        children: [
-            {
-                label: "Tạo thông báo mới",
-                href: "/admin/notifications/create",
-            },
-            {
-                label: "Danh sách thông báo",
-                href: "/admin/notifications",
             },
         ],
     },
@@ -82,40 +98,36 @@ export const adminMenuGroups: AdminMenuGroup[] = [
         ],
     },
     {
-        key: "recharge-methods",
-        label: "Quản lý nạp tiền",
-        icon: Landmark,
+        key: "notifications",
+        label: "Thông báo hệ thống",
+        icon: BellRing,
         children: [
             {
-                label: "Tạo phương thức",
-                href: "/admin/recharge-methods/create",
+                label: "Tạo thông báo mới",
+                href: "/admin/notifications/create",
             },
             {
-                label: "Phương thức nạp",
-                href: "/admin/recharge-methods",
+                label: "Danh sách thông báo",
+                href: "/admin/notifications",
             },
         ],
     },
     {
-        key: "api-management",
-        label: "Quản lý API",
-        icon: KeyRound,
+        key: "coupons",
+        label: "Mã giảm giá",
+        icon: ReceiptText,
         children: [
             {
-                label: "Thêm bank",
-                href: "/admin/banks/create",
+                label: "Tạo mã giảm giá",
+                href: "/admin/couponts/create",
             },
             {
-                label: "Quản lý bank",
-                href: "/admin/banks",
+                label: "Danh sách coupon",
+                href: "/admin/couponts",
             },
             {
-                label: "Quản lý API key",
-                href: "/admin/api-keys",
-            },
-            {
-                label: "Quản lý API log",
-                href: "/admin/api-logs",
+                label: "Lịch sử coupon",
+                href: "/admin/couponts/history",
             },
         ],
     },
@@ -147,25 +159,6 @@ export const adminMenuGroups: AdminMenuGroup[] = [
         ],
     },
     {
-        key: "coupons",
-        label: "Mã giảm giá",
-        icon: Landmark,
-        children: [
-            {
-                label: "Tạo mã giảm giá",
-                href: "/admin/couponts/create",
-            },
-            {
-                label: "Danh sách coupon",
-                href: "/admin/couponts",
-            },
-            {
-                label: "Lịch sử coupon",
-                href: "/admin/couponts/history",
-            },
-        ],
-    },
-    {
         key: "settings",
         label: "Cấu hình hệ thống",
         icon: Settings,
@@ -175,7 +168,7 @@ export const adminMenuGroups: AdminMenuGroup[] = [
                 href: "/admin/settings/general",
             },
             {
-                label: "Cấu hình điều khoản",
+                label: "Cấu hình nội dung",
                 href: "/admin/settings/content",
             },
         ],
@@ -191,18 +184,6 @@ export const adminMenuGroups: AdminMenuGroup[] = [
         label: "Quản lý queue",
         icon: ListChecks,
         href: "/admin/queues",
-    },
-    {
-        key: "webhooks",
-        label: "Quản lý webhook",
-        icon: Webhook,
-        href: "/admin/webhooks",
-    },
-    {
-        key: "feedbacks",
-        label: "Liên hệ và góp ý",
-        icon: Mail,
-        href: "/admin/feedbacks",
     },
 ];
 

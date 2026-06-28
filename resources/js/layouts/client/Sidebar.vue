@@ -1,15 +1,16 @@
 <script setup lang="ts">
 import { useSystemSetting } from "@/composables/useSystemSetting";
 import {
-    BanknoteIcon,
-    BookText,
-    CircleArrowUp,
+    BellRing,
     CircleUserRound,
-    CreditCard,
+    Clock3,
+    Code2,
     LayoutDashboard,
     Menu,
     MessageSquareMore,
-    Newspaper,
+    Package,
+    ReceiptText,
+    Wallet,
     X,
     type LucideIcon,
 } from "lucide-vue-next";
@@ -28,7 +29,6 @@ type NavItem = {
     label: string;
     icon: LucideIcon;
     href: string;
-    external?: boolean;
 };
 
 const route = useRoute();
@@ -37,11 +37,12 @@ const { settings, fetchSettings } = useSystemSetting();
 const items: NavItem[] = [
     { label: "Tổng quan", icon: LayoutDashboard, href: "/" },
     { label: "Hồ sơ tài khoản", icon: CircleUserRound, href: "/profile" },
-    { label: "Nạp tiền", icon: BanknoteIcon, href: "/recharge" },
-    { label: "Quản lý thẻ", icon: CreditCard, href: "/bank-manager" },
-    { label: "Quản lý nâng cấp", icon: CircleArrowUp, href: "/package" },
-    { label: "Tài liệu API", icon: BookText, href: "/api-docs" },
-    { label: "Tin tức", icon: Newspaper, href: "/blog", external: true },
+    { label: "Ví và nạp tiền", icon: Wallet, href: "/wallet" },
+    { label: "Cron Jobs", icon: Clock3, href: "/cron-jobs" },
+    { label: "Nhật ký chạy", icon: ReceiptText, href: "/logs" },
+    { label: "Kênh cảnh báo", icon: BellRing, href: "/alerts" },
+    { label: "Gói dịch vụ", icon: Package, href: "/package" },
+    { label: "Tài liệu API", icon: Code2, href: "/api-docs" },
     { label: "Liên hệ và góp ý", icon: MessageSquareMore, href: "/contact" },
 ];
 
@@ -54,8 +55,8 @@ const isActive = (href: string): boolean => {
 };
 
 const siteLogo = computed(() => settings.value.light_logo || false);
-const siteName = computed(() => settings.value.site_name || "Client Panel");
-const siteDescription = computed(() => settings.value.site_description || "Simple dashboard");
+const siteName = computed(() => settings.value.site_name || "AutoCron");
+const siteDescription = computed(() => settings.value.site_description || "HTTP Cron SaaS");
 const supportLine = computed(() => settings.value.support_email || settings.value.hotline || "");
 
 onMounted(async () => {
@@ -96,17 +97,7 @@ onMounted(async () => {
             <nav class="flex-1 px-4 py-5">
                 <ul class="space-y-2">
                     <li v-for="item in items" :key="item.label" class="relative">
-                        <a
-                            v-if="item.external"
-                            :href="item.href"
-                            class="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-medium text-white/65 transition hover:bg-white/5 hover:text-white"
-                            @click="$emit('close')"
-                        >
-                            <component :is="item.icon" class="h-5 w-5" />
-                            <span>{{ item.label }}</span>
-                        </a>
                         <RouterLink
-                            v-else
                             :to="item.href"
                             class="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-medium transition"
                             :class="isActive(item.href) ? 'bg-white text-[#212120]' : 'text-white/65 hover:bg-white/5 hover:text-white'"

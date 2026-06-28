@@ -16,6 +16,6 @@ onMounted(() => {
 <style>
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: "Be Vietnam Pro", "IBM Plex Sans", system-ui, -apple-system, sans-serif;
 }
 </style>

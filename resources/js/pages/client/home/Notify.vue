@@ -1,49 +1,48 @@
 <template>
-    <Card custom-class="rounded-[10px] border border-slate-200/80 shadow-[0_14px_36px_-28px_rgba(15,23,42,0.18)]">
-        <template #body>
-            <div class="p-3.5">
-                <div class="flex items-center justify-between gap-3 border-b border-slate-100 pb-3">
-                    <div>
-                        <h2 class="text-lg font-bold tracking-[-0.03em] text-slate-900">Thông báo hệ thống</h2>
-                        <p class="mt-1 text-xs text-slate-500">Cập nhật mới nhất về gói, hệ thống và ưu đãi.</p>
-                    </div>
-                </div>
+    <article class="rounded-[10px] border border-slate-200 bg-white p-5 shadow-sm">
+        <div class="flex items-center justify-between gap-3">
+            <div>
+                <h2 class="text-lg font-bold tracking-[-0.03em] text-slate-950">Thông báo cập nhật</h2>
+                <p class="mt-1 text-sm text-slate-500">Các thay đổi mới nhất về hệ thống, gói dịch vụ và hướng dẫn sử dụng.</p>
+            </div>
+        </div>
 
-                <div v-if="loading" class="mt-3 text-xs text-slate-500">Đang tải thông báo...</div>
+        <div v-if="loading" class="mt-4 rounded-[10px] border border-dashed border-slate-200 px-4 py-10 text-center text-sm text-slate-500">
+            Đang tải thông báo...
+        </div>
 
-                <div v-else-if="notifications.length === 0" class="mt-3 text-xs text-slate-500">Chưa có thông báo.</div>
+        <div v-else-if="notifications.length === 0" class="mt-4 rounded-[10px] border border-dashed border-slate-200 px-4 py-10 text-center text-sm text-slate-500">
+            Chưa có thông báo nào.
+        </div>
 
-                <div v-else class="mt-3 space-y-2.5">
-                    <button
-                        v-for="item in notifications"
-                        :key="item.id"
-                        type="button"
-                        class="grid w-full gap-2.5 rounded-[8px] border border-slate-100 bg-white px-3 py-2.5 text-left transition hover:border-slate-200 hover:bg-slate-50/70 md:grid-cols-[auto_1fr_auto]"
-                        @click="openNotification(item)"
-                    >
-                        <div class="flex items-start">
+        <div v-else class="mt-4 space-y-3">
+            <button
+                v-for="item in notifications"
+                :key="item.id"
+                type="button"
+                class="w-full rounded-[10px] border px-4 py-4 text-left transition"
+                :class="item.is_read ? 'border-slate-200 bg-slate-50 hover:bg-white' : 'border-sky-200 bg-sky-50/70 hover:bg-sky-50'"
+                @click="openNotification(item)"
+            >
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div class="min-w-0">
+                        <div class="flex flex-wrap items-center gap-2">
                             <span :class="item.is_read ? 'rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-700' : 'rounded-full bg-blue-100 px-2.5 py-1 text-[11px] font-semibold text-blue-700'">
                                 {{ item.is_read ? 'Đã xem' : 'Mới' }}
                             </span>
+                            <span class="text-xs text-slate-400">{{ formatTime(item.created_at) }}</span>
                         </div>
 
-                        <div>
-                            <p class="text-sm font-semibold text-slate-900">{{ item.title }}</p>
-                            <p class="mt-1 text-xs leading-5 text-slate-500">{{ item.content }}</p>
-                        </div>
-
-                        <div class="text-xs text-slate-400 md:text-right">
-                            {{ formatTime(item.created_at) }}
-                        </div>
-                    </button>
+                        <p class="mt-3 text-base font-bold text-slate-950">{{ item.title }}</p>
+                        <p class="mt-2 line-clamp-3 text-sm leading-6 text-slate-600">{{ item.content }}</p>
+                    </div>
                 </div>
-            </div>
-        </template>
-    </Card>
+            </button>
+        </div>
+    </article>
 </template>
 
 <script setup lang="ts">
-import Card from '@/components/Card/index.vue';
 import { clientNotificationService } from '@/services/client-notification.service';
 import type { ClientNotificationItem } from '@/types/client-notification.type';
 import { handleErrorResponse } from '@/utils/response';

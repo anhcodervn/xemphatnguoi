@@ -3,15 +3,27 @@
 namespace App\Utils;
 
 use DateTimeInterface;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
+use InvalidArgumentException;
 use Throwable;
 
 class SendMessage
 {
-    private static function tele($message, $chatId, $token)
+    private const DISCORD_CHANNELS = [
+        'queue' => 'queue',
+        'info' => 'info',
+        'ops' => 'ops',
+        'security' => 'security',
+        'alerts' => 'alerts',
+        'recovered' => 'recovered',
+        'staging' => 'staging',
+    ];
+
+    private static function tele(string $message, string $chatId, string $token): void
     {
-        $url = "https://api.telegram.org/bot$token/sendMessage";
+        $url = "https://api.telegram.org/bot{$token}/sendMessage";
         $data = [
             'chat_id' => $chatId,
             'text' => $message,
@@ -20,41 +32,45 @@ class SendMessage
             'http' => [
                 'header' => "Content-Type: application/json\r\n",
                 'method' => 'POST',
-                'content' => json_encode($data),
+                'content' => json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
             ],
         ];
         $context = stream_context_create($options);
         file_get_contents($url, false, $context);
-
     }
 
-    public static function sendTelegram($message, $chatId = '-5237556794')
-    {
-        $token = '5549496111:AAHYXIIi5XGd8JkCbx3Lk0DMHrLA45a6ODk';
-        self::tele($message, $chatId, $token);
-    }
-
-    public static function sendDiscord($message, $type): void
+    public static function sendTelegram(string $message, ?string $chatId = null): void
     {
         if (app()->environment('testing')) {
             return;
         }
 
-        switch ($type) {
-            case 'queue':
-                $webhookUrl = 'https://discord.com/api/webhooks/1512374229176291339/Qg7-YgIUP47ZJhirNg8uD425RVuWQFffxKGEtDTluTG_zKKP2ckUG8JFurdql-KcCVkI';
-                break;
-            case 'info':
-                $webhookUrl = 'https://discord.com/api/webhooks/1512357656759762947/4tNR4x_6Zyvz5zCaBsxMNsqEvWlxfhHqbzNXJG-yp_4k3ogJ30H2ha8qmen51qtahUUC';
-                break;
-            default:
-                return;
+        $token = (string) config('services.telegram.bot_token', '');
+        $resolvedChatId = $chatId ?: (string) config('services.telegram.default_chat_id', '');
+
+        if ($token === '' || $resolvedChatId === '') {
+            return;
         }
 
-        $url = $webhookUrl ?: config('services.discord.webhook_url');
+        self::tele($message, $resolvedChatId, $token);
+    }
+
+    public static function sendDiscord(string $message, string $type): void
+    {
+        if (app()->environment('testing')) {
+            return;
+        }
+
+        $channelKey = self::DISCORD_CHANNELS[$type] ?? null;
+        if ($channelKey === null) {
+            throw new InvalidArgumentException(sprintf('Unsupported Discord channel type [%s].', $type));
+        }
+
+        $channels = config('services.discord.channels', []);
+        $url = Arr::get($channels, $channelKey);
 
         if (! is_string($url) || trim($url) === '') {
-            throw new \InvalidArgumentException('Discord webhook URL is not configured.');
+            throw new InvalidArgumentException(sprintf('Discord webhook URL is not configured for channel [%s].', $channelKey));
         }
 
         Http::connectTimeout(5)
@@ -84,6 +100,61 @@ class SendMessage
         self::safeSendDiscord(
             self::formatDiscordReport('QUEUE', $title, $details),
             'queue',
+        );
+    }
+
+    /**
+     * @param  array<string, mixed>  $details
+     */
+    public static function sendOpsReport(string $title, array $details = []): void
+    {
+        self::safeSendDiscord(
+            self::formatDiscordReport('OPS', $title, $details),
+            'ops',
+        );
+    }
+
+    /**
+     * @param  array<string, mixed>  $details
+     */
+    public static function sendSecurityReport(string $title, array $details = []): void
+    {
+        self::safeSendDiscord(
+            self::formatDiscordReport('SECURITY', $title, $details),
+            'security',
+        );
+    }
+
+    /**
+     * @param  array<string, mixed>  $details
+     */
+    public static function sendAlertReport(string $title, array $details = []): void
+    {
+        self::safeSendDiscord(
+            self::formatDiscordReport('ALERT', $title, $details),
+            'alerts',
+        );
+    }
+
+    /**
+     * @param  array<string, mixed>  $details
+     */
+    public static function sendRecoveredReport(string $title, array $details = []): void
+    {
+        self::safeSendDiscord(
+            self::formatDiscordReport('RECOVERED', $title, $details),
+            'recovered',
+        );
+    }
+
+    /**
+     * @param  array<string, mixed>  $details
+     */
+    public static function sendStagingReport(string $title, array $details = []): void
+    {
+        self::safeSendDiscord(
+            self::formatDiscordReport('STAGING', $title, $details),
+            'staging',
         );
     }
 

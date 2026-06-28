@@ -19,7 +19,6 @@ class UpdateOptionSettingRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'recharge_syntax' => ['required', 'string', 'max:50'],
             'terms_of_use' => ['nullable', 'array'],
             'privacy_policy' => ['nullable', 'array'],
             'refund_policy' => ['nullable', 'array'],
@@ -32,7 +31,6 @@ class UpdateOptionSettingRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'recharge_syntax' => 'cú pháp nạp tiền',
             'terms_of_use' => 'điều khoản sử dụng',
             'privacy_policy' => 'chính sách bảo mật',
             'refund_policy' => 'chính sách hoàn tiền',

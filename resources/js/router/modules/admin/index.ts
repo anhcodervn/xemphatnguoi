@@ -8,25 +8,6 @@ export default {
             component: () => import('@/pages/admin/home/index.vue'),
         },
         {
-            path: 'user',
-            redirect: { name: 'admin.users.index' },
-        },
-        {
-            path: 'user/list',
-            redirect: { name: 'admin.users.index' },
-        },
-        {
-            path: 'user/wallet-transaction',
-            redirect: { name: 'admin.users.wallet-transaction' },
-        },
-        {
-            path: 'user/wallet-transaction/:user_id(\\d+)',
-            redirect: (to: { params: { user_id: string } }) => ({
-                name: 'admin.users.wallet-transaction.show',
-                params: { user_id: to.params.user_id },
-            }),
-        },
-        {
             path: 'users',
             children: [
                 {
@@ -52,6 +33,16 @@ export default {
             ],
         },
         {
+            path: 'cron-jobs',
+            name: 'admin.cron-jobs.index',
+            component: () => import('@/pages/admin/cron-jobs/index.vue'),
+        },
+        {
+            path: 'system-logs',
+            name: 'admin.system-logs.index',
+            component: () => import('@/pages/admin/system-logs/index.vue'),
+        },
+        {
             path: 'packages',
             children: [
                 {
@@ -73,31 +64,6 @@ export default {
                     path: 'orders',
                     name: 'admin.packages.orders',
                     component: () => import('@/pages/admin/package/orders/index.vue'),
-                },
-            ],
-        },
-        {
-            path: 'couponts',
-            children: [
-                {
-                    path: '',
-                    name: 'admin.couponts.index',
-                    component: () => import('@/pages/admin/couponts/list/index.vue'),
-                },
-                {
-                    path: 'create',
-                    name: 'admin.couponts.create',
-                    component: () => import('@/pages/admin/couponts/create/index.vue'),
-                },
-                {
-                    path: ':coupont_id(\\d+)/edit',
-                    name: 'admin.couponts.edit',
-                    component: () => import('@/pages/admin/couponts/create/index.vue'),
-                },
-                {
-                    path: 'history',
-                    name: 'admin.couponts.history',
-                    component: () => import('@/pages/admin/couponts/history/index.vue'),
                 },
             ],
         },
@@ -137,64 +103,34 @@ export default {
             component: () => import('@/pages/admin/queues/index.vue'),
         },
         {
-            path: 'webhooks',
-            name: 'admin.webhooks.index',
-            component: () => import('@/pages/admin/webhooks/index.vue'),
-        },
-        {
             path: 'feedbacks',
             name: 'admin.feedbacks.index',
             component: () => import('@/pages/admin/feedbacks/index.vue'),
         },
         {
-            path: 'recharge-methods',
+            path: 'couponts',
             children: [
                 {
                     path: '',
-                    name: 'admin.recharge-methods.index',
-                    component: () => import('@/pages/admin/recharge-methods/list/index.vue'),
+                    name: 'admin.couponts.index',
+                    component: () => import('@/pages/admin/couponts/list/index.vue'),
                 },
                 {
                     path: 'create',
-                    name: 'admin.recharge-methods.create',
-                    component: () => import('@/pages/admin/recharge-methods/create/index.vue'),
+                    name: 'admin.couponts.create',
+                    component: () => import('@/pages/admin/couponts/create/index.vue'),
                 },
                 {
-                    path: ':recharge_method_id(\\d+)/edit',
-                    name: 'admin.recharge-methods.edit',
-                    component: () => import('@/pages/admin/recharge-methods/create/index.vue'),
+                    path: ':coupont_id(\\d+)/edit',
+                    name: 'admin.couponts.edit',
+                    component: () => import('@/pages/admin/couponts/create/index.vue'),
+                },
+                {
+                    path: 'history',
+                    name: 'admin.couponts.history',
+                    component: () => import('@/pages/admin/couponts/history/index.vue'),
                 },
             ],
-        },
-        {
-            path: 'banks',
-            children: [
-                {
-                    path: '',
-                    name: 'admin.banks.index',
-                    component: () => import('@/pages/admin/banks/list/index.vue'),
-                },
-                {
-                    path: 'create',
-                    name: 'admin.banks.create',
-                    component: () => import('@/pages/admin/banks/create/index.vue'),
-                },
-                {
-                    path: ':bank_id(\\d+)/edit',
-                    name: 'admin.banks.edit',
-                    component: () => import('@/pages/admin/banks/create/index.vue'),
-                },
-            ],
-        },
-        {
-            path: 'api-keys',
-            name: 'admin.api-keys.index',
-            component: () => import('@/pages/admin/api-keys/index.vue'),
-        },
-        {
-            path: 'api-logs',
-            name: 'admin.api-logs.index',
-            component: () => import('@/pages/admin/api-logs/index.vue'),
         },
         {
             path: 'seo',
@@ -232,6 +168,20 @@ export default {
             ],
         },
         {
+            path: 'recharge',
+            redirect: { name: 'admin.recharge.config' },
+        },
+        {
+            path: 'recharge/config',
+            name: 'admin.recharge.config',
+            component: () => import('@/pages/admin/settings/recharge/index.vue'),
+        },
+        {
+            path: 'recharge/history',
+            name: 'admin.recharge.history',
+            component: () => import('@/pages/admin/recharge/history/index.vue'),
+        },
+        {
             path: 'setting',
             redirect: { name: 'admin.settings.general' },
         },
@@ -244,6 +194,10 @@ export default {
             path: 'settings/content',
             name: 'admin.settings.content',
             component: () => import('@/pages/admin/settings/content/index.vue'),
+        },
+        {
+            path: 'settings/recharge',
+            redirect: { name: 'admin.recharge.config' },
         },
         {
             path: ':pathMatch(.*)*',

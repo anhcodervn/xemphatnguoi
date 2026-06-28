@@ -4,6 +4,7 @@ namespace App\Features\Admin\Package\Controllers;
 
 use App\Features\Admin\Package\Requests\StorePackageRequest;
 use App\Features\Admin\Package\Requests\UpdatePackageRequest;
+use App\Features\Cron\Support\CronPackageCatalog;
 use App\Http\Controllers\Controller;
 use App\Models\Package;
 use App\Support\Enums\PackageStatus;
@@ -55,7 +56,13 @@ class PackageController extends Controller
     {
         return response()->json([
             'status' => true,
-            'data' => $package,
+            'data' => [
+                ...$package->toArray(),
+                'package_limits' => CronPackageCatalog::resolve(
+                    overrides: is_array($package->package_limits) ? $package->package_limits : null,
+                    package: $package,
+                ),
+            ],
         ]);
     }
 
@@ -97,21 +104,27 @@ class PackageController extends Controller
      */
     private function payload(array $validated): array
     {
+        $packageLimits = CronPackageCatalog::resolve(
+            overrides: is_array($validated['package_limits'] ?? null) ? $validated['package_limits'] : null,
+        );
         $features = collect($validated['features'] ?? [])
             ->map(fn (mixed $feature): string => trim((string) $feature))
             ->filter()
             ->values()
             ->all();
 
-        $canBuyExtraAccount = (bool) ($validated['can_buy_extra_account'] ?? false);
-
         return [
             ...$validated,
             'slug' => trim((string) $validated['slug']),
             'description' => trim((string) ($validated['description'] ?? '')),
             'features' => $features,
-            'can_buy_extra_account' => $canBuyExtraAccount,
-            'extra_account_price' => $canBuyExtraAccount ? $validated['extra_account_price'] : 0,
+            'package_limits' => $packageLimits,
+            'account_limit' => (int) ($packageLimits['max_cron_jobs'] ?? 0),
+            'can_buy_extra_account' => false,
+            'extra_account_price' => 0,
+            'request_limit' => (int) ($packageLimits['monthly_run_quota'] ?? 0),
+            'request_per_minute' => max(1, (int) floor(60 / max(1, ((int) ($packageLimits['min_interval_seconds'] ?? 60))))),
+            'concurrent_limit' => (int) ($packageLimits['concurrent_runs_limit'] ?? 1),
         ];
     }
 }

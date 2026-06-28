@@ -2,8 +2,8 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -15,9 +15,11 @@ return new class extends Migration
             }
         });
 
-        DB::statement('ALTER TABLE notifications DROP FOREIGN KEY notifications_user_id_foreign');
-        DB::statement('ALTER TABLE notifications MODIFY user_id BIGINT UNSIGNED NULL');
-        DB::statement('ALTER TABLE notifications ADD CONSTRAINT notifications_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL');
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement('ALTER TABLE notifications DROP FOREIGN KEY notifications_user_id_foreign');
+            DB::statement('ALTER TABLE notifications MODIFY user_id BIGINT UNSIGNED NULL');
+            DB::statement('ALTER TABLE notifications ADD CONSTRAINT notifications_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL');
+        }
 
         Schema::table('notifications', function (Blueprint $table): void {
             $table->index(['scope', 'created_at'], 'notifications_scope_created_at_index');
@@ -33,8 +35,10 @@ return new class extends Migration
             $table->dropColumn('scope');
         });
 
-        DB::statement('ALTER TABLE notifications DROP FOREIGN KEY notifications_user_id_foreign');
-        DB::statement('ALTER TABLE notifications MODIFY user_id BIGINT UNSIGNED NOT NULL');
-        DB::statement('ALTER TABLE notifications ADD CONSTRAINT notifications_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE');
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement('ALTER TABLE notifications DROP FOREIGN KEY notifications_user_id_foreign');
+            DB::statement('ALTER TABLE notifications MODIFY user_id BIGINT UNSIGNED NOT NULL');
+            DB::statement('ALTER TABLE notifications ADD CONSTRAINT notifications_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE');
+        }
     }
 };

@@ -1,7 +1,9 @@
 <?php
 
+use App\Jobs\SendSystemMailJob;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Queue;
 use Laravel\Sanctum\Sanctum;
 
 test('authenticated user can view profile overview', function () {
@@ -56,6 +58,8 @@ test('authenticated user can update profile and activity log is recorded', funct
 });
 
 test('authenticated user can update password and record user log', function () {
+    Queue::fake([SendSystemMailJob::class]);
+
     $user = User::factory()->create();
 
     Sanctum::actingAs($user);
@@ -75,6 +79,12 @@ test('authenticated user can update password and record user log', function () {
         'user_id' => $user->id,
         'action' => 'password_change',
     ]);
+
+    Queue::assertPushed(SendSystemMailJob::class, function (SendSystemMailJob $job) use ($user): bool {
+        return $job->to === $user->email
+            && $job->subjectText === 'Hệ thống Auto Cron'
+            && $job->title === 'Mật khẩu tài khoản đã được thay đổi';
+    });
 });
 
 test('authenticated user can logout other devices', function () {

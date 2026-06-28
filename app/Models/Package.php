@@ -3,8 +3,8 @@
 namespace App\Models;
 
 use App\Support\Enums\PackageStatus;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -25,6 +25,7 @@ class Package extends Model
         'request_per_minute',
         'concurrent_limit',
         'features',
+        'package_limits',
         'status',
     ];
 
@@ -40,6 +41,7 @@ class Package extends Model
             'request_per_minute' => 'integer',
             'concurrent_limit' => 'integer',
             'features' => 'array',
+            'package_limits' => 'array',
             'status' => PackageStatus::class,
             'deleted_at' => 'datetime',
         ];

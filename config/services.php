@@ -42,7 +42,24 @@ return [
     ],
 
     'discord' => [
-        'webhook_url' => env('DISCORD_WEBHOOK_URL'),
+        'channels' => [
+            'queue' => env('DISCORD_WEBHOOK_QUEUE'),
+            'info' => env('DISCORD_WEBHOOK_INFO'),
+            'ops' => env('DISCORD_WEBHOOK_OPS'),
+            'security' => env('DISCORD_WEBHOOK_SECURITY'),
+            'alerts' => env('DISCORD_WEBHOOK_ALERTS'),
+            'recovered' => env('DISCORD_WEBHOOK_RECOVERED'),
+            'staging' => env('DISCORD_WEBHOOK_STAGING'),
+        ],
+    ],
+
+    'telegram' => [
+        'bot_token' => env('TELEGRAM_BOT_TOKEN'),
+        'default_chat_id' => env('TELEGRAM_DEFAULT_CHAT_ID'),
+    ],
+
+    'internal_cron' => [
+        'key' => env('AUTOCRON_INTERNAL_KEY'),
     ],
 
 ];

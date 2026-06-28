@@ -6,7 +6,7 @@ import type { ClientNotificationItem } from '@/types/client-notification.type';
 import formatCash from '@/utils/helpers/formatCash';
 import { handleErrorResponse } from '@/utils/response';
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/vue';
-import { Bell, CheckCheck, ChevronDown, LogOut, Menu as MenuIcon, Settings, UserRound } from 'lucide-vue-next';
+import { Bell, CheckCheck, ChevronDown, LogOut, Menu as MenuIcon, Settings, UserRound, Wallet } from 'lucide-vue-next';
 import { computed, onMounted, ref } from 'vue';
 import { RouterLink } from 'vue-router';
 
@@ -37,6 +37,12 @@ const userActions: UserActionItem[] = [
         icon: UserRound,
         href: '/admin',
         isAdmin: true,
+    },
+    {
+        label: 'Ví và nạp tiền',
+        icon: Wallet,
+        href: '/wallet',
+        isAdmin: false,
     },
     {
         label: 'Thông tin tài khoản',

@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import { clientApiKeyService } from '@/services/client-api-key.service';
 import { clientProfileService } from '@/services/client-profile.service';
 import { useUserStore } from '@/stores/user.store';
-import type { ApiKeyPermissionType, ClientApiKeyType } from '@/types/api-key.type';
 import type {
     ClientProfilePaginationMeta,
     ClientProfileType,
@@ -15,14 +13,13 @@ import type { AxiosError } from 'axios';
 import Swal from 'sweetalert2';
 import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import TabApiKeys from './components/TabApiKeys.vue';
 import TabChangePass from './components/TabChangePass.vue';
 import TabProfile from './components/TabProfile.vue';
 import TabsComponent from './components/TabsComponent.vue';
 import TabUserLog from './components/TabUserLog.vue';
 import TabWalletTransaction from './components/TabWalletTransaction.vue';
 
-type TabKey = 'profile' | 'password' | 'api-keys' | 'user-log' | 'wallet-log';
+type TabKey = 'profile' | 'password' | 'user-log' | 'wallet-log';
 type ValidationErrors = Record<string, string[]>;
 
 const DEFAULT_META: ClientProfilePaginationMeta = {
@@ -36,26 +33,17 @@ const route = useRoute();
 const router = useRouter();
 const userStore = useUserStore();
 
-const tabKeys: TabKey[] = ['profile', 'password', 'api-keys', 'user-log', 'wallet-log'];
+const tabKeys: TabKey[] = ['profile', 'password', 'user-log', 'wallet-log'];
 const activeTab = ref<TabKey>('profile');
 const profile = ref<ClientProfileType | null>(null);
 const profileLoaded = ref(false);
 const userLogsLoaded = ref(false);
 const walletTransactionsLoaded = ref(false);
-const apiKeysLoaded = ref(false);
 const savingProfile = ref(false);
 const savingPassword = ref(false);
 const loggingOutDevices = ref(false);
 const loadingUserLogs = ref(false);
 const loadingWalletTransactions = ref(false);
-const loadingApiKeys = ref(false);
-const creatingApiKey = ref(false);
-const updatingApiKeyId = ref<number | null>(null);
-const copiedKey = ref<string | null>(null);
-const generatedSecret = ref<{ api_key: string; api_secret: string; name: string } | null>(null);
-const apiKeyPermissions = ref<ApiKeyPermissionType[]>([]);
-const apiKeys = ref<ClientApiKeyType[]>([]);
-let copiedTimer: ReturnType<typeof setTimeout> | null = null;
 
 const profileForm = reactive({
     avatar: '',
@@ -69,11 +57,6 @@ const passwordForm = reactive({
     current_password: '',
     new_password: '',
     new_password_confirmation: '',
-});
-
-const apiKeyForm = reactive({
-    name: '',
-    ip_whitelist: '',
 });
 
 const profileErrors = reactive<Partial<Record<'avatar' | 'full_name' | 'email' | 'phone' | 'username', string>>>({});
@@ -108,7 +91,7 @@ const accountMeta = computed(() => [
     {
         label: 'Phiên gần nhất',
         value: profile.value?.last_login_at
-            ? `${formatTime(profile.value.last_login_at, 'H:i d/m/Y')} • ${profile.value.last_login_ip ?? 'IP ẩn'}`
+            ? `${formatTime(profile.value.last_login_at, 'H:i d/m/Y')} - ${profile.value.last_login_ip ?? 'IP ẩn'}`
             : 'Chưa có dữ liệu',
     },
 ]);
@@ -198,117 +181,6 @@ const loadProfile = async (): Promise<void> => {
     mergeProfileIntoStore(response);
 };
 
-const loadApiKeys = async (): Promise<void> => {
-    loadingApiKeys.value = true;
-
-    try {
-        const response = await clientApiKeyService.list();
-        apiKeys.value = response.data;
-        apiKeyPermissions.value = response.permissions;
-        apiKeysLoaded.value = true;
-    } finally {
-        loadingApiKeys.value = false;
-    }
-};
-
-const normalizeIpWhitelistInput = (value: string): string[] =>
-    value
-        .split('\n')
-        .map((item) => item.trim())
-        .filter((item, index, array) => item !== '' && array.indexOf(item) === index);
-
-const createApiKey = async (): Promise<void> => {
-    if (!profile.value?.api_access?.can_create || apiKeyForm.name.trim() === '') {
-        return;
-    }
-
-    creatingApiKey.value = true;
-
-    try {
-        const response = await clientApiKeyService.create({
-            name: apiKeyForm.name.trim(),
-            permissions: apiKeyPermissions.value.map((permission) => permission.key),
-            ip_whitelist: normalizeIpWhitelistInput(apiKeyForm.ip_whitelist),
-        });
-
-        generatedSecret.value = {
-            api_key: response.api_key.api_key,
-            api_secret: response.api_secret,
-            name: response.api_key.name,
-        };
-
-        apiKeyPermissions.value = response.permission_catalog;
-        apiKeyForm.name = '';
-        apiKeyForm.ip_whitelist = '';
-        await loadApiKeys();
-        await Swal.fire('Đã tạo', 'API key đã được tạo thành công.', 'success');
-    } catch (error) {
-        await Swal.fire('Không thể tạo API key', extractErrorMessage(error, 'Vui lòng kiểm tra lại gói đang dùng.'), 'error');
-    } finally {
-        creatingApiKey.value = false;
-    }
-};
-
-const updateApiKeyIpWhitelist = async (apiKeyId: number, value: string): Promise<void> => {
-    updatingApiKeyId.value = apiKeyId;
-
-    try {
-        await clientApiKeyService.update(apiKeyId, {
-            ip_whitelist: normalizeIpWhitelistInput(value),
-        });
-
-        await loadApiKeys();
-        await Swal.fire('Đã cập nhật', 'IP whitelist đã được lưu thành công.', 'success');
-    } catch (error) {
-        await Swal.fire('Không thể cập nhật IP', extractErrorMessage(error, 'Vui lòng kiểm tra lại danh sách IP.'), 'error');
-    } finally {
-        updatingApiKeyId.value = null;
-    }
-};
-
-const rotateApiKey = async (apiKeyId: number): Promise<void> => {
-    const confirmed = await Swal.fire({
-        title: 'Đổi API key?',
-        text: 'API key và API secret cũ sẽ hết hiệu lực ngay sau khi đổi.',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Đổi ngay',
-        cancelButtonText: 'Hủy',
-    });
-
-    if (!confirmed.isConfirmed) {
-        return;
-    }
-
-    try {
-        const response = await clientApiKeyService.rotate(apiKeyId);
-
-        generatedSecret.value = {
-            api_key: response.api_key.api_key,
-            api_secret: response.api_secret,
-            name: response.api_key.name,
-        };
-
-        await loadApiKeys();
-        await Swal.fire('Đã đổi', 'Credential mới đã được tạo. Credential cũ không còn hiệu lực.', 'success');
-    } catch (error) {
-        await Swal.fire('Không thể đổi key', extractErrorMessage(error, 'Vui lòng thử lại sau.'), 'error');
-    }
-};
-
-const copyToClipboard = async (value: string, key: string): Promise<void> => {
-    await navigator.clipboard.writeText(value);
-    copiedKey.value = key;
-
-    if (copiedTimer) {
-        clearTimeout(copiedTimer);
-    }
-
-    copiedTimer = setTimeout(() => {
-        copiedKey.value = null;
-    }, 1500);
-};
-
 const loadUserLogs = async (page = userLogFilters.page): Promise<void> => {
     loadingUserLogs.value = true;
 
@@ -348,10 +220,6 @@ const loadWalletTransactions = async (page = walletLogFilters.page): Promise<voi
 };
 
 const loadTabData = async (tab: TabKey): Promise<void> => {
-    if (tab === 'api-keys' && !apiKeysLoaded.value) {
-        await loadApiKeys();
-    }
-
     if (tab === 'user-log' && !userLogsLoaded.value) {
         await loadUserLogs(1);
     }
@@ -578,6 +446,11 @@ function normalizeStatus(status: unknown): string {
                     :account-meta="accountMeta"
                     :errors="profileErrors"
                     :saving="savingProfile"
+                    @update:avatar="profileForm.avatar = $event"
+                    @update:full-name="profileForm.full_name = $event"
+                    @update:email="profileForm.email = $event"
+                    @update:phone="profileForm.phone = $event"
+                    @update:username="profileForm.username = $event"
                     @submit="saveProfile"
                 />
 
@@ -587,29 +460,11 @@ function normalizeStatus(status: unknown): string {
                     :errors="passwordErrors"
                     :saving="savingPassword"
                     :logging-out-devices="loggingOutDevices"
+                    @update:current-password="passwordForm.current_password = $event"
+                    @update:new-password="passwordForm.new_password = $event"
+                    @update:new-password-confirmation="passwordForm.new_password_confirmation = $event"
                     @submit="updatePassword"
                     @logout-all-devices="logoutOtherDevices"
-                />
-
-                <TabApiKeys
-                    v-else-if="activeTab === 'api-keys'"
-                    :profile="profile"
-                    :permissions="apiKeyPermissions"
-                    :api-keys="apiKeys"
-                    :loading="loadingApiKeys"
-                    :creating="creatingApiKey"
-                    :updating-api-key-id="updatingApiKeyId"
-                    :copied-key="copiedKey"
-                    :generated-secret="generatedSecret"
-                    :form-name="apiKeyForm.name"
-                    :form-ip-whitelist="apiKeyForm.ip_whitelist"
-                    @update-name="apiKeyForm.name = $event"
-                    @update-ip-whitelist="apiKeyForm.ip_whitelist = $event"
-                    @create="createApiKey"
-                    @refresh="loadApiKeys"
-                    @update-ip-list="updateApiKeyIpWhitelist"
-                    @rotate="rotateApiKey"
-                    @copy="copyToClipboard"
                 />
 
                 <TabUserLog
@@ -618,6 +473,8 @@ function normalizeStatus(status: unknown): string {
                     :logs="userLogs"
                     :loading="loadingUserLogs"
                     :meta="userLogsMeta"
+                    @update:search="userLogFilters.search = $event"
+                    @update:action="userLogFilters.action = $event"
                     @change-page="loadUserLogs"
                 />
 
@@ -627,6 +484,8 @@ function normalizeStatus(status: unknown): string {
                     :transactions="walletTransactions"
                     :loading="loadingWalletTransactions"
                     :meta="walletTransactionsMeta"
+                    @update:search="walletLogFilters.search = $event"
+                    @update:type="walletLogFilters.type = $event"
                     @change-page="loadWalletTransactions"
                 />
             </div>

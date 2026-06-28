@@ -49,13 +49,8 @@ class PublicSeoPageController extends Controller
             ->get();
 
         $featuredPost = $posts->first();
-        $latestPosts = $posts
-            ->skip($featuredPost ? 1 : 0)
-            ->take(6)
-            ->values();
-        $sidebarPosts = $posts
-            ->take(3)
-            ->values();
+        $latestPosts = $posts->skip($featuredPost ? 1 : 0)->take(6)->values();
+        $sidebarPosts = $posts->take(3)->values();
 
         $categories = SeoCategory::query()
             ->where('is_active', true)
@@ -70,8 +65,8 @@ class PublicSeoPageController extends Controller
             ->get();
 
         $systemSettings = $this->systemSettings($settingStore);
-        $pageTitle = 'Blog & kiến thức API Banking';
-        $pageDescription = 'Cập nhật kiến thức, hướng dẫn tích hợp API, webhook, vận hành giao dịch và các chủ đề thực chiến cho hệ thống API banking.';
+        $pageTitle = 'Blog AutoCron và kiến thức HTTP Cron';
+        $pageDescription = 'Chia sẻ hướng dẫn cấu hình HTTP Cron Jobs, tối ưu lịch chạy, kiểm soát quota, log, cảnh báo và vận hành queue ổn định.';
 
         return view('pages.seo.index', [
             'systemSettings' => $systemSettings,
@@ -79,7 +74,7 @@ class PublicSeoPageController extends Controller
             'pageDescription' => $pageDescription,
             'pageMetaTitle' => $search !== ''
                 ? "Tìm kiếm: {$search} | {$pageTitle}"
-                : $pageTitle.' | '.($systemSettings['site_name'] ?: config('app.name', 'Nạp Tiền Tự Động')),
+                : $pageTitle.' | '.($systemSettings['site_name'] ?: config('app.name', 'AutoCron')),
             'pageMetaDescription' => $pageDescription,
             'pageMetaUrl' => $request->url().($request->getQueryString() ? '?'.$request->getQueryString() : ''),
             'featuredPost' => $featuredPost ? $this->transformPost($featuredPost) : null,
@@ -146,7 +141,7 @@ class PublicSeoPageController extends Controller
             'headingIndex' => $headingIndex,
             'relatedPosts' => $relatedPosts->map(fn (SeoPost $item) => $this->transformPost($item)),
             'sidebarCategories' => $sidebarCategories,
-            'pageMetaTitle' => $post->seo_title ?: $post->title.' | '.($systemSettings['site_name'] ?: config('app.name', 'Nạp Tiền Tự Động')),
+            'pageMetaTitle' => $post->seo_title ?: $post->title.' | '.($systemSettings['site_name'] ?: config('app.name', 'AutoCron')),
             'pageMetaDescription' => $post->seo_description ?: ($post->excerpt ?: $this->contentRenderer->extractText($content)),
             'pageMetaCanonical' => $post->canonical_url ?: $request->url(),
             'pageMetaUrl' => $request->url(),
@@ -157,7 +152,7 @@ class PublicSeoPageController extends Controller
     protected function systemSettings(SettingStore $settingStore): array
     {
         return $settingStore->getMany([
-            'site_name' => config('app.name', 'Nạp Tiền Tự Động'),
+            'site_name' => config('app.name', 'AutoCron'),
             'site_domain' => '',
             'site_description' => '',
             'support_email' => '',

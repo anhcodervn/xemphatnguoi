@@ -2,15 +2,16 @@
 
 namespace App\Models;
 
+use App\Support\Enums\SubscriptionStatus;
+use Database\Factories\UserSubscriptionFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use App\Support\Enums\SubscriptionStatus;
 
 class UserSubscription extends Model
 {
-    /** @use HasFactory<\Database\Factories\UserSubscriptionFactory> */
+    /** @use HasFactory<UserSubscriptionFactory> */
     use HasFactory;
 
     protected $fillable = [
@@ -19,6 +20,7 @@ class UserSubscription extends Model
         'order_id',
         'package_name',
         'package_price',
+        'package_limits',
         'base_account_limit',
         'extra_account_limit',
         'used_account',
@@ -31,6 +33,7 @@ class UserSubscription extends Model
     {
         return [
             'package_price' => 'decimal:2',
+            'package_limits' => 'array',
             'base_account_limit' => 'integer',
             'extra_account_limit' => 'integer',
             'used_account' => 'integer',

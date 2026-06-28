@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware('site.active')->get('/', function (SettingStore $settingStore) {
     $defaults = [
-        'site_name' => config('app.name', 'Nạp Tiền Tự Động'),
+        'site_name' => config('app.name', 'AutoCron'),
         'site_domain' => '',
         'site_description' => '',
         'support_email' => '',
@@ -84,10 +84,6 @@ Route::middleware(['guest', 'site.active'])->group(function (): void {
 
 Route::middleware('auth')->post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-if (file_exists(base_path('app/Features/Cron/routes.php'))) {
-    require base_path('app/Features/Cron/routes.php');
-}
-
 Route::controller(PublicContentPageController::class)->group(function (): void {
     Route::get('/gioi-thieu', 'show')->defaults('slug', 'gioi-thieu')->name('content.about');
     Route::get('/lien-he', 'show')->defaults('slug', 'lien-he')->name('content.contact');
@@ -110,7 +106,7 @@ Route::controller(PublicSeoPageController::class)->group(function (): void {
 Route::middleware(['auth', 'site.active'])->get('/{any}', function (SettingStore $settingStore) {
     return view('app', [
         'systemSettings' => $settingStore->getMany([
-            'site_name' => config('app.name', 'Nạp Tiền Tự Động'),
+            'site_name' => config('app.name', 'AutoCron'),
             'meta_title' => '',
             'meta_description' => '',
             'gtm_id' => '',
@@ -122,3 +118,7 @@ Route::middleware(['auth', 'site.active'])->get('/{any}', function (SettingStore
         ]),
     ]);
 })->where('any', '.*');
+
+if (file_exists(base_path('app/Features/BlogPost/routes.php'))) {
+    require base_path('app/Features/BlogPost/routes.php');
+}

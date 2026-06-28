@@ -1,15 +1,12 @@
 <template>
     <div class="space-y-4">
-        <Breadcrumb title="Cấu hình option" description="Quản lý nội dung dùng chung toàn hệ thống và cú pháp nạp tiền áp dụng cho recharge." />
+        <Breadcrumb title="Nội dung pháp lý" description="Quản lý điều khoản, chính sách bảo mật và chính sách hoàn tiền dùng chung cho toàn hệ thống." />
 
         <section class="overflow-hidden rounded-[10px] border border-slate-200 bg-white shadow-sm">
             <div class="flex flex-col gap-3 border-b border-slate-200 px-4 py-4 md:flex-row md:items-start md:justify-between">
                 <div>
-                    <h2 class="text-base font-semibold text-slate-900">Nội dung option toàn website</h2>
-                    <p class="text-sm text-slate-500">
-                        <code>recharge_syntax</code> sẽ được dùng để ghép nội dung nạp theo mẫu
-                        <code v-pre>{{ recharge_syntax }}{{ user.id }}</code>.
-                    </p>
+                    <h2 class="text-base font-semibold text-slate-900">Nội dung chung toàn website</h2>
+                    <p class="text-sm text-slate-500">Các văn bản này được dùng cho nhóm trang pháp lý và thông tin công khai của AutoCron.</p>
                 </div>
 
                 <button
@@ -17,7 +14,7 @@
                     :disabled="isSaving || !isRootDomain"
                     @click="submitForm"
                 >
-                    {{ !isRootDomain ? "Chỉ main domain được chỉnh sửa" : isSaving ? "Đang lưu" : "Lưu cấu hình option" }}
+                    {{ !isRootDomain ? "Chỉ main domain được chỉnh sửa" : isSaving ? "Đang lưu" : "Lưu nội dung" }}
                 </button>
             </div>
 
@@ -28,29 +25,6 @@
 
                 <div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
                     <div class="space-y-4">
-                        <div class="rounded-[10px] border border-slate-200 bg-slate-50 p-4">
-                            <div class="grid gap-3 md:grid-cols-[160px_minmax(0,1fr)] md:items-center">
-                                <div>
-                                    <p class="text-sm font-semibold text-slate-900">Cú pháp nạp tiền</p>
-                                    <p class="mt-1 text-xs text-slate-500">Tiền tố dùng cho nội dung chuyển khoản.</p>
-                                </div>
-
-                                <div class="space-y-2">
-                                    <input
-                                        v-model="formData.recharge_syntax"
-                                        type="text"
-                                        maxlength="50"
-                                        placeholder="NAP"
-                                        class="w-full rounded-[10px] border border-slate-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-slate-900"
-                                    />
-                                    <p class="text-xs text-slate-500">
-                                        Ví dụ hiển thị:
-                                        <span class="font-semibold text-slate-900">{{ rechargeSyntaxPreview }}</span>
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
                         <div class="border-b border-slate-200 px-1 pb-1">
                             <div class="no-scrollbar flex gap-2 overflow-x-auto">
                                 <button
@@ -89,11 +63,10 @@
 
                     <aside class="space-y-3">
                         <div class="rounded-[10px] border border-slate-200 bg-white p-4">
-                            <p class="text-xs uppercase tracking-[0.18em] text-slate-400">Preview</p>
-                            <p class="mt-2 text-sm font-semibold text-slate-900">Nội dung nạp</p>
-                            <div class="mt-3 rounded-[10px] border border-indigo-100 bg-indigo-50 px-3 py-3">
-                                <p class="text-xs text-slate-500">Dữ liệu hiển thị tại trang nạp tiền</p>
-                                <p class="mt-1 break-all text-sm font-semibold text-indigo-700">{{ rechargeSyntaxPreview }}</p>
+                            <p class="text-xs uppercase tracking-[0.18em] text-slate-400">Gợi ý</p>
+                            <p class="mt-2 text-sm font-semibold text-slate-900">Viết rõ, ngắn và dễ hiểu</p>
+                            <div class="mt-3 rounded-[10px] border border-sky-100 bg-sky-50 px-3 py-3 text-sm text-slate-600">
+                                Ưu tiên mô tả rõ quyền lợi, trách nhiệm, trường hợp ngoại lệ và cách người dùng liên hệ hỗ trợ khi cần.
                             </div>
                         </div>
 
@@ -101,7 +74,7 @@
                             <div v-for="tab in tabs" :key="`${tab.key}-count`" class="rounded-[10px] border border-slate-200 bg-white px-4 py-3">
                                 <p class="text-xs uppercase tracking-[0.18em] text-slate-400">{{ tab.shortLabel }}</p>
                                 <p class="mt-2 text-lg font-semibold text-slate-900">{{ formData[tab.key].length }}</p>
-                                <p class="text-sm text-slate-500">block nội dung</p>
+                                <p class="text-sm text-slate-500">khối nội dung</p>
                             </div>
                         </div>
                     </aside>
@@ -112,13 +85,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
 import Breadcrumb from "@/components/MasterLayouts/Breadcrumb/index.vue";
 import Editor from "@/components/shared/Editor/index.vue";
 import { adminSettingService } from "@/services/admin-setting.service";
 import type { OptionSettingType } from "@/types/setting.type";
 import { uploadEditorImages } from "@/utils/editor-image-upload";
 import { handleErrorResponse, handleSuccessResponse } from "@/utils/response";
+import { computed, onMounted, ref } from "vue";
 
 type OptionTabKey = "terms_of_use" | "privacy_policy" | "refund_policy";
 
@@ -157,15 +130,13 @@ const tabs: Array<{
     },
 ];
 
-const formData = ref<OptionSettingType>({
+const formData = ref<Required<OptionSettingType>>({
     terms_of_use: [],
     privacy_policy: [],
     refund_policy: [],
-    recharge_syntax: "NAP",
 });
 
 const activeConfig = computed(() => tabs.find((item) => item.key === activeTab.value) ?? tabs[0]);
-const rechargeSyntaxPreview = computed(() => `${(formData.value.recharge_syntax || "NAP").trim() || "NAP"}1801`);
 
 const loadData = async (): Promise<void> => {
     try {
@@ -174,7 +145,6 @@ const loadData = async (): Promise<void> => {
             terms_of_use: Array.isArray(data.settings.terms_of_use) ? data.settings.terms_of_use : [],
             privacy_policy: Array.isArray(data.settings.privacy_policy) ? data.settings.privacy_policy : [],
             refund_policy: Array.isArray(data.settings.refund_policy) ? data.settings.refund_policy : [],
-            recharge_syntax: typeof data.settings.recharge_syntax === "string" ? data.settings.recharge_syntax : "NAP",
         };
         editorKey.value += 1;
     } catch (err) {
@@ -198,22 +168,19 @@ const submitForm = async (): Promise<void> => {
         isSaving.value = true;
 
         const res = await adminSettingService.updateOptions({
-            ...formData.value,
             terms_of_use: await uploadEditorImages(formData.value.terms_of_use),
             privacy_policy: await uploadEditorImages(formData.value.privacy_policy),
             refund_policy: await uploadEditorImages(formData.value.refund_policy),
-            recharge_syntax: formData.value.recharge_syntax.trim(),
         });
 
         formData.value = {
             terms_of_use: Array.isArray(res.settings.terms_of_use) ? res.settings.terms_of_use : [],
             privacy_policy: Array.isArray(res.settings.privacy_policy) ? res.settings.privacy_policy : [],
             refund_policy: Array.isArray(res.settings.refund_policy) ? res.settings.refund_policy : [],
-            recharge_syntax: typeof res.settings.recharge_syntax === "string" ? res.settings.recharge_syntax : "NAP",
         };
 
         editorKey.value += 1;
-        handleSuccessResponse({ data: { status: true, message: "Cập nhật cấu hình option thành công" } });
+        handleSuccessResponse({ data: { status: true, message: "Cập nhật nội dung pháp lý thành công" } });
     } catch (err) {
         handleErrorResponse(err);
     } finally {

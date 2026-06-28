@@ -91,7 +91,7 @@ test('creating a successful credit wallet transaction queues a balance change ma
 
     Queue::assertPushed(SendSystemMailJob::class, function (SendSystemMailJob $job) use ($user): bool {
         return $job->to === $user->email
-            && $job->subjectText === 'Số dư ví vừa tăng'
+            && $job->subjectText === 'Hệ thống Auto Cron'
             && $job->title === 'Biến động tăng số dư ví'
             && in_array('Số tiền biến động: 150.000đ', $job->messageLines, true)
             && in_array('Số dư sau biến động: 250.000đ', $job->messageLines, true);
@@ -118,7 +118,7 @@ test('debiting wallet through wallet service queues a balance change mail', func
 
     Queue::assertPushed(SendSystemMailJob::class, function (SendSystemMailJob $job) use ($user): bool {
         return $job->to === $user->email
-            && $job->subjectText === 'Số dư ví vừa giảm'
+            && $job->subjectText === 'Hệ thống Auto Cron'
             && $job->title === 'Biến động giảm số dư ví'
             && in_array('Số tiền biến động: 120.000đ', $job->messageLines, true)
             && in_array('Số dư sau biến động: 380.000đ', $job->messageLines, true)

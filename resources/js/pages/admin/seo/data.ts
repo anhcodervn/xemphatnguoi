@@ -1,10 +1,4 @@
-import {
-    BookOpenText,
-    FolderTree,
-    type LucideIcon,
-    Map,
-    ShieldCheck,
-} from "lucide-vue-next";
+import { BookOpenText, FolderTree, Map, ShieldCheck, type LucideIcon } from "lucide-vue-next";
 
 export type SeoReference = {
     label: string;
@@ -53,22 +47,22 @@ export const seoReferences: SeoReference[] = [
     {
         label: "SEO Starter Guide",
         url: "https://developers.google.com/search/docs/fundamentals/seo-starter-guide",
-        summary: "Google khuyến nghị nội dung phải hữu ích, rõ cấu trúc, title/description riêng và dễ crawl.",
+        summary: "Google khuyến nghị nội dung phải hữu ích, rõ cấu trúc, có title và description riêng cho từng trang.",
     },
     {
         label: "Sitemaps",
         url: "https://developers.google.com/search/docs/crawling-indexing/sitemaps/overview",
-        summary: "Sitemap nên liệt kê URL quan trọng và được gửi lại mỗi khi nội dung lớn thay đổi.",
+        summary: "Sitemap nên liệt kê URL quan trọng và được gửi lại khi có thay đổi lớn về nội dung.",
     },
     {
         label: "Article structured data",
         url: "https://developers.google.com/search/docs/appearance/structured-data/article",
-        summary: "Bài viết nên có schema Article/BlogPosting rõ title, image, date và author.",
+        summary: "Bài viết nên có schema Article hoặc BlogPosting với title, image, date và author rõ ràng.",
     },
     {
         label: "Breadcrumb structured data",
         url: "https://developers.google.com/search/docs/appearance/structured-data/breadcrumb",
-        summary: "Breadcrumb giúp máy tìm kiếm hiểu ngữ cảnh phân cấp của trang và cải thiện điều hướng.",
+        summary: "Breadcrumb giúp máy tìm kiếm hiểu ngữ cảnh phân cấp nội dung và cải thiện điều hướng.",
     },
     {
         label: "Canonical URL",
@@ -102,7 +96,7 @@ export const seoMetricCards: SeoMetricCard[] = [
     {
         label: "Checklist kỹ thuật",
         value: "8/10",
-        description: "Đang ưu tiên canonical, robots meta, breadcrumb và schema bài viết.",
+        description: "Ưu tiên canonical, robots meta, breadcrumb và schema bài viết.",
         tone: "amber",
         icon: ShieldCheck,
     },
@@ -111,10 +105,10 @@ export const seoMetricCards: SeoMetricCard[] = [
 export const seoCategories: SeoCategoryItem[] = [
     {
         id: 1,
-        name: "Hướng dẫn tích hợp API",
-        slug: "huong-dan-tich-hop-api",
-        seoTitle: "Hướng dẫn tích hợp API banking | ApibankVN",
-        seoDescription: "Nhóm bài viết hướng dẫn tích hợp API, webhook và đối soát giao dịch tự động.",
+        name: "Hướng dẫn HTTP Cron",
+        slug: "huong-dan-http-cron",
+        seoTitle: "Hướng dẫn HTTP Cron Jobs | AutoCron",
+        seoDescription: "Nhóm bài viết hướng dẫn tạo cron jobs, cấu hình HTTP request và xử lý logs.",
         robots: "index,follow",
         articleCount: 14,
         updatedAt: "2026-06-01 09:30",
@@ -123,8 +117,8 @@ export const seoCategories: SeoCategoryItem[] = [
         id: 2,
         name: "Vận hành hệ thống",
         slug: "van-hanh-he-thong",
-        seoTitle: "Vận hành hệ thống API bank | ApibankVN",
-        seoDescription: "Quản trị queue, cron, cảnh báo webhook và theo dõi trạng thái dịch vụ.",
+        seoTitle: "Vận hành queue và alerts | AutoCron",
+        seoDescription: "Quản trị queue, cron scheduler, cảnh báo và theo dõi trạng thái dịch vụ.",
         robots: "index,follow",
         articleCount: 11,
         updatedAt: "2026-06-01 14:10",
@@ -133,7 +127,7 @@ export const seoCategories: SeoCategoryItem[] = [
         id: 3,
         name: "Chính sách & pháp lý",
         slug: "chinh-sach-phap-ly",
-        seoTitle: "Chính sách sử dụng API bank | ApibankVN",
+        seoTitle: "Chính sách sử dụng dịch vụ | AutoCron",
         seoDescription: "Các nội dung điều khoản, bảo mật, hoàn tiền và miễn trừ trách nhiệm.",
         robots: "index,follow",
         articleCount: 8,
@@ -144,22 +138,22 @@ export const seoCategories: SeoCategoryItem[] = [
 export const seoPosts: SeoPostItem[] = [
     {
         id: 1,
-        title: "Hướng dẫn tạo lệnh nạp qua API recharge-orders",
-        slug: "huong-dan-tao-lenh-nap-qua-api-recharge-orders",
-        category: "Hướng dẫn tích hợp API",
+        title: "Hướng dẫn tạo HTTP cron job đầu tiên trên AutoCron",
+        slug: "huong-dan-tao-http-cron-job-dau-tien-tren-autocron",
+        category: "Hướng dẫn HTTP Cron",
         status: "published",
         seoScore: 92,
-        canonicalUrl: "https://apibankvn.com/blog/huong-dan-tao-lenh-nap-qua-api-recharge-orders",
+        canonicalUrl: "https://autocron.example/blog/huong-dan-tao-http-cron-job-dau-tien-tren-autocron",
         updatedAt: "2026-06-01 11:20",
     },
     {
         id: 2,
-        title: "Checklist webhook callback an toàn cho API bank",
-        slug: "checklist-webhook-callback-an-toan-cho-api-bank",
+        title: "Checklist alert và retry an toàn cho HTTP cron jobs",
+        slug: "checklist-alert-va-retry-an-toan-cho-http-cron-jobs",
         category: "Vận hành hệ thống",
         status: "published",
         seoScore: 88,
-        canonicalUrl: "https://apibankvn.com/blog/checklist-webhook-callback-an-toan-cho-api-bank",
+        canonicalUrl: "https://autocron.example/blog/checklist-alert-va-retry-an-toan-cho-http-cron-jobs",
         updatedAt: "2026-05-31 16:00",
     },
     {
@@ -169,7 +163,7 @@ export const seoPosts: SeoPostItem[] = [
         category: "Chính sách & pháp lý",
         status: "draft",
         seoScore: 74,
-        canonicalUrl: "https://apibankvn.com/blog/khi-nao-nen-dung-noindex-cho-trang-noi-bo",
+        canonicalUrl: "https://autocron.example/blog/khi-nao-nen-dung-noindex-cho-trang-noi-bo",
         updatedAt: "2026-05-30 10:15",
     },
 ];
@@ -202,13 +196,13 @@ export const sitemapEntries: SitemapEntry[] = [
 ];
 
 export const seoTechnicalChecklist = [
-    "Mỗi bài viết cần title riêng, không nhồi từ khóa, dài khoảng 50-60 ký tự.",
+    "Mỗi bài viết cần title riêng, không nhồi từ khóa và dài khoảng 50-60 ký tự.",
     "Meta description nên ngắn gọn, duy nhất và mô tả đúng ý định tìm kiếm.",
     "Slug phải dễ đọc, dùng dấu gạch nối và tránh tham số thừa trong URL.",
-    "Các bài viết chính nên có canonical tự trỏ về chính URL public của bài.",
+    "Các bài viết chính nên có canonical tự trỏ về đúng URL public của bài.",
     "Danh mục và bài viết quan trọng nên nằm trong sitemap và không bị robots noindex.",
     "Bài viết nên có breadcrumb rõ ngữ cảnh danh mục thay vì chỉ mirror theo URL.",
-    "Bài blog nên gắn Article/BlogPosting schema với image, author, published_at và modified_at.",
+    "Bài blog nên gắn Article hoặc BlogPosting schema với image, author, published_at và modified_at.",
     "Ảnh bài viết nên có alt text rõ nghĩa và nằm gần phần nội dung liên quan.",
 ];
 

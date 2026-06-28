@@ -75,7 +75,7 @@ beforeEach(function () {
 test('guest sees maintenance page when site is inactive', function () {
     DB::table('settings')->insert([
         ['key' => 'site_active', 'value' => '0', 'type' => 'boolean', 'created_at' => now(), 'updated_at' => now()],
-        ['key' => 'site_name', 'value' => 'ApibankVN', 'type' => 'string', 'created_at' => now(), 'updated_at' => now()],
+        ['key' => 'site_name', 'value' => 'AutoCron', 'type' => 'string', 'created_at' => now(), 'updated_at' => now()],
         ['key' => 'system_status_title', 'value' => 'Bao tri he thong', 'type' => 'string', 'created_at' => now(), 'updated_at' => now()],
         ['key' => 'system_status_excerpt', 'value' => 'He thong dang nang cap dich vu.', 'type' => 'string', 'created_at' => now(), 'updated_at' => now()],
         ['key' => 'support_email', 'value' => 'support@example.com', 'type' => 'string', 'created_at' => now(), 'updated_at' => now()],
@@ -93,7 +93,7 @@ test('guest sees maintenance page when site is inactive', function () {
 test('admin can still access the site while maintenance mode is enabled', function () {
     DB::table('settings')->insert([
         ['key' => 'site_active', 'value' => '0', 'type' => 'boolean', 'created_at' => now(), 'updated_at' => now()],
-        ['key' => 'site_name', 'value' => 'ApibankVN', 'type' => 'string', 'created_at' => now(), 'updated_at' => now()],
+        ['key' => 'site_name', 'value' => 'AutoCron', 'type' => 'string', 'created_at' => now(), 'updated_at' => now()],
     ]);
 
     $admin = User::factory()->create([

@@ -33,7 +33,6 @@ class AdminUserDetailResource extends JsonResource
                 'id' => $wallet->id,
                 'balance' => (float) $wallet->balance,
                 'hold_balance' => (float) $wallet->hold_balance,
-                'total_recharge' => (float) $wallet->total_recharge,
                 'total_spent' => (float) $wallet->total_spent,
             ] : null,
             'current_package' => $currentSubscription ? [
