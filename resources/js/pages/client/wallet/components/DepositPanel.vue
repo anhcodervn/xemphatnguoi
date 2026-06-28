@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { AlertTriangle, CheckCircle2, Copy, Landmark, ReceiptText, RefreshCw, WalletCards } from 'lucide-vue-next';
-import { computed } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 type DepositMethodItem = {
     id: number;
@@ -15,6 +15,7 @@ type DepositMethodItem = {
 
 const props = defineProps<{
     hasConfig: boolean;
+    amountInput: string;
     amountDisplay: string;
     amountError: string;
     transferInfo: {
@@ -46,6 +47,38 @@ const presets = [100000, 200000, 500000, 1000000];
 const amountLabel = computed(() => (props.amountDisplay ? `${props.amountDisplay}đ` : '0đ'));
 const selectedMethod = computed(() => props.methods.find((item) => item.id === props.selectedMethodId) ?? null);
 const methodLabel = computed(() => selectedMethod.value?.title || props.transferInfo.bankName || 'Phương thức hệ thống');
+const amountInputValue = ref(formatDigits(props.amountInput));
+
+watch(
+    () => props.amountInput,
+    (nextValue) => {
+        amountInputValue.value = formatDigits(nextValue);
+    },
+);
+
+function normalizeDigits(value: string): string {
+    return value.replace(/\D+/g, '');
+}
+
+function formatDigits(value: string): string {
+    const digits = normalizeDigits(value);
+
+    if (digits === '') {
+        return '';
+    }
+
+    return new Intl.NumberFormat('vi-VN').format(Number(digits));
+}
+
+function handleAmountInput(value: string): void {
+    const digits = normalizeDigits(value);
+    amountInputValue.value = formatDigits(digits);
+    emit('update:amount', digits);
+}
+
+function handleAmountBlur(): void {
+    amountInputValue.value = formatDigits(amountInputValue.value);
+}
 </script>
 
 <template>
@@ -111,12 +144,13 @@ const methodLabel = computed(() => selectedMethod.value?.title || props.transfer
                                 <Landmark class="h-4.5 w-4.5" />
                             </div>
                             <input
-                                :value="props.amountDisplay"
+                                :value="amountInputValue"
                                 inputmode="numeric"
                                 type="text"
                                 class="ml-3 min-w-0 flex-1 bg-transparent text-[20px] font-black tracking-[-0.04em] text-slate-950 outline-none sm:text-[32px]"
                                 placeholder="0"
-                                @input="emit('update:amount', ($event.target as HTMLInputElement).value)"
+                                @blur="handleAmountBlur"
+                                @input="handleAmountInput(($event.target as HTMLInputElement).value)"
                             />
                             <span class="shrink-0 text-sm font-semibold text-slate-400 sm:text-base">VND</span>
                         </div>

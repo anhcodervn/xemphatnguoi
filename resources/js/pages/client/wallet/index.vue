@@ -4,6 +4,7 @@ import { useUserStore } from '@/stores/user.store';
 import type { DepositRequestItem, RechargeConfigType } from '@/types/recharge-config.type';
 import type { WalletType } from '@/types/wallet.type';
 import { handleErrorResponse } from '@/utils/response';
+import Swal from 'sweetalert2';
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import DepositPanel from './components/DepositPanel.vue';
@@ -31,7 +32,7 @@ const rechargeConfig = ref<RechargeConfigType | null>(null);
 const rechargeConfigs = ref<RechargeConfigType[]>([]);
 const selectedConfigId = ref<number | null>(null);
 const activePaymentRequest = ref<DepositRequestItem | null>(null);
-const amount = ref(200000);
+const amountInput = ref('200000');
 const copiedField = ref<string | null>(null);
 const historySearch = ref('');
 const historyStatus = ref('all');
@@ -44,8 +45,8 @@ const historyMeta = ref({
     total: 0,
 });
 const countdownSeconds = ref(0);
+const handlingPaidRequest = ref(false);
 
-let overviewDebounceId: number | null = null;
 let countdownTimerId: number | null = null;
 let paymentPollTimerId: number | null = null;
 
@@ -69,7 +70,7 @@ watch(
     },
 );
 
-const amountValue = computed(() => Math.max(0, Number(amount.value || 0)));
+const amountValue = computed(() => Math.max(0, Number(amountInput.value.replace(/\D+/g, '') || 0)));
 const amountDisplay = computed(() => (amountValue.value > 0 ? formatNumber(amountValue.value) : ''));
 const balanceLabel = computed(() => formatMoney(wallet.value?.balance));
 const bonusRate = computed(() => 0);
@@ -165,16 +166,6 @@ const countdownProgress = computed(() => {
     return Math.max(0, Math.min(100, (countdownSeconds.value / total) * 100));
 });
 
-watch(amountValue, () => {
-    if (overviewDebounceId !== null) {
-        window.clearTimeout(overviewDebounceId);
-    }
-
-    overviewDebounceId = window.setTimeout(() => {
-        void loadOverview();
-    }, 250);
-});
-
 onMounted(async () => {
     if (!userStore.user) {
         await userStore.bootstrap({ silent: true });
@@ -196,6 +187,7 @@ onBeforeUnmount(() => {
 async function loadOverview(): Promise<void> {
     try {
         loadingOverview.value = true;
+
         const response = await clientWalletService.overview({
             amount: amountValue.value,
         });
@@ -239,12 +231,15 @@ async function loadHistory(): Promise<void> {
 }
 
 function onAmountInput(value: string): void {
-    const digits = value.replace(/\D+/g, '');
-    amount.value = digits === '' ? 0 : Number(digits);
+    amountInput.value = value.replace(/\D+/g, '');
 }
 
 function selectPreset(nextAmount: number): void {
-    amount.value = nextAmount;
+    amountInput.value = String(nextAmount);
+}
+
+async function refreshWalletData(): Promise<void> {
+    await Promise.all([loadOverview(), loadHistory()]);
 }
 
 function selectConfig(configId: number): void {
@@ -390,6 +385,11 @@ async function refreshActivePaymentRequest(silent = false): Promise<void> {
             activePaymentRequest.value = matched;
             persistPaymentState(matched);
             syncCountdown();
+
+            if (matched.status === 'paid') {
+                await handlePaidDepositSuccess();
+                return;
+            }
         }
 
         if (!silent) {
@@ -473,6 +473,37 @@ function clearActivePaymentState(): void {
     countdownSeconds.value = 0;
     window.sessionStorage.removeItem(PAYMENT_STORAGE_KEY);
     stopPaymentTimers();
+}
+
+async function handlePaidDepositSuccess(): Promise<void> {
+    if (handlingPaidRequest.value) {
+        return;
+    }
+
+    handlingPaidRequest.value = true;
+    stopPaymentTimers();
+
+    try {
+        await loadOverview();
+
+        await Swal.fire({
+            icon: 'success',
+            title: 'Nạp tiền thành công',
+            text: `Số dư mới của bạn là ${balanceLabel.value}.`,
+            confirmButtonText: 'Đã hiểu',
+            allowOutsideClick: false,
+        });
+    } catch (error) {
+        handleErrorResponse(error);
+    } finally {
+        redirectToWalletOverview();
+    }
+}
+
+function redirectToWalletOverview(): void {
+    clearActivePaymentState();
+    const targetUrl = router.resolve({ name: 'client.wallet' }).href;
+    window.location.assign(targetUrl);
 }
 
 function startPaymentTimers(): void {
@@ -575,6 +606,7 @@ function formatCountdown(totalSeconds: number): string {
                     <DepositPanel
                         v-else-if="activeTab === 'deposit'"
                         :has-config="hasConfig"
+                        :amount-input="amountInput"
                         :amount-display="amountDisplay"
                         :amount-error="amountError"
                         :transfer-info="transferInfo"
@@ -587,7 +619,7 @@ function formatCountdown(totalSeconds: number): string {
                         @select-preset="selectPreset"
                         @select-method="selectConfig"
                         @copy="copyTransferField"
-                        @refresh="loadHistory"
+                        @refresh="refreshWalletData"
                         @submit="createRequest"
                         @confirm="openLatestPendingPayment"
                     />
