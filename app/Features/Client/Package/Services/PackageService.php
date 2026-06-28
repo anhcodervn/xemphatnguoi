@@ -21,10 +21,11 @@ class PackageService
      *     package_price:string,
      *     base_account_limit:int,
      *     extra_account_limit:int,
-     *     used_account:int,
-     *     starts_at:?string,
-     *     expires_at:?string,
-     *     status:string,
+ *     used_account:int,
+ *     auto_renew_enabled:bool,
+ *     starts_at:?string,
+ *     expires_at:?string,
+ *     status:string,
      *     package:array{
      *         id:int,
      *         name:string,
@@ -72,6 +73,7 @@ class PackageService
             'base_account_limit' => $subscription->base_account_limit,
             'extra_account_limit' => $subscription->extra_account_limit,
             'used_account' => $user->cronJobs()->count(),
+            'auto_renew_enabled' => (bool) $subscription->auto_renew_enabled,
             'starts_at' => $subscription->starts_at?->toISOString(),
             'expires_at' => $subscription->expires_at?->toISOString(),
             'status' => $subscription->status->value,
@@ -121,5 +123,22 @@ class PackageService
             ->where('expires_at', '>', now())
             ->latest('expires_at')
             ->first();
+    }
+
+    public function updateAutoRenew(UserSubscription $subscription, bool $enabled): UserSubscription
+    {
+        $payload = [
+            'auto_renew_enabled' => $enabled,
+        ];
+
+        if ($enabled) {
+            $payload['auto_renew_attempted_at'] = null;
+            $payload['auto_renew_status'] = null;
+            $payload['auto_renew_message'] = null;
+        }
+
+        $subscription->forceFill($payload)->save();
+
+        return $subscription->fresh(['package']);
     }
 }

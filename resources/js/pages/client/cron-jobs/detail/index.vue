@@ -48,6 +48,40 @@ const scheduleLabel = computed(() => {
     return `${cronJob.value.interval_seconds ?? '--'} giây`;
 });
 
+const formatLogPreview = (value: string | null): string => {
+    if (!value) {
+        return 'Khong co preview.';
+    }
+
+    const trimmedValue = value.trim();
+
+    if (!trimmedValue) {
+        return 'Khong co preview.';
+    }
+
+    try {
+        const parsedValue = JSON.parse(trimmedValue) as unknown;
+
+        if (typeof parsedValue === 'string') {
+            return parsedValue;
+        }
+
+        return JSON.stringify(parsedValue, null, 2);
+    } catch {
+        if (!trimmedValue.includes('\\u')) {
+            return value;
+        }
+
+        try {
+            const decodedValue = JSON.parse(`"${trimmedValue.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`) as string;
+
+            return decodedValue;
+        } catch {
+            return value;
+        }
+    }
+};
+
 const loadDetail = async (): Promise<void> => {
     loading.value = true;
 
@@ -127,7 +161,7 @@ onMounted(async () => {
                             </div>
                             <span class="text-xs text-slate-500">Attempt {{ log.attempt }}</span>
                         </div>
-                        <p class="mt-3 break-words whitespace-pre-wrap text-sm text-slate-600">{{ log.error_message || log.response_body_preview || 'Không có preview.' }}</p>
+                        <pre class="mt-3 overflow-auto whitespace-pre-wrap break-words text-sm text-slate-600">{{ formatLogPreview(log.error_message || log.response_body_preview) }}</pre>
                     </article>
                     <div v-if="recentLogs.length === 0" class="rounded-[10px] border border-dashed border-slate-200 px-4 py-10 text-center text-sm text-slate-500">
                         Chưa có log nào cho cron job này.

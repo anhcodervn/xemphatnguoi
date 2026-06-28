@@ -14,6 +14,7 @@ import {
     HeartHandshake,
     Layers3,
     Package2,
+    RefreshCcw,
     ShieldCheck,
     Sparkles,
     X,
@@ -41,16 +42,22 @@ type ComparisonRow = {
 
 const userStore = useUserStore();
 const loading = ref(false);
+const autoRenewUpdating = ref(false);
 const showGuideModal = ref(false);
 const packages = ref<PackageItem[]>([]);
+
 const currentSubscription = computed(() => userStore.user?.user_subscriptions ?? null);
+const currentPackageLimits = computed(() => currentSubscription.value?.package_limits ?? null);
+const currentSubscriptionActive = computed(() => currentSubscription.value?.status === 'active');
 
 const sortedPackages = computed(() =>
     [...packages.value].sort((a, b) => Number(a.price || 0) - Number(b.price || 0)),
 );
 
 const featuredPackageId = computed(() => {
-    const bySlug = sortedPackages.value.find((item) => ['basic', 'co-ban', 'standard', 'pro'].some((keyword) => item.slug.toLowerCase().includes(keyword)));
+    const bySlug = sortedPackages.value.find((item) =>
+        ['basic', 'co-ban', 'standard', 'pro'].some((keyword) => item.slug.toLowerCase().includes(keyword)),
+    );
 
     if (bySlug) {
         return bySlug.id;
@@ -104,6 +111,53 @@ const comparisonRows = computed<ComparisonRow[]>(() => [
     },
 ]);
 
+const heroHighlights = [
+    {
+        title: 'Hiệu suất cao',
+        description: 'Server ổn định, chạy 24/7',
+        icon: Zap,
+    },
+    {
+        title: 'Bảo mật tốt',
+        description: 'Cô lập request và giới hạn an toàn',
+        icon: ShieldCheck,
+    },
+    {
+        title: 'Dễ mở rộng',
+        description: 'Nâng cấp nhanh theo số lượng jobs',
+        icon: Layers3,
+    },
+];
+
+const currentPackageStats = computed(() => {
+    const limits = currentPackageLimits.value;
+    const cronLimit = Number(limits?.max_cron_jobs ?? 0);
+    const usedCronJobs = Number(currentSubscription.value?.used_account ?? 0);
+    const logsPerJob = Number(limits?.max_logs_per_job ?? 0);
+    const requestQuota = Number(limits?.daily_run_quota ?? limits?.monthly_run_quota ?? 0);
+
+    return [
+        {
+            label: 'Cron Jobs',
+            value: cronLimit > 0 ? `${formatNumber(usedCronJobs)} / ${formatNumber(cronLimit)}` : formatNumber(usedCronJobs),
+            helper: cronLimit > 0 ? `${formatNumber(Math.max(0, cronLimit - usedCronJobs))} còn trống` : 'Không giới hạn',
+            progress: cronLimit > 0 ? `${Math.min(100, Math.round((usedCronJobs / cronLimit) * 100))}%` : '72%',
+        },
+        {
+            label: 'Log lưu trữ',
+            value: logsPerJob > 0 ? `${formatNumber(logsPerJob)} / job` : '--',
+            helper: 'Theo giới hạn gói',
+            progress: logsPerJob > 0 ? `${Math.min(100, Math.max(34, logsPerJob))}%` : '48%',
+        },
+        {
+            label: 'Requests / ngày',
+            value: requestQuota > 0 ? formatNumber(requestQuota) : 'Unlimited',
+            helper: requestQuota > 0 ? 'Quota chạy mỗi ngày' : 'Không khóa quota ngày',
+            progress: requestQuota > 0 ? '78%' : '56%',
+        },
+    ];
+});
+
 const formatMoney = (value: string | number): string =>
     new Intl.NumberFormat('vi-VN', {
         style: 'currency',
@@ -111,7 +165,8 @@ const formatMoney = (value: string | number): string =>
         maximumFractionDigits: 0,
     }).format(Number(value || 0));
 
-const formatNumber = (value: number | string | null | undefined): string => new Intl.NumberFormat('vi-VN').format(Number(value || 0));
+const formatNumber = (value: number | string | null | undefined): string =>
+    new Intl.NumberFormat('vi-VN').format(Number(value || 0));
 
 const formatDate = (value: string | null | undefined): string => {
     if (!value) {
@@ -152,7 +207,7 @@ const toneFor = (item: PackageItem) => {
             soft: 'bg-violet-50 text-violet-700 border-violet-200',
             button: 'bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white hover:from-violet-500 hover:to-fuchsia-500',
             ring: 'border-violet-200',
-            metric: 'bg-violet-50 text-violet-700',
+            tint: 'from-violet-50 to-white',
         };
     }
 
@@ -162,7 +217,7 @@ const toneFor = (item: PackageItem) => {
             soft: 'bg-blue-50 text-blue-700 border-blue-200',
             button: 'bg-gradient-to-r from-blue-600 to-sky-500 text-white hover:from-blue-500 hover:to-sky-400',
             ring: 'border-blue-300',
-            metric: 'bg-blue-50 text-blue-700',
+            tint: 'from-blue-50 to-white',
         };
     }
 
@@ -171,7 +226,7 @@ const toneFor = (item: PackageItem) => {
         soft: 'bg-emerald-50 text-emerald-700 border-emerald-200',
         button: 'border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100',
         ring: 'border-emerald-200',
-        metric: 'bg-emerald-50 text-emerald-700',
+        tint: 'from-emerald-50 to-white',
     };
 };
 
@@ -182,7 +237,7 @@ const packageSummary = (limits?: PackageLimitsType) => [
         icon: Layers3,
     },
     {
-        label: 'Interval tối thiểu',
+        label: 'Interval',
         value: intervalLabel(limits?.min_interval_seconds ?? null),
         icon: Clock3,
     },
@@ -246,6 +301,8 @@ const orderPackage = async (packageItem: PackageItem): Promise<void> => {
         icon: 'question',
         title: `Đăng ký gói ${packageItem.name}?`,
         text: 'Đơn hàng sẽ được tạo và thanh toán bằng ví chính nếu đủ số dư.',
+        input: 'checkbox',
+        inputPlaceholder: 'Bật tự gia hạn khi gói hết hạn',
         showCancelButton: true,
         confirmButtonText: 'Tiếp tục',
         cancelButtonText: 'Hủy',
@@ -259,6 +316,7 @@ const orderPackage = async (packageItem: PackageItem): Promise<void> => {
         const orderResponse = await clientPackageService.createOrder({
             package_id: packageItem.id,
             payment_method: 'wallet',
+            auto_renew_enabled: Boolean(confirmed.value),
         });
         const orderId = orderResponse.data.data.id;
         const payResponse = await clientPackageService.payOrder(orderId, {
@@ -273,118 +331,242 @@ const orderPackage = async (packageItem: PackageItem): Promise<void> => {
     }
 };
 
+const toggleCurrentSubscriptionAutoRenew = async (): Promise<void> => {
+    if (!currentSubscription.value) {
+        return;
+    }
+
+    try {
+        autoRenewUpdating.value = true;
+
+        const nextValue = !currentSubscription.value.auto_renew_enabled;
+        const response = await clientPackageService.updateSubscriptionAutoRenew(currentSubscription.value.id, {
+            auto_renew_enabled: nextValue,
+        });
+
+        handleSuccessResponse(response, nextValue ? 'Đã bật tự động gia hạn.' : 'Đã tắt tự động gia hạn.');
+        await userStore.fetchCurrentUser({ silent: true });
+    } catch (error) {
+        handleErrorResponse(error);
+    } finally {
+        autoRenewUpdating.value = false;
+    }
+};
+
 onMounted(async () => {
     await loadPackages();
 });
 </script>
 
 <template>
-    <div class="space-y-5 pb-4">
-        <section class="grid gap-5 xl:grid-cols-[minmax(0,1.35fr)_420px] xl:items-center">
-            <article class="rounded-[10px] border border-slate-200 bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.14),_transparent_36%),linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] p-6 shadow-[0_24px_50px_-36px_rgba(15,23,42,0.36)]">
-                <div class="flex flex-wrap items-center gap-3">
-                    <p class="text-xs font-semibold uppercase tracking-[0.28em] text-blue-600">AutoCron Plans</p>
-                    <button
-                        type="button"
-                        class="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white px-3 py-1.5 text-xs font-semibold text-blue-700 transition hover:bg-blue-50"
-                        @click="showGuideModal = true"
-                    >
-                        <CircleHelp class="h-3.5 w-3.5" />
-                        Xem hướng dẫn
-                    </button>
+    <div class="space-y-4 pb-4 sm:space-y-5">
+        <section class="grid gap-4 xl:grid-cols-[minmax(0,1.4fr)_380px]">
+            <article class="relative overflow-hidden rounded-[12px] border border-[#dce6fb] bg-[radial-gradient(circle_at_top_left,_rgba(80,109,255,0.14),_transparent_34%),linear-gradient(180deg,_#ffffff_0%,_#f8fbff_100%)] p-4 shadow-[0_20px_46px_-38px_rgba(37,99,235,0.26)] sm:p-5">
+                <div class="absolute inset-y-0 right-0 hidden w-[34%] lg:block">
+                    <div class="absolute right-6 top-6 w-40 rounded-[12px] border border-[#e0e7ff] bg-white/90 p-3 shadow-[0_18px_36px_-30px_rgba(79,70,229,0.3)] backdrop-blur">
+                        <div class="flex items-center justify-between">
+                            <p class="text-sm font-black tracking-[0.24em] text-[#3158ff]">
+                                {{ slugLabel(sortedPackages[1]?.slug ?? 'pro') }}
+                            </p>
+                            <Check class="h-4 w-4 text-[#3158ff]" />
+                        </div>
+                        <div class="mt-3 space-y-2">
+                            <div class="h-2 rounded-full bg-[#dfe8ff]"></div>
+                            <div class="h-2 w-4/5 rounded-full bg-[#edf2ff]"></div>
+                            <div class="h-2 w-3/5 rounded-full bg-[#dfe8ff]"></div>
+                        </div>
+                        <div class="mt-4 flex items-end gap-1.5">
+                            <div class="h-6 w-3 rounded-t-full bg-[#dbe6ff]"></div>
+                            <div class="h-10 w-3 rounded-t-full bg-[#bdd1ff]"></div>
+                            <div class="h-8 w-3 rounded-t-full bg-[#dbe6ff]"></div>
+                            <div class="h-12 w-3 rounded-t-full bg-[#3158ff]"></div>
+                        </div>
+                    </div>
                 </div>
 
-                <h1 class="mt-4 max-w-3xl text-3xl font-black tracking-[-0.05em] text-slate-950 sm:text-[3rem]">
-                    Chọn gói phù hợp cho hệ thống cron của bạn
-                </h1>
-                <p class="mt-4 max-w-2xl text-sm leading-7 text-slate-600 sm:text-[15px]">
-                    Nâng cấp gói để tăng giới hạn cron jobs, quota, số log giữ lại và mở khóa thêm tính năng alerts, run now, custom headers.
-                </p>
-            </article>
-
-            <article class="rounded-[10px] border border-slate-200 bg-white p-6 shadow-[0_24px_50px_-36px_rgba(15,23,42,0.36)]">
-                <div class="flex items-start gap-4">
-                    <div class="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
-                        <Package2 class="h-8 w-8" />
+                <div class="relative z-10 max-w-2xl">
+                    <div class="flex flex-wrap items-center gap-2.5">
+                        <p class="text-[11px] font-black uppercase tracking-[0.32em] text-[#4f67ff]">AutoCron Plans</p>
+                        <button
+                            type="button"
+                            class="inline-flex items-center gap-2 rounded-full border border-[#d7e3ff] bg-white px-3 py-1.5 text-xs font-semibold text-[#4660ff] transition hover:bg-[#f7faff]"
+                            @click="showGuideModal = true"
+                        >
+                            <CircleHelp class="h-3.5 w-3.5" />
+                            Xem hướng dẫn
+                        </button>
                     </div>
-                    <div class="min-w-0">
-                        <p class="text-sm font-semibold text-slate-500">Gói hiện tại</p>
-                        <h2 class="mt-2 text-3xl font-black tracking-[-0.04em] text-slate-950">{{ currentSubscription?.package_name || 'Chưa có gói' }}</h2>
-                        <p class="mt-2 text-sm text-slate-600">Hết hạn: {{ formatDate(currentSubscription?.expires_at) }}</p>
-                        <div class="mt-4 inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700">
-                            <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
-                            {{ currentSubscription?.status === 'active' ? 'Đang hoạt động' : 'Cần gia hạn' }}
+
+                    <h1 class="mt-3 max-w-xl text-[1.95rem] font-black leading-tight tracking-[-0.05em] text-[#0c1b4d] sm:text-[2.7rem]">
+                        Chọn gói phù hợp cho hệ thống cron của bạn
+                    </h1>
+                    <p class="mt-3 max-w-2xl text-sm leading-7 text-slate-600 sm:text-[15px]">
+                        Nâng cấp để tăng số cron jobs, quota chạy, log lưu trữ và mở khóa thêm alerts, run now, custom headers.
+                    </p>
+
+                    <div class="mt-4 grid gap-2.5 sm:grid-cols-3">
+                        <div
+                            v-for="item in heroHighlights"
+                            :key="item.title"
+                            class="rounded-[10px] border border-[#dfe6fb] bg-white/85 px-3.5 py-3 shadow-[0_12px_26px_-24px_rgba(37,99,235,0.24)]"
+                        >
+                            <div class="flex items-start gap-3">
+                                <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#eef2ff] text-[#4f67ff]">
+                                    <component :is="item.icon" class="h-4 w-4" />
+                                </span>
+                                <div>
+                                    <p class="text-sm font-bold text-[#12204f]">{{ item.title }}</p>
+                                    <p class="mt-1 text-xs leading-5 text-slate-500">{{ item.description }}</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </article>
+
+            <article class="rounded-[12px] border border-[#dce6fb] bg-[linear-gradient(180deg,_#ffffff_0%,_#fbfdff_100%)] p-4 shadow-[0_20px_46px_-38px_rgba(37,99,235,0.24)] sm:p-5">
+                <div class="flex items-start gap-3">
+                    <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-500">
+                        <Package2 class="h-6 w-6" />
+                    </span>
+                    <div class="min-w-0 flex-1">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <p class="text-sm font-semibold text-slate-500">Gói hiện tại</p>
+                            <span
+                                class="inline-flex items-center rounded-full px-3 py-1 text-xs font-bold"
+                                :class="currentSubscriptionActive ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-700'"
+                            >
+                                {{ currentSubscriptionActive ? 'Đang hoạt động' : 'Cần gia hạn' }}
+                            </span>
+                        </div>
+                        <h2 class="mt-2 text-[1.8rem] font-black tracking-[-0.05em] text-[#111c44]">
+                            {{ currentSubscription?.package_name || 'Chưa có gói' }}
+                        </h2>
+                        <p class="mt-1 text-sm text-slate-500">
+                            Hết hạn:
+                            <span class="font-bold text-[#3158ff]">{{ formatDate(currentSubscription?.expires_at) }}</span>
+                        </p>
+                    </div>
+                </div>
+
+                <div
+                    v-if="currentSubscription"
+                    class="mt-4 flex items-center justify-between gap-3 rounded-[10px] border border-[#dfe6fb] bg-white px-3.5 py-3"
+                >
+                    <div class="flex min-w-0 items-center gap-3">
+                        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#eef3ff] text-[#4f67ff]">
+                            <RefreshCcw class="h-4 w-4" />
+                        </span>
+                        <div class="min-w-0">
+                            <p class="text-sm font-bold text-[#111c44]">Tự gia hạn</p>
+                            <p class="mt-0.5 text-xs text-slate-500">Tự động gia hạn khi đến hạn</p>
+                        </div>
+                    </div>
+                    <button
+                        type="button"
+                        role="switch"
+                        :aria-checked="currentSubscription.auto_renew_enabled"
+                        class="relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition disabled:cursor-not-allowed disabled:opacity-60"
+                        :class="currentSubscription.auto_renew_enabled ? 'bg-emerald-400' : 'bg-slate-300'"
+                        :disabled="autoRenewUpdating"
+                        @click="toggleCurrentSubscriptionAutoRenew"
+                    >
+                        <span class="sr-only">Bật hoặc tắt tự gia hạn</span>
+                        <span
+                            class="inline-block h-5 w-5 rounded-full bg-white shadow-sm transition-transform"
+                            :class="currentSubscription.auto_renew_enabled ? 'translate-x-6' : 'translate-x-1'"
+                        />
+                    </button>
+                </div>
+
+                <div class="mt-4 grid gap-2.5 sm:grid-cols-3">
+                    <article
+                        v-for="metric in currentPackageStats"
+                        :key="metric.label"
+                        class="rounded-[10px] border border-[#dfe6fb] bg-white px-3.5 py-3.5"
+                    >
+                        <p class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">{{ metric.label }}</p>
+                        <p class="mt-2 text-lg font-black tracking-[-0.04em] text-[#3158ff]">{{ metric.value }}</p>
+                        <p class="mt-1 text-xs text-slate-500">{{ metric.helper }}</p>
+                        <div class="mt-3 h-1.5 rounded-full bg-[#ebf0ff]">
+                            <div class="h-1.5 rounded-full bg-[#4f67ff]" :style="{ width: metric.progress }"></div>
+                        </div>
+                    </article>
+                </div>
+            </article>
         </section>
 
-        <section v-if="loading" class="rounded-[10px] border border-slate-200 bg-white px-4 py-10 text-center text-sm text-slate-500 shadow-sm">
+        <section
+            v-if="loading"
+            class="rounded-[12px] border border-slate-200 bg-white px-4 py-10 text-center text-sm text-slate-500 shadow-sm"
+        >
             Đang tải danh sách gói...
         </section>
 
-        <section v-else class="grid gap-5 xl:grid-cols-3">
+        <section v-else class="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
             <article
                 v-for="item in sortedPackages"
                 :key="item.id"
-                class="relative flex h-full flex-col rounded-[10px] border bg-white p-5 shadow-[0_24px_50px_-36px_rgba(15,23,42,0.36)] transition"
+                class="relative flex h-full flex-col overflow-hidden rounded-[12px] border bg-white p-4 shadow-[0_18px_42px_-34px_rgba(15,23,42,0.2)]"
                 :class="[
                     isCurrentPackage(item) ? 'border-emerald-300 ring-1 ring-emerald-100' : toneFor(item).ring,
-                    item.id === featuredPackageId ? 'xl:-mt-2 xl:mb-2' : '',
+                    `bg-gradient-to-b ${toneFor(item).tint}`,
                 ]"
             >
-                <div
-                    v-if="item.id === featuredPackageId"
-                    class="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 rounded-[10px] bg-blue-100 px-4 py-1.5 text-xs font-bold uppercase tracking-[0.2em] text-blue-700"
-                >
-                    Phổ biến nhất
-                </div>
-
                 <div class="flex items-start justify-between gap-3">
                     <div class="min-w-0">
-                        <p class="text-xs font-semibold uppercase tracking-[0.28em]" :class="toneFor(item).accent">{{ slugLabel(item.slug) }}</p>
-                        <h2 class="mt-2 text-2xl font-black tracking-[-0.04em] text-slate-950">{{ item.name }}</h2>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span
+                                v-if="item.id === featuredPackageId"
+                                class="rounded-full bg-blue-100 px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-blue-700"
+                            >
+                                Phổ biến
+                            </span>
+                            <span
+                                v-if="isCurrentPackage(item)"
+                                class="rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700"
+                            >
+                                Đang dùng
+                            </span>
+                        </div>
+                        <p class="mt-3 text-[11px] font-bold uppercase tracking-[0.28em]" :class="toneFor(item).accent">
+                            {{ slugLabel(item.slug) }}
+                        </p>
+                        <h2 class="mt-2 text-[1.9rem] font-black tracking-[-0.05em] text-slate-950">{{ item.name }}</h2>
                     </div>
-                    <span
-                        v-if="isCurrentPackage(item)"
-                        class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700"
-                    >
-                        Đang dùng
-                    </span>
                 </div>
 
-                <div class="mt-4 flex items-end gap-2">
-                    <p class="text-4xl font-black tracking-[-0.05em] text-slate-950">{{ formatMoney(item.price) }}</p>
+                <div class="mt-3 flex items-end gap-2">
+                    <p class="text-[2.2rem] font-black tracking-[-0.05em] text-slate-950">{{ formatMoney(item.price) }}</p>
                     <span class="pb-1 text-sm text-slate-500">/ {{ item.duration_days }} ngày</span>
                 </div>
 
-                <p class="mt-4 min-h-[48px] text-sm leading-6 text-slate-600">
+                <p class="mt-3 min-h-[42px] text-sm leading-6 text-slate-600">
                     {{ item.description || 'Gói phù hợp để vận hành HTTP cron jobs với giới hạn và tính năng rõ ràng.' }}
                 </p>
 
-                <div class="mt-5 grid gap-3 sm:grid-cols-2">
+                <div class="mt-4 grid gap-2 sm:grid-cols-2">
                     <div
                         v-for="summaryItem in packageSummary(item.package_limits)"
                         :key="`${item.id}-${summaryItem.label}`"
-                        class="rounded-[10px] border border-slate-200 bg-white px-3 py-3"
+                        class="rounded-[10px] border border-slate-200 bg-white/90 px-3 py-3"
                     >
                         <div class="flex items-center gap-2">
                             <component :is="summaryItem.icon" class="h-4 w-4" :class="toneFor(item).accent" />
                             <p class="text-xs font-medium text-slate-500">{{ summaryItem.label }}</p>
                         </div>
-                        <p class="mt-2 text-sm font-bold text-slate-950">{{ summaryItem.value }}</p>
+                        <p class="mt-1.5 text-sm font-bold text-slate-950">{{ summaryItem.value }}</p>
                     </div>
                 </div>
 
-                <ul class="mt-4 space-y-1.5 text-sm text-slate-600">
+                <ul class="mt-4 space-y-2 text-sm text-slate-600">
                     <li v-for="highlight in packageHighlights(item.package_limits)" :key="highlight" class="flex items-start gap-2">
                         <Check class="mt-0.5 h-4 w-4 shrink-0" :class="toneFor(item).accent" />
                         <span>{{ highlight }}</span>
                     </li>
                 </ul>
 
-                <div class="mt-4 flex flex-wrap content-start gap-2">
+                <div class="mt-4 flex flex-wrap gap-2">
                     <span
                         v-for="badge in featureBadges(item.package_limits)"
                         :key="`${item.id}-${badge.label}`"
@@ -399,22 +581,34 @@ onMounted(async () => {
                     <button
                         type="button"
                         class="inline-flex w-full items-center justify-center rounded-[10px] px-4 py-3 text-sm font-semibold transition"
-                        :class="
-                            isCurrentPackage(item)
-                                ? 'border border-slate-200 bg-slate-100 text-slate-500'
-                                : toneFor(item).button
-                        "
+                        :class="isCurrentPackage(item) ? 'border border-slate-200 bg-slate-100 text-slate-500' : toneFor(item).button"
                         :disabled="isCurrentPackage(item)"
                         @click="orderPackage(item)"
                     >
-                        {{ isCurrentPackage(item) ? 'Dùng gói này' : item.id === featuredPackageId ? 'Nâng cấp ngay' : `Chọn gói ${item.name}` }}
+                        {{ isCurrentPackage(item) ? 'Đang dùng gói này' : item.id === featuredPackageId ? 'Chọn gói cơ bản' : `Chọn gói ${item.name}` }}
                     </button>
                 </div>
             </article>
         </section>
 
-        <section v-if="sortedPackages.length > 0" class="rounded-[10px] border border-slate-200 bg-white p-5 shadow-[0_24px_50px_-36px_rgba(15,23,42,0.36)]">
-            <h2 class="text-base font-bold text-slate-950">So sánh nhanh tính năng chính</h2>
+        <section
+            v-if="sortedPackages.length > 0"
+            class="rounded-[12px] border border-slate-200 bg-white p-4 shadow-[0_18px_42px_-34px_rgba(15,23,42,0.18)] sm:p-5"
+        >
+            <div class="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                    <h2 class="text-base font-bold text-slate-950">So sánh nhanh tính năng chính</h2>
+                    <p class="mt-1 text-sm text-slate-500">Bảng này giúp nhìn nhanh khác biệt giữa các gói.</p>
+                </div>
+                <button
+                    type="button"
+                    class="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-50"
+                    @click="showGuideModal = true"
+                >
+                    <CircleHelp class="h-3.5 w-3.5" />
+                    Cách đọc bảng
+                </button>
+            </div>
 
             <div class="mt-4 overflow-x-auto">
                 <table class="min-w-full divide-y divide-slate-200">
@@ -441,10 +635,7 @@ onMounted(async () => {
                             </td>
                             <td v-for="(value, index) in row.values" :key="`${row.key}-${index}`" class="px-3 py-3 text-center">
                                 <template v-if="typeof value === 'boolean'">
-                                    <span
-                                        class="inline-flex items-center justify-center"
-                                        :class="value ? 'text-emerald-600' : 'text-slate-300'"
-                                    >
+                                    <span class="inline-flex items-center justify-center" :class="value ? 'text-emerald-600' : 'text-slate-300'">
                                         <Check v-if="value" class="h-4 w-4" />
                                         <X v-else class="h-4 w-4" />
                                     </span>
@@ -459,39 +650,45 @@ onMounted(async () => {
             </div>
         </section>
 
-        <section class="grid gap-4 lg:grid-cols-3">
-            <article class="rounded-[10px] border border-slate-200 bg-white p-5 shadow-sm">
-                <div class="flex items-center gap-3">
-                    <div class="flex h-11 w-11 items-center justify-center rounded-[10px] bg-blue-50 text-blue-600">
-                        <HeartHandshake class="h-5 w-5" />
+        <section class="grid gap-3 lg:grid-cols-3">
+            <article class="rounded-[10px] border border-slate-200 bg-white p-4 shadow-sm">
+                <div class="flex items-start gap-3">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-[10px] bg-blue-50 text-blue-600">
+                        <HeartHandshake class="h-4.5 w-4.5" />
                     </div>
                     <div>
                         <h3 class="font-bold text-slate-950">Thanh toán bằng ví</h3>
-                        <p class="mt-1 text-sm text-slate-500">Đơn hàng package sẽ ưu tiên thanh toán trực tiếp bằng số dư ví hiện có.</p>
+                        <p class="mt-1 text-sm leading-6 text-slate-500">
+                            Đơn hàng package sẽ ưu tiên thanh toán trực tiếp bằng số dư ví hiện có.
+                        </p>
                     </div>
                 </div>
             </article>
 
-            <article class="rounded-[10px] border border-slate-200 bg-white p-5 shadow-sm">
-                <div class="flex items-center gap-3">
-                    <div class="flex h-11 w-11 items-center justify-center rounded-[10px] bg-emerald-50 text-emerald-600">
-                        <BadgeCheck class="h-5 w-5" />
+            <article class="rounded-[10px] border border-slate-200 bg-white p-4 shadow-sm">
+                <div class="flex items-start gap-3">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-[10px] bg-emerald-50 text-emerald-600">
+                        <BadgeCheck class="h-4.5 w-4.5" />
                     </div>
                     <div>
                         <h3 class="font-bold text-slate-950">Nâng cấp không mất dữ liệu</h3>
-                        <p class="mt-1 text-sm text-slate-500">Cron jobs hiện tại được giữ nguyên, hệ thống chỉ cập nhật giới hạn và tính năng của gói.</p>
+                        <p class="mt-1 text-sm leading-6 text-slate-500">
+                            Cron jobs hiện tại được giữ nguyên, hệ thống chỉ cập nhật giới hạn và tính năng của gói.
+                        </p>
                     </div>
                 </div>
             </article>
 
-            <article class="rounded-[10px] border border-slate-200 bg-white p-5 shadow-sm">
-                <div class="flex items-center gap-3">
-                    <div class="flex h-11 w-11 items-center justify-center rounded-[10px] bg-violet-50 text-violet-600">
-                        <Gem class="h-5 w-5" />
+            <article class="rounded-[10px] border border-slate-200 bg-white p-4 shadow-sm">
+                <div class="flex items-start gap-3">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-[10px] bg-violet-50 text-violet-600">
+                        <Gem class="h-4.5 w-4.5" />
                     </div>
                     <div>
                         <h3 class="font-bold text-slate-950">Phù hợp từ test đến production</h3>
-                        <p class="mt-1 text-sm text-slate-500">Bạn có thể bắt đầu với gói nhỏ và mở rộng dần khi lượng jobs, quota hoặc retention tăng lên.</p>
+                        <p class="mt-1 text-sm leading-6 text-slate-500">
+                            Có thể bắt đầu với gói nhỏ và mở rộng dần khi lượng jobs, quota hoặc retention tăng lên.
+                        </p>
                     </div>
                 </div>
             </article>

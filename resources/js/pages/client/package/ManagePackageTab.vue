@@ -42,6 +42,33 @@
                         </div>
                     </div>
 
+                    <div class="mt-4 flex items-center justify-between gap-3 rounded-[10px] border border-dashed border-slate-200 bg-slate-50 px-3 py-3">
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Tự gia hạn</p>
+                            <p class="mt-1 text-sm font-semibold text-slate-900">
+                                {{ subscription.auto_renew_enabled ? 'Đang bật' : 'Đang tắt' }}
+                            </p>
+                            <p class="mt-1 text-xs text-slate-500">
+                                {{ subscription.auto_renew_enabled ? 'Khi gói hết hạn hệ thống sẽ thử trừ ví để gia hạn tự động.' : 'Bạn có thể bật lại khi mua hoặc gia hạn gói tiếp theo.' }}
+                            </p>
+                        </div>
+                        <button
+                            type="button"
+                            role="switch"
+                            :aria-checked="subscription.auto_renew_enabled"
+                            class="relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition disabled:cursor-not-allowed disabled:opacity-60"
+                            :class="subscription.auto_renew_enabled ? 'bg-emerald-500' : 'bg-slate-300'"
+                            :disabled="updatingAutoRenew"
+                            @click="$emit('toggle-auto-renew')"
+                        >
+                            <span class="sr-only">Bật hoặc tắt tự gia hạn</span>
+                            <span
+                                class="inline-block h-5 w-5 rounded-full bg-white shadow-sm transition-transform"
+                                :class="subscription.auto_renew_enabled ? 'translate-x-6' : 'translate-x-1'"
+                            />
+                        </button>
+                    </div>
+
                     <div class="mt-4 rounded-[10px] border border-dashed border-slate-200 p-3">
                         <div class="flex items-center justify-between gap-3 text-xs">
                             <span class="font-semibold text-slate-500">Mức sử dụng slot</span>
@@ -138,12 +165,14 @@ import { computed } from 'vue';
 const props = defineProps<{
     subscription: CurrentUserSubscriptionType;
     buyingExtraCard: boolean;
+    updatingAutoRenew?: boolean;
 }>();
 
 defineEmits<{
     'buy-extra-card': [];
     'go-bank-manager': [];
     'go-upgrade-tab': [];
+    'toggle-auto-renew': [];
 }>();
 
 const totalSlots = computed(() => props.subscription.base_account_limit + props.subscription.extra_account_limit);

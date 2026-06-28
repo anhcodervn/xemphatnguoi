@@ -96,6 +96,7 @@ class PackageCheckoutService
             ->where('package_id', $package->id)
             ->where('source_subscription_id', $quote->sourceSubscription?->id)
             ->where('discount_amount', $quote->discountAmount)
+            ->where('auto_renew_enabled', (bool) ($payload['auto_renew_enabled'] ?? false))
             ->where('payment_status', PaymentStatus::Pending)
             ->where('status', PackageOrderStatus::Pending)
             ->where(function ($query): void {
@@ -118,6 +119,7 @@ class PackageCheckoutService
             'credit_amount' => $quote->creditAmount,
             'final_amount' => $quote->finalAmount,
             'payment_method' => $payload['payment_method'] ?? null,
+            'auto_renew_enabled' => (bool) ($payload['auto_renew_enabled'] ?? false),
             'payment_status' => PaymentStatus::Pending,
             'status' => PackageOrderStatus::Pending,
             'paid_at' => null,

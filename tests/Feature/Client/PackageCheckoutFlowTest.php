@@ -112,6 +112,49 @@ test('client package create order stores quote snapshot for upgrade', function (
     ]);
 });
 
+test('client package checkout stores auto renew choice on order and subscription', function () {
+    Carbon::setTestNow('2026-05-25 12:00:00');
+
+    $user = User::factory()->create();
+    $user->wallet()->update([
+        'balance' => 500000,
+        'hold_balance' => 0,
+        'total_spent' => 0,
+    ]);
+
+    $package = Package::factory()->create([
+        'status' => 'active',
+        'price' => 300000,
+        'duration_days' => 30,
+    ]);
+
+    Sanctum::actingAs($user);
+
+    $orderResponse = $this->postJson('/api/package/orders', [
+        'package_id' => $package->id,
+        'payment_method' => 'wallet',
+        'auto_renew_enabled' => true,
+    ])->assertCreated();
+
+    $orderId = $orderResponse->json('data.id');
+
+    $this->assertDatabaseHas('package_orders', [
+        'id' => $orderId,
+        'auto_renew_enabled' => true,
+    ]);
+
+    $payResponse = $this->postJson("/api/package/orders/{$orderId}/pay", [
+        'payment_method' => 'wallet',
+    ])->assertSuccessful();
+
+    $subscriptionId = $payResponse->json('data.subscription.id');
+
+    $this->assertDatabaseHas('user_subscriptions', [
+        'id' => $subscriptionId,
+        'auto_renew_enabled' => true,
+    ]);
+});
+
 test('client package pay with wallet debits balance and creates new subscription', function () {
     Carbon::setTestNow('2026-05-25 12:00:00');
 

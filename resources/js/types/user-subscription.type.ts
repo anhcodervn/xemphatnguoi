@@ -55,6 +55,7 @@ export interface CurrentUserSubscriptionType {
     base_account_limit: number;
     extra_account_limit: number;
     used_account: number;
+    auto_renew_enabled: boolean;
     starts_at: string | null;
     expires_at: string | null;
     status: string;

@@ -262,6 +262,16 @@
                     </div>
 
                     <div class="mt-5 border-t border-dashed border-slate-200 pt-5">
+                        <label class="mb-4 flex items-start gap-3 rounded-[8px] border border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-600">
+                            <input v-model="autoRenewEnabled" type="checkbox" class="mt-1 h-4 w-4 rounded border-slate-300 text-[#465fff] focus:ring-[#465fff]" />
+                            <span>
+                                <span class="block font-semibold text-slate-900">Auto renew</span>
+                                <span class="mt-1 block text-xs leading-5 text-slate-500">
+                                    When the package expires, the system will check your wallet balance and try to renew it automatically. If the balance is not enough, it will skip the renewal and send you an email notice.
+                                </span>
+                            </span>
+                        </label>
+
                         <div class="flex items-center justify-between gap-4">
                             <span class="text-sm text-slate-500">Tổng thanh toán</span>
                             <strong class="text-[28px] font-black tracking-tight text-[#6b4eff]">
@@ -405,6 +415,7 @@ const walletBalance = ref<string>('0');
 const quote = ref<PackageQuote | null>(null);
 const quoteError = ref('');
 const couponCode = ref('');
+const autoRenewEnabled = ref(false);
 
 const selectedPackage = computed<ClientPackage | null>(() => {
     return packages.value.find((item) => item.id === selectedPackageId.value) ?? null;
@@ -532,6 +543,7 @@ async function purchaseSelectedPackage(): Promise<void> {
             package_id: selectedPackage.value.id,
             payment_method: 'wallet',
             coupon_code: couponCode.value.trim() || undefined,
+            auto_renew_enabled: autoRenewEnabled.value,
         });
 
         const packageOrderId = orderResponse.data.data.id as number;

@@ -40,6 +40,10 @@ class StorePackageOrderRequest extends FormRequest
                 'string',
                 'max:255',
             ],
+            'auto_renew_enabled' => [
+                'nullable',
+                'boolean',
+            ],
         ];
     }
 }

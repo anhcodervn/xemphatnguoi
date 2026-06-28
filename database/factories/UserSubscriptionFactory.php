@@ -33,8 +33,12 @@ class UserSubscriptionFactory extends Factory
             'base_account_limit' => fake()->numberBetween(1, 5),
             'extra_account_limit' => 0,
             'used_account' => 0,
+            'auto_renew_enabled' => false,
             'starts_at' => $startsAt,
             'expires_at' => $expiresAt,
+            'auto_renew_attempted_at' => null,
+            'auto_renew_status' => null,
+            'auto_renew_message' => null,
             'status' => SubscriptionStatus::Active,
         ];
     }

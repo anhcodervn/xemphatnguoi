@@ -22,3 +22,8 @@ Schedule::command('cron:reset-usage-quota')
     ->daily()
     ->withoutOverlapping()
     ->onOneServer();
+
+Schedule::command('subscriptions:auto-renew-due')
+    ->everyMinute()
+    ->withoutOverlapping()
+    ->onOneServer();

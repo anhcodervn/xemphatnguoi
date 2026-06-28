@@ -83,10 +83,18 @@ test('autocron schema contains the core SaaS tables and columns', function () {
     expect(Schema::hasColumns('user_subscriptions', [
         'user_id',
         'package_id',
+        'auto_renew_enabled',
         'starts_at',
         'expires_at',
+        'auto_renew_attempted_at',
+        'auto_renew_status',
+        'auto_renew_message',
         'status',
         'package_limits',
+    ]))->toBeTrue();
+
+    expect(Schema::hasColumns('package_orders', [
+        'auto_renew_enabled',
     ]))->toBeTrue();
 });
 

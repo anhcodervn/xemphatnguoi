@@ -35,6 +35,7 @@ class PackageOrderFactory extends Factory
             'credit_amount' => 0,
             'final_amount' => max(0, $price - $discountAmount),
             'payment_method' => null,
+            'auto_renew_enabled' => false,
             'payment_status' => PaymentStatus::Pending,
             'status' => PackageOrderStatus::Pending,
             'paid_at' => null,

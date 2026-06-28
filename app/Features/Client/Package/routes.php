@@ -12,4 +12,5 @@ Route::middleware('auth:sanctum')
         Route::post('quote', 'quote')->name('quote');
         Route::post('orders', 'store')->name('orders.store');
         Route::post('orders/{packageOrder}/pay', 'pay')->name('orders.pay');
+        Route::patch('subscriptions/{userSubscription}/auto-renew', 'updateSubscriptionAutoRenew')->name('subscriptions.auto-renew.update');
     });

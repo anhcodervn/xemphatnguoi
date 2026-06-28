@@ -4,7 +4,9 @@ namespace App\Features\Client\Package\Controllers;
 
 use App\Features\Client\Package\Requests\PayPackageOrderRequest;
 use App\Features\Client\Package\Requests\QuotePackageOrderRequest;
+use App\Features\Client\Package\Requests\UpdateSubscriptionAutoRenewRequest;
 use App\Features\Client\Package\Services\PackageCheckoutService;
+use App\Features\Client\Package\Services\PackageService;
 use App\Features\Client\Profile\Actions\RecordUserLogAction;
 use App\Features\Client\Subscription\Requests\StorePackageOrderRequest;
 use App\Features\Client\Wallet\Services\WalletService;
@@ -12,6 +14,7 @@ use App\Features\Cron\Support\CronPackageCatalog;
 use App\Http\Controllers\Controller;
 use App\Models\Package;
 use App\Models\PackageOrder;
+use App\Models\UserSubscription;
 use App\Support\Enums\PackageStatus;
 use App\Support\Enums\SubscriptionStatus;
 use Illuminate\Http\JsonResponse;
@@ -21,6 +24,7 @@ class PackageController extends Controller
 {
     public function __construct(
         private readonly PackageCheckoutService $packageCheckoutService,
+        private readonly PackageService $packageService,
         private readonly WalletService $walletService,
         private readonly RecordUserLogAction $recordUserLogAction,
     ) {}
@@ -141,6 +145,37 @@ class PackageController extends Controller
                 'order' => $result['order'],
                 'subscription' => $result['subscription'],
                 'wallet' => $this->walletService->getWalletInfo($request->user()),
+            ],
+        ]);
+    }
+
+    public function updateSubscriptionAutoRenew(
+        UpdateSubscriptionAutoRenewRequest $request,
+        UserSubscription $userSubscription,
+    ): JsonResponse {
+        $this->authorize('manage', $userSubscription);
+
+        $enabled = (bool) $request->boolean('auto_renew_enabled');
+        $subscription = $this->packageService->updateAutoRenew($userSubscription, $enabled);
+
+        $this->recordUserLogAction->handle(
+            $request->user(),
+            'subscription_auto_renew_updated',
+            sprintf(
+                '%s tự gia hạn cho gói %s',
+                $enabled ? 'Bật' : 'Tắt',
+                $subscription->package_name,
+            ),
+            $request,
+        );
+
+        return response()->json([
+            'status' => true,
+            'message' => $enabled
+                ? 'Đã bật tự gia hạn cho gói hiện tại.'
+                : 'Đã tắt tự gia hạn cho gói hiện tại.',
+            'data' => [
+                'subscription' => $this->packageService->getCurrentUserSubscriptionInfo($request->user()),
             ],
         ]);
     }

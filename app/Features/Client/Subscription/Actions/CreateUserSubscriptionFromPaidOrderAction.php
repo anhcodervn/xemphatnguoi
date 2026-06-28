@@ -41,6 +41,7 @@ class CreateUserSubscriptionFromPaidOrderAction
             'base_account_limit' => (int) ($resolvedPackageLimits['max_cron_jobs'] ?? 0),
             'extra_account_limit' => $carryExtraAccountLimit,
             'used_account' => $carryUsedAccount,
+            'auto_renew_enabled' => (bool) $packageOrder->auto_renew_enabled,
             'starts_at' => $paidAt,
             'expires_at' => $expiresAt,
             'status' => $expiresAt->isPast() ? SubscriptionStatus::Expired : SubscriptionStatus::Active,

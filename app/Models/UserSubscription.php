@@ -24,8 +24,12 @@ class UserSubscription extends Model
         'base_account_limit',
         'extra_account_limit',
         'used_account',
+        'auto_renew_enabled',
         'starts_at',
         'expires_at',
+        'auto_renew_attempted_at',
+        'auto_renew_status',
+        'auto_renew_message',
         'status',
     ];
 
@@ -37,8 +41,10 @@ class UserSubscription extends Model
             'base_account_limit' => 'integer',
             'extra_account_limit' => 'integer',
             'used_account' => 'integer',
+            'auto_renew_enabled' => 'boolean',
             'starts_at' => 'datetime',
             'expires_at' => 'datetime',
+            'auto_renew_attempted_at' => 'datetime',
             'status' => SubscriptionStatus::class,
         ];
     }
