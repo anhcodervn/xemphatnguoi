@@ -13,6 +13,7 @@ export type RechargeConfigType = {
     api_base_url: string | null;
     api_key: string | null;
     api_secret: string | null;
+    webhook_secret: string | null;
     api_bank_id: number | null;
     api_ready: boolean;
     is_active: boolean;

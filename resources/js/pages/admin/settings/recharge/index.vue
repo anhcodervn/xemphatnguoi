@@ -15,6 +15,7 @@ type RechargeConfigForm = {
     transfer_prefix: string;
     api_key: string;
     api_secret: string;
+    webhook_secret: string;
     api_bank_id: string;
     is_active: boolean;
 };
@@ -116,6 +117,7 @@ function emptyForm(): RechargeConfigForm {
         transfer_prefix: 'NOIDUNG',
         api_key: '',
         api_secret: '',
+        webhook_secret: '',
         api_bank_id: '',
         is_active: true,
     };
@@ -140,6 +142,7 @@ async function openEditModal(config: RechargeConfigType): Promise<void> {
         transfer_prefix: config.transfer_prefix,
         api_key: config.api_key ?? '',
         api_secret: config.api_secret ?? '',
+        webhook_secret: config.webhook_secret ?? '',
         api_bank_id: config.api_bank_id ? String(config.api_bank_id) : '',
         is_active: config.is_active,
     };
@@ -241,6 +244,7 @@ async function saveConfig(): Promise<void> {
             api_base_url: isApiProvider.value ? 'https://apibankvn.com' : null,
             api_key: form.value.api_key.trim() || null,
             api_secret: form.value.api_secret.trim() || null,
+            webhook_secret: form.value.webhook_secret.trim() || null,
             api_bank_id: form.value.api_bank_id.trim() ? Number(form.value.api_bank_id) : null,
             is_active: form.value.is_active,
         };
@@ -440,6 +444,10 @@ async function removeConfig(config: RechargeConfigType): Promise<void> {
                             <label class="space-y-2">
                                 <span class="text-sm font-semibold text-slate-800">YOUR_API_SECRET</span>
                                 <input v-model="form.api_secret" type="text" class="w-full rounded-[10px] border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-indigo-400" />
+                            </label>
+                            <label class="space-y-2 md:col-span-2">
+                                <span class="text-sm font-semibold text-slate-800">WEBHOOK_SECRET</span>
+                                <input v-model="form.webhook_secret" type="text" class="w-full rounded-[10px] border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-indigo-400" />
                             </label>
                         </div>
 

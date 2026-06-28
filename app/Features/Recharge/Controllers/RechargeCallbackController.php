@@ -54,7 +54,7 @@ class RechargeCallbackController extends Controller
             return response()->json(ApiResponse::error('Khong tim thay cau hinh nap tien phu hop voi bank_id.'), 404);
         }
 
-        $secret = trim((string) ($config->api_secret ?? ''));
+        $secret = trim((string) ($config->webhook_secret ?? ''));
 
         if ($secret === '') {
             return response()->json(ApiResponse::error('Cau hinh webhook secret cua bank nay chua day du.'), 503);

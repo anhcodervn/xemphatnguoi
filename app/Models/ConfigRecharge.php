@@ -21,6 +21,7 @@ class ConfigRecharge extends Model
         'api_base_url',
         'api_key',
         'api_secret',
+        'webhook_secret',
         'api_bank_id',
         'is_active',
     ];
@@ -32,6 +33,7 @@ class ConfigRecharge extends Model
             'api_base_url' => 'string',
             'api_key' => 'string',
             'api_secret' => 'encrypted',
+            'webhook_secret' => 'encrypted',
             'api_bank_id' => 'integer',
             'is_active' => 'boolean',
         ];

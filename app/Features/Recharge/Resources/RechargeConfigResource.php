@@ -45,6 +45,7 @@ class RechargeConfigResource extends JsonResource
             'api_base_url' => $this->api_base_url,
             'api_key' => $this->api_key,
             'api_secret' => $this->api_secret,
+            'webhook_secret' => $this->webhook_secret,
             'api_bank_id' => $this->api_bank_id,
             'api_ready' => $partnerService->isConfigured($this->resource),
             'is_active' => (bool) $this->is_active,

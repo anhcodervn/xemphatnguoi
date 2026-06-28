@@ -33,6 +33,7 @@ class UpdateRechargeConfigRequest extends FormRequest
             'api_base_url' => ['nullable', 'url', 'max:255'],
             'api_key' => ['nullable', 'string', 'max:120'],
             'api_secret' => ['nullable', 'string', 'max:255'],
+            'webhook_secret' => ['nullable', 'string', 'max:255'],
             'api_bank_id' => ['nullable', 'integer', 'min:1'],
             'is_active' => ['required', 'boolean'],
         ];
@@ -49,6 +50,9 @@ class UpdateRechargeConfigRequest extends FormRequest
                 : null,
             'api_secret' => filled($this->input('api_secret'))
                 ? trim((string) $this->input('api_secret'))
+                : null,
+            'webhook_secret' => filled($this->input('webhook_secret'))
+                ? trim((string) $this->input('webhook_secret'))
                 : null,
             'api_bank_id' => filled($this->input('api_bank_id'))
                 ? (int) $this->input('api_bank_id')
@@ -67,6 +71,7 @@ class UpdateRechargeConfigRequest extends FormRequest
                 'api_base_url' => 'URL API',
                 'api_key' => 'API key',
                 'api_secret' => 'API secret',
+                'webhook_secret' => 'Webhook secret',
                 'api_bank_id' => 'bank_id đối tác',
             ] as $field => $label) {
                 if (! filled($this->input($field))) {
@@ -88,6 +93,7 @@ class UpdateRechargeConfigRequest extends FormRequest
             'api_base_url' => 'URL API',
             'api_key' => 'API key',
             'api_secret' => 'API secret',
+            'webhook_secret' => 'Webhook secret',
             'api_bank_id' => 'bank_id đối tác',
             'is_active' => 'trạng thái kích hoạt',
         ];
