@@ -30,7 +30,7 @@ class StoreCronJobRequest extends FormRequest
             'body' => ['nullable'],
             'query_params' => ['nullable', 'array'],
             'cron_expression' => ['nullable', 'string', 'max:255'],
-            'interval_seconds' => ['nullable', 'integer', 'min:60'],
+            'interval_seconds' => ['nullable', 'integer', 'min:1'],
             'timezone' => ['nullable', 'timezone:all'],
             'timeout_seconds' => ['nullable', 'integer', 'min:1', 'max:120'],
             'connect_timeout_seconds' => ['nullable', 'integer', 'min:1', 'max:120'],

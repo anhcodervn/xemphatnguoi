@@ -100,7 +100,7 @@ class CronDispatchDueCommand extends Command
         }
 
         $cronJob->forceFill([
-            'next_run_at' => $cronScheduleService->calculateNextRun($cronJob, $from),
+            'next_run_at' => $cronScheduleService->calculateNextRun($cronJob, $from, false),
         ])->save();
     }
 }

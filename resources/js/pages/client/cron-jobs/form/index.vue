@@ -210,7 +210,7 @@ onMounted(async () => {
                 <div class="mt-4 grid gap-3 md:grid-cols-2">
                     <label class="space-y-1.5">
                         <span class="text-sm font-semibold text-slate-700">Interval seconds</span>
-                        <input v-model.number="form.interval_seconds" type="number" min="60" placeholder="Ví dụ: 300 = 5 phút" class="h-11 w-full rounded-[10px] border border-slate-200 px-3 text-sm outline-none focus:border-sky-500" />
+                        <input v-model.number="form.interval_seconds" type="number" min="1" placeholder="Ví dụ: 1 hoặc 300" class="h-11 w-full rounded-[10px] border border-slate-200 px-3 text-sm outline-none focus:border-sky-500" />
                     </label>
                     <label class="space-y-1.5">
                         <span class="text-sm font-semibold text-slate-700">Cron expression</span>
@@ -375,3 +375,4 @@ onMounted(async () => {
         </form>
     </div>
 </template>
+

@@ -138,7 +138,7 @@ class CronJobConfigurationService
         }
 
         if ($intervalSeconds !== null && $intervalSeconds > 0) {
-            $minimum = max(60, (int) ($limits['min_interval_seconds'] ?? 60));
+            $minimum = max(1, (int) ($limits['min_interval_seconds'] ?? 60));
 
             if ($intervalSeconds < $minimum) {
                 throw new ApiException(sprintf('Khoảng chạy tối thiểu của gói hiện tại là %d giây.', $minimum), 422);

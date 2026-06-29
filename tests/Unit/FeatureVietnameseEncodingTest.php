@@ -1,38 +1,70 @@
 <?php
 
-test('app features php files do not contain mojibake vietnamese sequences', function () {
-    $featureFiles = new RecursiveIteratorIterator(
-        new RecursiveDirectoryIterator(dirname(__DIR__, 2).DIRECTORY_SEPARATOR.'app'.DIRECTORY_SEPARATOR.'Features'),
-    );
-
-    $suspiciousPatterns = [
-        '/Ã./u',
-        '/Ä./u',
-        '/Æ./u',
-        '/Â./u',
-        '/á»/u',
-        '/áº/u',
-        '/â€|â€œ|â€|â€˜|â€™/u',
+test('project text files do not contain mojibake vietnamese sequences', function () {
+    $projectRoot = dirname(__DIR__, 2).DIRECTORY_SEPARATOR;
+    $directories = [
+        'app',
+        'resources',
+        'routes',
+        'tests',
+        'docs',
+        'config',
+    ];
+    $allowedExtensions = ['php', 'vue', 'ts', 'js', 'md', 'json', 'txt'];
+    $excludedFiles = [
+        'tests'.DIRECTORY_SEPARATOR.'Unit'.DIRECTORY_SEPARATOR.'FeatureVietnameseEncodingTest.php',
+    ];
+    $suspiciousFragments = [
+        'Ãƒ',
+        'Ã„',
+        'Ã†',
+        'Ã‚',
+        'Ã¡Â»',
+        'Ã¡Âº',
+        'Ã¢â‚¬',
+        'á»',
+        'áº',
     ];
 
     $filesWithMojibake = [];
 
-    foreach ($featureFiles as $file) {
-        if (! $file->isFile() || $file->getExtension() !== 'php') {
-            continue;
-        }
+    foreach ($directories as $directory) {
+        $files = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($projectRoot.$directory, FilesystemIterator::SKIP_DOTS),
+        );
 
-        $contents = file_get_contents($file->getPathname());
+        foreach ($files as $file) {
+            if (! $file->isFile()) {
+                continue;
+            }
 
-        if (! is_string($contents)) {
-            continue;
-        }
+            $relativePath = str_replace($projectRoot, '', $file->getPathname());
 
-        foreach ($suspiciousPatterns as $pattern) {
-            if (preg_match($pattern, $contents) === 1) {
-                $projectRoot = dirname(__DIR__, 2).DIRECTORY_SEPARATOR;
-                $filesWithMojibake[] = str_replace($projectRoot, '', $file->getPathname());
-                break;
+            if (in_array($relativePath, $excludedFiles, true)) {
+                continue;
+            }
+
+            $extension = $file->getExtension();
+            $isBladePhp = str_ends_with($file->getFilename(), '.blade.php');
+
+            if (! in_array($extension, $allowedExtensions, true) && ! $isBladePhp) {
+                continue;
+            }
+
+            $contents = file_get_contents($file->getPathname());
+
+            if (! is_string($contents) || ! mb_check_encoding($contents, 'UTF-8')) {
+                $filesWithMojibake[] = $relativePath.' (invalid UTF-8)';
+
+                continue;
+            }
+
+            foreach ($suspiciousFragments as $fragment) {
+                if (str_contains($contents, $fragment)) {
+                    $filesWithMojibake[] = $relativePath;
+
+                    break;
+                }
             }
         }
     }

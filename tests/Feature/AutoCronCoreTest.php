@@ -10,6 +10,8 @@ use App\Models\User;
 use App\Models\UserSubscription;
 use App\Support\Enums\PackageStatus;
 use App\Support\Enums\SubscriptionStatus;
+use Carbon\CarbonImmutable;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
 use Laravel\Sanctum\Sanctum;
@@ -205,6 +207,72 @@ test('dispatch due command advances overdue jobs from current time instead of re
 
     expect($job->next_run_at)->not->toBeNull()
         ->and($job->next_run_at?->gte($startedAt->copy()->addSeconds(55)))->toBeTrue();
+});
+
+test('dispatch due scheduler repeats every second to support one-second intervals', function () {
+    $event = collect(app(Schedule::class)->events())
+        ->first(fn ($scheduledEvent) => str_contains((string) $scheduledEvent->command, 'cron:dispatch-due'));
+
+    expect($event)->not->toBeNull()
+        ->and($event->expression)->toBe('* * * * *');
+
+    $reflection = new ReflectionClass($event);
+    $repeatSeconds = null;
+
+    if ($reflection->hasProperty('repeatSeconds')) {
+        $property = $reflection->getProperty('repeatSeconds');
+        $property->setAccessible(true);
+        $repeatSeconds = $property->getValue($event);
+    }
+
+    expect($repeatSeconds)->toBe(1);
+});
+
+test('dispatch due command advances cron expressions beyond the current slot so they queue only once', function () {
+    Queue::fake();
+    CarbonImmutable::setTestNow(CarbonImmutable::parse('2026-06-30 00:30:01', 'Asia/Ho_Chi_Minh'));
+
+    try {
+        $user = User::factory()->create();
+        autocronActiveSubscription($user, [
+            'queue_name' => 'cron-default',
+        ]);
+
+        $job = autocronJob($user, [
+            'cron_expression' => '30 0 * * *',
+            'interval_seconds' => null,
+            'next_run_at' => now()->subSecond(),
+        ]);
+
+        $this->artisan('cron:dispatch-due --limit=10')->assertExitCode(0);
+        $this->artisan('cron:dispatch-due --limit=10')->assertExitCode(0);
+
+        Queue::assertPushed(RunHttpCronJob::class, 1);
+
+        expect($job->fresh()->next_run_at)->not->toBeNull()
+            ->and($job->fresh()->next_run_at?->format('Y-m-d H:i:s'))->toBe('2026-07-01 00:30:00');
+    } finally {
+        CarbonImmutable::setTestNow();
+    }
+});
+
+test('client can create a one-second interval job when the package allows it', function () {
+    $user = User::factory()->create();
+    autocronActiveSubscription($user, [
+        'min_interval_seconds' => 1,
+    ]);
+
+    Sanctum::actingAs($user);
+
+    $this->postJson('/api/client/cron-jobs', [
+        'name' => 'One second pulse',
+        'url' => 'https://example.com/pulse',
+        'method' => 'GET',
+        'body_type' => 'none',
+        'interval_seconds' => 1,
+    ])
+        ->assertCreated()
+        ->assertJsonPath('data.cron_job.interval_seconds', 1);
 });
 
 test('run http cron job stores a success log and updates counters', function () {

@@ -263,7 +263,7 @@ onMounted(async () => {
                         </div>
                         <div class="space-y-2">
                             <label class="text-sm font-medium text-slate-700">Min interval seconds</label>
-                            <input v-model.number="form.package_limits.min_interval_seconds" type="number" min="30" step="30" :class="inputClass" />
+                            <input v-model.number="form.package_limits.min_interval_seconds" type="number" min="1" step="1" :class="inputClass" />
                         </div>
                         <div class="space-y-2">
                             <label class="text-sm font-medium text-slate-700">Max logs per job</label>
