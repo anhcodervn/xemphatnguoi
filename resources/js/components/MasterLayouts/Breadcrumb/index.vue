@@ -1,20 +1,20 @@
 <template>
-    <div class="flex flex-col gap-2 rounded-lg border border-slate-200 bg-white px-4 py-3 shadow-sm">
-        <div class="flex items-center gap-2 text-sm text-slate-500">
+    <div class="flex flex-col gap-2 rounded-[18px] border border-teal-100 bg-white/90 px-5 py-4 shadow-[0_18px_40px_-26px_rgba(8,145,178,0.28)] backdrop-blur-sm">
+        <div class="flex items-center gap-2 text-sm text-teal-700/75">
             <template v-for="(item, index) in resolvedItems" :key="`${item.label}-${index}`">
                 <template v-if="index > 0">
-                    <span class="mr-2 text-slate-300">/</span>
+                    <span class="mr-2 text-teal-200">/</span>
                 </template>
 
                 <router-link
                     v-if="item.to && !item.active"
                     :to="item.to"
-                    class="transition-colors hover:text-blue-600"
+                    class="transition-colors hover:text-teal-700"
                 >
                     {{ item.label }}
                 </router-link>
 
-                <span v-else class="font-medium text-slate-900">
+                <span v-else class="font-medium text-teal-950">
                     {{ item.label }}
                 </span>
             </template>
@@ -22,10 +22,10 @@
 
         <div class="flex items-center justify-between gap-3">
             <div>
-                <h1 class="text-lg font-semibold text-slate-900">
+                <h1 class="text-lg font-semibold text-teal-950">
                     {{ resolvedTitle }}
                 </h1>
-                <p v-if="description" class="text-sm text-slate-500">
+                <p v-if="description" class="text-sm text-slate-600">
                     {{ description }}
                 </p>
             </div>
@@ -58,26 +58,17 @@ const props = withDefaults(
         title: '',
         description: '',
         items: () => [],
-        homeLabel: 'Dashboard',
+        homeLabel: 'Trang chủ',
     },
 );
 
 const routeLabelMap: Record<string, string> = {
     'admin.dashboard': 'Dashboard',
     'admin.users.index': 'Người dùng',
+    'admin.packages.index': 'Gói captcha',
     'admin.users.show': 'Chi tiết người dùng',
     'admin.users.wallet-transaction': 'Lịch sử dòng tiền',
     'admin.users.wallet-transaction.show': 'Lịch sử dòng tiền',
-    'admin.cron-jobs.index': 'Cron Jobs',
-    'admin.system-logs.index': 'Nhật ký hệ thống',
-    'admin.packages.index': 'Gói thuê',
-    'admin.packages.create': 'Tạo gói',
-    'admin.packages.edit': 'Cập nhật gói',
-    'admin.packages.orders': 'Đơn hàng gói',
-    'admin.couponts.index': 'Mã giảm giá',
-    'admin.couponts.create': 'Tạo mã giảm giá',
-    'admin.couponts.edit': 'Cập nhật mã giảm giá',
-    'admin.couponts.history': 'Lịch sử coupon',
     'admin.notifications.index': 'Thông báo',
     'admin.notifications.create': 'Tạo thông báo',
     'admin.notifications.edit': 'Cập nhật thông báo',
@@ -93,15 +84,14 @@ const routeLabelMap: Record<string, string> = {
     'admin.seo.sitemaps': 'Sitemap và index',
     'admin.settings.general': 'Cấu hình chung',
     'admin.settings.content': 'Cấu hình nội dung',
+    'admin.settings.recharge': 'Cấu hình nạp tiền',
     'admin.error.404': 'Trang quản trị không tồn tại',
     'client.home': 'Trang chủ',
-    'client.cron-jobs': 'Cron Jobs',
-    'client.cron-jobs.create': 'Tạo cron job',
-    'client.cron-jobs.show': 'Chi tiết cron job',
-    'client.cron-jobs.edit': 'Cập nhật cron job',
-    'client.logs': 'Nhật ký chạy',
-    'client.alerts': 'Kênh cảnh báo',
-    'client.package': 'Gói dịch vụ',
+    'client.services': 'Dịch vụ captcha',
+    'client.packages': 'Gói captcha',
+    'client.captcha-history': 'Lịch sử giải captcha',
+    'client.wallet': 'Ví và nạp tiền',
+    'client.api-docs': 'Tài liệu API',
     'client.profile': 'Hồ sơ tài khoản',
     'client.contact': 'Liên hệ và góp ý',
     'client.error.404': 'Trang không tồn tại',

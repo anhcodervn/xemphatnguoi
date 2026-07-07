@@ -5,7 +5,7 @@ namespace App\Features\Admin\User\Services;
 use App\Features\Admin\PackageOrder\Resources\AdminPackageOrderResource;
 use App\Features\Admin\User\Resources\AdminUserResource;
 use App\Features\Admin\WalletTransaction\Resources\AdminWalletTransactionResource;
-use App\Models\CronUsageCounter;
+use App\Models\CaptchaTask;
 use App\Models\PackageOrder;
 use App\Models\User;
 use App\Models\UserLog;
@@ -56,15 +56,15 @@ class AdminUserService
                         ->orderByDesc('expires_at');
                 },
             ])
-            ->withCount(['packageOrders', 'cronJobs', 'cronAlertChannels'])
+            ->withCount(['packageOrders', 'captchaTasks', 'apiKeys'])
             ->findOrFail($user->id);
 
         $wallet = $user->wallet;
         $currentSubscription = $user->userSubscriptions->first();
-        $runsToday = (int) CronUsageCounter::query()
+        $solvedTaskCount = (int) CaptchaTask::query()
             ->where('user_id', $user->id)
-            ->whereDate('date', today()->toDateString())
-            ->value('total_runs');
+            ->where('status', CaptchaTask::STATUS_SOLVED)
+            ->count();
 
         return [
             'user' => $user,
@@ -73,9 +73,9 @@ class AdminUserService
             'stats' => [
                 'total_spent' => $wallet instanceof Wallet ? (float) $wallet->total_spent : 0.0,
                 'package_order_count' => $user->package_orders_count,
-                'cron_job_count' => $user->cron_jobs_count,
-                'alert_channel_count' => $user->cron_alert_channels_count,
-                'runs_today' => $runsToday,
+                'captcha_task_count' => $user->captcha_tasks_count,
+                'api_key_count' => $user->api_keys_count,
+                'solved_task_count' => $solvedTaskCount,
             ],
             'latest_login' => [
                 'at' => $user->last_login_at?->toISOString(),

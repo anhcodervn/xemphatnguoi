@@ -24,6 +24,8 @@ class UserSubscription extends Model
         'base_account_limit',
         'extra_account_limit',
         'used_account',
+        'used_captcha_quota',
+        'captcha_usage_by_service',
         'auto_renew_enabled',
         'starts_at',
         'expires_at',
@@ -41,6 +43,8 @@ class UserSubscription extends Model
             'base_account_limit' => 'integer',
             'extra_account_limit' => 'integer',
             'used_account' => 'integer',
+            'used_captcha_quota' => 'integer',
+            'captcha_usage_by_service' => 'array',
             'auto_renew_enabled' => 'boolean',
             'starts_at' => 'datetime',
             'expires_at' => 'datetime',
@@ -72,5 +76,15 @@ class UserSubscription extends Model
     public function accounts(): HasMany
     {
         return $this->hasMany(Account::class, 'subscription_id');
+    }
+
+    public function captchaTasks(): HasMany
+    {
+        return $this->hasMany(CaptchaTask::class, 'package_subscription_id');
+    }
+
+    public function apiKeys(): HasMany
+    {
+        return $this->hasMany(ApiKey::class, 'user_subscription_id');
     }
 }

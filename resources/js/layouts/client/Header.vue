@@ -32,36 +32,11 @@ const loggingOut = ref(false);
 const unreadCount = computed(() => notifications.value.filter((item) => !item.is_read).length);
 
 const userActions: UserActionItem[] = [
-    {
-        label: 'Quản trị website',
-        icon: UserRound,
-        href: '/admin',
-        isAdmin: true,
-    },
-    {
-        label: 'Ví và nạp tiền',
-        icon: Wallet,
-        href: '/wallet',
-        isAdmin: false,
-    },
-    {
-        label: 'Thông tin tài khoản',
-        icon: UserRound,
-        href: '/profile',
-        isAdmin: false,
-    },
-    {
-        label: 'Cài đặt mật khẩu',
-        icon: Settings,
-        href: '/profile?tab=password',
-        isAdmin: false,
-    },
-    {
-        label: 'Đăng xuất',
-        icon: LogOut,
-        isAdmin: false,
-        action: 'logout',
-    },
+    { label: 'Quản trị website', icon: UserRound, href: '/admin', isAdmin: true },
+    { label: 'Ví và nạp tiền', icon: Wallet, href: '/wallet', isAdmin: false },
+    { label: 'Thông tin tài khoản', icon: UserRound, href: '/profile', isAdmin: false },
+    { label: 'Cài đặt mật khẩu', icon: Settings, href: '/profile?tab=password', isAdmin: false },
+    { label: 'Đăng xuất', icon: LogOut, isAdmin: false, action: 'logout' },
 ];
 
 const formatTime = (value: string | null): string => {
@@ -139,12 +114,12 @@ onMounted(loadNotifications);
 </script>
 
 <template>
-    <header class="fixed left-0 right-0 top-0 z-30 border-b border-slate-200/80 bg-white/85 backdrop-blur lg:left-72">
+    <header class="fixed left-0 right-0 top-0 z-30 border-b border-sky-100 bg-white/92 backdrop-blur lg:left-72">
         <div class="flex items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
             <div class="flex items-center">
                 <button
                     type="button"
-                    class="rounded-2xl bg-white p-2.5 text-slate-700 shadow-sm ring-1 ring-slate-200 lg:hidden"
+                    class="rounded-2xl border border-sky-100 bg-white p-2.5 text-blue-700 shadow-[0_10px_28px_rgba(15,23,42,0.06)] transition hover:bg-sky-50 lg:hidden"
                     @click="$emit('toggleSidebar')"
                 >
                     <MenuIcon class="h-5 w-5" />
@@ -153,11 +128,9 @@ onMounted(loadNotifications);
 
             <div class="flex items-center gap-3">
                 <Menu as="div" class="relative">
-                    <MenuButton
-                        class="relative rounded-2xl border border-slate-200 bg-white p-2.5 text-slate-600 shadow-sm transition hover:bg-slate-50"
-                    >
+                    <MenuButton class="relative rounded-full border border-sky-100 bg-white p-3 text-slate-700 shadow-[0_10px_28px_rgba(15,23,42,0.06)] transition hover:bg-sky-50 hover:text-blue-700">
                         <Bell class="h-4 w-4" />
-                        <span v-if="unreadCount > 0" class="absolute right-2 top-2 h-2 w-2 rounded-full bg-orange-400" />
+                        <span v-if="unreadCount > 0" class="absolute right-3 top-3 h-2 w-2 rounded-full bg-orange-400" />
                     </MenuButton>
 
                     <Transition
@@ -169,16 +142,16 @@ onMounted(loadNotifications);
                         leave-to-class="translate-y-1 scale-[0.98] opacity-0"
                     >
                         <MenuItems
-                            class="fixed inset-x-4 top-16 z-40 w-auto rounded-3xl border border-slate-200 bg-white p-2 shadow-[0_18px_50px_rgba(15,23,42,0.12)] outline-none sm:absolute sm:left-auto sm:right-0 sm:top-auto sm:mt-3 sm:w-[19rem] sm:origin-top-right"
+                            class="fixed inset-x-4 top-16 z-40 w-auto rounded-3xl border border-sky-100 bg-white p-2 shadow-[0_18px_40px_rgba(37,99,235,0.12)] outline-none sm:absolute sm:left-auto sm:right-0 sm:top-auto sm:mt-3 sm:w-[19rem] sm:origin-top-right"
                         >
                             <div class="flex items-center justify-between px-3 py-2">
                                 <div>
-                                    <p class="text-sm font-semibold text-slate-900">Thông báo của bạn</p>
-                                    <p class="text-xs text-slate-400">{{ unreadCount }} mục chưa đọc</p>
+                                    <p class="text-sm font-semibold text-slate-950">Thông báo của bạn</p>
+                                    <p class="text-xs text-slate-500">{{ unreadCount }} mục chưa đọc</p>
                                 </div>
                                 <button
                                     type="button"
-                                    class="rounded-xl p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 disabled:opacity-60"
+                                    class="rounded-xl p-2 text-blue-600 transition hover:bg-sky-50 hover:text-blue-700 disabled:opacity-60"
                                     :disabled="markingAllRead || unreadCount === 0"
                                     @click="markAllRead"
                                 >
@@ -194,18 +167,12 @@ onMounted(loadNotifications);
                                     <button
                                         type="button"
                                         class="w-full rounded-2xl px-3 py-3 text-left transition"
-                                        :class="[active ? 'bg-slate-50' : '', item.is_read ? 'opacity-80' : '']"
+                                        :class="[active ? 'bg-sky-50' : '', item.is_read ? 'opacity-80' : '']"
                                         @click="onClickNotification(item)"
                                     >
-                                        <p class="text-sm font-medium text-slate-800">
-                                            {{ item.title }}
-                                        </p>
-                                        <p class="mt-1 line-clamp-2 text-xs text-slate-500">
-                                            {{ item.content }}
-                                        </p>
-                                        <p class="mt-1 text-xs text-slate-400">
-                                            {{ formatTime(item.created_at) }}
-                                        </p>
+                                        <p class="text-sm font-medium text-slate-800">{{ item.title }}</p>
+                                        <p class="mt-1 line-clamp-2 text-xs text-slate-500">{{ item.content }}</p>
+                                        <p class="mt-1 text-xs text-slate-400">{{ formatTime(item.created_at) }}</p>
                                     </button>
                                 </MenuItem>
                             </div>
@@ -214,17 +181,15 @@ onMounted(loadNotifications);
                 </Menu>
 
                 <Menu as="div" class="relative">
-                    <MenuButton
-                        class="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-3 py-1.5 shadow-sm transition hover:bg-slate-50"
-                    >
-                        <div class="flex h-9 w-9 items-center justify-center rounded-full bg-[#212120] text-sm font-semibold text-white">A</div>
-                        <div>
-                            <p class="max-w-[50px] truncate text-sm font-medium text-slate-900 md:max-w-[100px] lg:max-w-[200px] xl:max-w-[250px]">
-                                {{ userStore.user?.email }}
-                            </p>
-                            <p class="text-xs text-slate-400">{{ formatCash(parseInt(userStore.user?.wallet?.balance ?? '0')) }}đ</p>
+                    <MenuButton class="flex items-center gap-3 rounded-full border border-sky-100 bg-white px-4 py-2 shadow-[0_10px_28px_rgba(15,23,42,0.06)] transition hover:bg-sky-50">
+                        <div class="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-r from-blue-600 to-cyan-500 text-sm font-semibold text-white">
+                            A
                         </div>
-                        <ChevronDown class="hidden h-4 w-4 text-slate-400 sm:block" />
+                        <div class="text-left">
+                            <p class="max-w-[90px] truncate text-sm font-semibold text-slate-900 sm:max-w-[190px]">{{ userStore.user?.email }}</p>
+                            <p class="text-xs text-slate-500">{{ formatCash(parseInt(userStore.user?.wallet?.balance ?? '0')) }}đ</p>
+                        </div>
+                        <ChevronDown class="hidden h-4 w-4 text-blue-500 sm:block" />
                     </MenuButton>
 
                     <Transition
@@ -235,12 +200,10 @@ onMounted(loadNotifications);
                         leave-from-class="translate-y-0 scale-100 opacity-100"
                         leave-to-class="translate-y-1 scale-[0.98] opacity-0"
                     >
-                        <MenuItems
-                            class="absolute right-0 mt-3 w-56 max-w-[calc(100vw-2rem)] origin-top-right rounded-3xl border border-slate-200 bg-white p-2 shadow-[0_18px_50px_rgba(15,23,42,0.12)] outline-none"
-                        >
+                        <MenuItems class="absolute right-0 mt-3 w-56 max-w-[calc(100vw-2rem)] origin-top-right rounded-3xl border border-sky-100 bg-white p-2 shadow-[0_18px_40px_rgba(37,99,235,0.12)] outline-none">
                             <div class="px-3 py-2">
-                                <p class="text-sm font-semibold text-slate-900">{{ userStore.user?.full_name ?? userStore.user?.username }}</p>
-                                <p class="text-xs text-slate-400">{{ userStore.user?.email }}</p>
+                                <p class="text-sm font-semibold text-slate-950">{{ userStore.user?.full_name ?? userStore.user?.username }}</p>
+                                <p class="text-xs text-slate-500">{{ userStore.user?.email }}</p>
                             </div>
 
                             <div class="mt-1 space-y-1">
@@ -249,7 +212,7 @@ onMounted(loadNotifications);
                                         v-if="item.href && (!item.isAdmin || userStore.user?.role === 'admin')"
                                         :to="item.href"
                                         class="flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left text-sm transition"
-                                        :class="active ? 'bg-slate-50 text-slate-900' : 'text-slate-600'"
+                                        :class="active ? 'bg-sky-50 text-blue-700' : 'text-slate-600'"
                                     >
                                         <component :is="item.icon" class="h-4 w-4" />
                                         <span>{{ item.label }}</span>

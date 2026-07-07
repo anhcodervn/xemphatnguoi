@@ -76,6 +76,8 @@ class SendMessage
         Http::connectTimeout(5)
             ->timeout(10)
             ->post($url, [
+                'username' => (string) config('services.discord.bot_name', 'GiaiCaptcha Monitor'),
+                'avatar_url' => (string) config('services.discord.bot_avatar_url', ''),
                 'content' => $message,
             ])
             ->throw();
@@ -177,6 +179,10 @@ class SendMessage
             sprintf('- Thời gian: `%s`', now()->format('Y-m-d H:i:s T')),
         ];
 
+        foreach (self::contextDetails() as $label => $value) {
+            $lines[] = sprintf('- %s: %s', $label, self::normalizeDiscordValue($value));
+        }
+
         foreach ($details as $label => $value) {
             $lines[] = sprintf('- %s: %s', $label, self::normalizeDiscordValue($value));
         }
@@ -205,5 +211,23 @@ class SendMessage
         $encoded = json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
         return sprintf('`%s`', Str::limit($encoded ?: '[unserializable]', 300));
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private static function contextDetails(): array
+    {
+        $context = config('services.discord.context', []);
+
+        return array_filter([
+            'App' => trim((string) Arr::get($context, 'app_name', '')),
+            'Môi trường' => trim((string) Arr::get($context, 'app_env', '')),
+            'URL' => trim((string) Arr::get($context, 'app_url', '')),
+            'Server' => trim((string) Arr::get($context, 'server_name', '')),
+            'IP' => trim((string) Arr::get($context, 'server_ip', '')),
+            'Role' => trim((string) Arr::get($context, 'server_role', '')),
+            'Region' => trim((string) Arr::get($context, 'server_region', '')),
+        ], static fn (string $value): bool => $value !== '');
     }
 }

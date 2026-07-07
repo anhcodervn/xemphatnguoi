@@ -1,6 +1,5 @@
 <?php
 
-use App\Features\Client\Package\Services\PackageService;
 use App\Features\Client\Wallet\Services\WalletService;
 use App\Models\User;
 use App\Support\SettingStore;
@@ -11,38 +10,18 @@ if (file_exists(base_path('app/Features/Auth/routes.php'))) {
     require base_path('app/Features/Auth/routes.php');
 }
 
-if (file_exists(base_path('app/Features/Client/Package/routes.php'))) {
-    require base_path('app/Features/Client/Package/routes.php');
-}
-
-if (file_exists(base_path('app/Features/Client/CronJob/routes.php'))) {
-    require base_path('app/Features/Client/CronJob/routes.php');
-}
-
-if (file_exists(base_path('app/Features/Client/CronAlert/routes.php'))) {
-    require base_path('app/Features/Client/CronAlert/routes.php');
-}
-
 if (file_exists(base_path('app/Features/Client/ApiKey/routes.php'))) {
     require base_path('app/Features/Client/ApiKey/routes.php');
-}
-
-if (file_exists(base_path('app/Features/Cron/routes.php'))) {
-    require base_path('app/Features/Cron/routes.php');
 }
 
 if (file_exists(base_path('app/Features/Recharge/routes.php'))) {
     require base_path('app/Features/Recharge/routes.php');
 }
 
-if (file_exists(base_path('app/Features/Api/V1/routes.php'))) {
-    require base_path('app/Features/Api/V1/routes.php');
-}
-
 Route::prefix('')->group(function (): void {
     Route::get('/system-settings', function (SettingStore $settingStore) {
         $defaults = [
-            'site_name' => config('app.name', 'AutoCron'),
+            'site_name' => config('app.name', 'GiaiCaptcha.vn'),
             'site_domain' => '',
             'site_description' => '',
             'site_active' => true,
@@ -86,7 +65,7 @@ Route::prefix('')->group(function (): void {
         ]);
     });
 
-    Route::get('/user', function (Request $request, WalletService $walletService, PackageService $packageService) {
+    Route::get('/user', function (Request $request, WalletService $walletService) {
         $user = $request->user();
 
         if (! $user instanceof User) {
@@ -106,13 +85,20 @@ Route::prefix('')->group(function (): void {
                 'name',
             ]),
             'wallet' => $walletService->getWalletInfo($user),
-            'user_subscriptions' => $packageService->getCurrentUserSubscriptionInfo($user),
         ];
     });
 })->middleware('auth:sanctum');
 
 if (file_exists(base_path('app/Features/Client/Profile/routes.php'))) {
     require base_path('app/Features/Client/Profile/routes.php');
+}
+
+if (file_exists(base_path('app/Features/Client/Package/routes.php'))) {
+    require base_path('app/Features/Client/Package/routes.php');
+}
+
+if (file_exists(base_path('app/Features/Client/Subscription/routes.php'))) {
+    require base_path('app/Features/Client/Subscription/routes.php');
 }
 
 if (file_exists(base_path('app/Features/Client/Wallet/routes.php'))) {
@@ -131,22 +117,6 @@ if (file_exists(base_path('app/Features/Client/Contact/routes.php'))) {
     require base_path('app/Features/Client/Contact/routes.php');
 }
 
-if (file_exists(base_path('app/Features/Admin/CronJob/routes.php'))) {
-    require base_path('app/Features/Admin/CronJob/routes.php');
-}
-
-if (file_exists(base_path('app/Features/Admin/PackageOrder/routes.php'))) {
-    require base_path('app/Features/Admin/PackageOrder/routes.php');
-}
-
-if (file_exists(base_path('app/Features/Admin/Package/routes.php'))) {
-    require base_path('app/Features/Admin/Package/routes.php');
-}
-
-if (file_exists(base_path('app/Features/Admin/Couponts/routes.php'))) {
-    require base_path('app/Features/Admin/Couponts/routes.php');
-}
-
 if (file_exists(base_path('app/Features/Admin/Setting/routes.php'))) {
     require base_path('app/Features/Admin/Setting/routes.php');
 }
@@ -159,8 +129,20 @@ if (file_exists(base_path('app/Features/Admin/RechargeHistory/routes.php'))) {
     require base_path('app/Features/Admin/RechargeHistory/routes.php');
 }
 
+if (file_exists(base_path('app/Features/Admin/Package/routes.php'))) {
+    require base_path('app/Features/Admin/Package/routes.php');
+}
+
 if (file_exists(base_path('app/Features/Admin/User/routes.php'))) {
     require base_path('app/Features/Admin/User/routes.php');
+}
+
+if (file_exists(base_path('app/Features/Admin/Analytics/routes.php'))) {
+    require base_path('app/Features/Admin/Analytics/routes.php');
+}
+
+if (file_exists(base_path('app/Features/Admin/ApiLog/routes.php'))) {
+    require base_path('app/Features/Admin/ApiLog/routes.php');
 }
 
 if (file_exists(base_path('app/Features/Admin/WalletTransaction/routes.php'))) {
@@ -193,4 +175,8 @@ if (file_exists(base_path('app/Features/BlogPost/routes.php'))) {
 
 if (file_exists(base_path('app/Features/Api/Auth/routes.php'))) {
     require base_path('app/Features/Api/Auth/routes.php');
+}
+
+if (file_exists(base_path('app/Features/Captcha/routes.php'))) {
+    require base_path('app/Features/Captcha/routes.php');
 }

@@ -6,6 +6,7 @@ use App\Exceptions\ApiException;
 use App\Features\Client\Package\Data\PackageQuoteData;
 use App\Features\Client\Subscription\Actions\CreateUserSubscriptionFromPaidOrderAction;
 use App\Features\Client\Wallet\Services\WalletService;
+use App\Models\ApiKey;
 use App\Models\Coupon;
 use App\Models\CouponLog;
 use App\Models\Package;
@@ -15,9 +16,9 @@ use App\Models\UserSubscription;
 use App\Support\Enums\PackageOrderStatus;
 use App\Support\Enums\PackageStatus;
 use App\Support\Enums\PaymentStatus;
-use App\Support\Enums\SubscriptionStatus;
 use App\Utils\SendMessage;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 class PackageCheckoutService
@@ -38,25 +39,6 @@ class PackageCheckoutService
             throw new ApiException('Gói hiện không khả dụng.', 422);
         }
 
-        $activeSubscription = $user->userSubscriptions()
-            ->where('status', SubscriptionStatus::Active)
-            ->where('expires_at', '>', now())
-            ->latest('expires_at')
-            ->first();
-
-        $latestSubscription = $user->userSubscriptions()
-            ->latest('expires_at')
-            ->latest('id')
-            ->first();
-
-        if ($activeSubscription instanceof UserSubscription && $activeSubscription->package_id === $package->id) {
-            throw new ApiException('Bạn đang sử dụng gói này. Vui lòng chờ hết hạn hoặc chọn gói khác.', 422);
-        }
-
-        $sourceSubscription = $activeSubscription instanceof UserSubscription
-            ? $activeSubscription
-            : $latestSubscription;
-
         $price = (float) $package->price;
         $couponCode = $this->normalizeCouponCode($payload['coupon_code'] ?? null);
         $coupon = null;
@@ -67,25 +49,21 @@ class PackageCheckoutService
             $discountAmount = $this->calculateCouponDiscount($coupon, $price);
         }
 
-        $creditAmount = $activeSubscription instanceof UserSubscription
-            ? $this->calculateRemainingCredit($activeSubscription)
-            : 0.0;
-
         return new PackageQuoteData(
             package: $package,
-            sourceSubscription: $sourceSubscription,
-            quoteType: $this->resolveQuoteType($package, $activeSubscription, $sourceSubscription),
+            sourceSubscription: null,
+            quoteType: 'new_purchase',
             price: $price,
             discountAmount: $discountAmount,
-            creditAmount: $creditAmount,
-            finalAmount: max(0, $price - $discountAmount - $creditAmount),
+            creditAmount: 0.0,
+            finalAmount: max(0, $price - $discountAmount),
             expiresAt: now()->addMinutes(self::QUOTE_TTL_MINUTES),
             coupon: $coupon,
         );
     }
 
     /**
-     * @param  array{coupon_code?:mixed,payment_method?:mixed}  $payload
+     * @param  array{coupon_code?:mixed,payment_method?:mixed,auto_renew_enabled?:mixed}  $payload
      */
     public function createOrder(User $user, Package $package, array $payload = []): PackageOrder
     {
@@ -94,7 +72,7 @@ class PackageCheckoutService
         $existingPendingOrder = PackageOrder::query()
             ->where('user_id', $user->id)
             ->where('package_id', $package->id)
-            ->where('source_subscription_id', $quote->sourceSubscription?->id)
+            ->whereNull('source_subscription_id')
             ->where('discount_amount', $quote->discountAmount)
             ->where('auto_renew_enabled', (bool) ($payload['auto_renew_enabled'] ?? false))
             ->where('payment_status', PaymentStatus::Pending)
@@ -112,11 +90,11 @@ class PackageCheckoutService
         return PackageOrder::query()->create([
             'user_id' => $user->id,
             'package_id' => $package->id,
-            'source_subscription_id' => $quote->sourceSubscription?->id,
+            'source_subscription_id' => null,
             'order_code' => $this->generateOrderCode(),
             'price' => $quote->price,
             'discount_amount' => $quote->discountAmount,
-            'credit_amount' => $quote->creditAmount,
+            'credit_amount' => 0,
             'final_amount' => $quote->finalAmount,
             'payment_method' => $payload['payment_method'] ?? null,
             'auto_renew_enabled' => (bool) ($payload['auto_renew_enabled'] ?? false),
@@ -128,7 +106,15 @@ class PackageCheckoutService
     }
 
     /**
-     * @return array{order:PackageOrder,subscription:UserSubscription}
+     * @return array{
+     *     order:PackageOrder,
+     *     subscription:UserSubscription,
+     *     package_api_key:array{
+     *         api_key:ApiKey,
+     *         api_secret:string|null,
+     *         is_new:bool
+     *     }|null
+     * }
      */
     public function payWithWallet(User $user, PackageOrder $packageOrder): array
     {
@@ -136,7 +122,7 @@ class PackageCheckoutService
 
         $result = DB::transaction(function () use ($user, $packageOrder, &$shouldNotify): array {
             $lockedOrder = PackageOrder::query()
-                ->with(['package', 'subscription', 'sourceSubscription'])
+                ->with(['package', 'subscription'])
                 ->whereKey($packageOrder->id)
                 ->lockForUpdate()
                 ->firstOrFail();
@@ -149,6 +135,7 @@ class PackageCheckoutService
                 return [
                     'order' => $lockedOrder,
                     'subscription' => $lockedOrder->subscription,
+                    'package_api_key' => $this->findPackageApiKey($lockedOrder->subscription),
                 ];
             }
 
@@ -171,7 +158,7 @@ class PackageCheckoutService
                     amount: (float) $lockedOrder->final_amount,
                     referenceType: PackageOrder::class,
                     referenceId: $lockedOrder->id,
-                    description: $this->walletTransactionDescription($lockedOrder),
+                    description: sprintf('Mua gói captcha qua đơn hàng %s', $lockedOrder->order_code),
                 );
             }
 
@@ -203,22 +190,14 @@ class PackageCheckoutService
                 ]);
             }
 
-            if ($lockedOrder->sourceSubscription instanceof UserSubscription
-                && $lockedOrder->sourceSubscription->status === SubscriptionStatus::Active
-                && $lockedOrder->sourceSubscription->expires_at !== null
-                && $lockedOrder->sourceSubscription->expires_at->isFuture()) {
-                $lockedOrder->sourceSubscription->forceFill([
-                    'status' => SubscriptionStatus::Cancelled,
-                    'expires_at' => $paidAt,
-                ])->save();
-            }
-
             $subscription = $this->createUserSubscriptionFromPaidOrderAction->handle($lockedOrder->fresh(['package']));
+            $packageApiKey = $this->ensurePackageApiKey($user, $subscription);
             $shouldNotify = true;
 
             return [
-                'order' => $lockedOrder->fresh(['package', 'subscription', 'sourceSubscription']),
-                'subscription' => $subscription->fresh(['package']),
+                'order' => $lockedOrder->fresh(['package', 'subscription']),
+                'subscription' => $subscription->fresh(['package', 'apiKeys']),
+                'package_api_key' => $packageApiKey,
             ];
         });
 
@@ -227,22 +206,6 @@ class PackageCheckoutService
         }
 
         return $result;
-    }
-
-    private function calculateRemainingCredit(UserSubscription $subscription): float
-    {
-        $startsAt = $subscription->starts_at;
-        $expiresAt = $subscription->expires_at;
-
-        if ($startsAt === null || $expiresAt === null || $expiresAt->lte(now())) {
-            return 0.0;
-        }
-
-        $totalSeconds = max(1, $startsAt->diffInSeconds($expiresAt));
-        $remainingSeconds = max(0, now()->diffInSeconds($expiresAt, false));
-        $remainingRatio = min(1, $remainingSeconds / $totalSeconds);
-
-        return round((float) $subscription->package_price * $remainingRatio, 2);
     }
 
     private function generateOrderCode(): string
@@ -349,35 +312,72 @@ class PackageCheckoutService
         return null;
     }
 
-    private function resolveQuoteType(
-        Package $package,
-        ?UserSubscription $activeSubscription,
-        ?UserSubscription $sourceSubscription,
-    ): string {
-        if ($activeSubscription instanceof UserSubscription) {
-            return 'upgrade';
+    /**
+     * @return array{api_key:ApiKey, api_secret:string|null, is_new:bool}|null
+     */
+    private function ensurePackageApiKey(User $user, UserSubscription $subscription): ?array
+    {
+        $existingKey = ApiKey::query()
+            ->where('user_id', $user->id)
+            ->where('key_type', ApiKey::TYPE_PACKAGE)
+            ->where('user_subscription_id', $subscription->id)
+            ->first();
+
+        if ($existingKey instanceof ApiKey) {
+            return [
+                'api_key' => $existingKey,
+                'api_secret' => $existingKey->api_secret_encrypted,
+                'is_new' => false,
+            ];
         }
 
-        if ($sourceSubscription instanceof UserSubscription && $sourceSubscription->package_id === $package->id) {
-            return 'renewal';
-        }
+        $credentials = ApiKey::generateCredentials();
 
-        return 'new_purchase';
+        $apiKey = ApiKey::query()->create([
+            'user_id' => $user->id,
+            'key_type' => ApiKey::TYPE_PACKAGE,
+            'user_subscription_id' => $subscription->id,
+            'name' => sprintf('Gói %s', $subscription->package_name),
+            'api_key' => $credentials['api_key'],
+            'api_secret_hash' => Hash::make($credentials['api_secret']),
+            'api_secret_encrypted' => $credentials['api_secret'],
+            'permissions' => [
+                'captcha-services.read',
+                'captcha-tasks.create',
+                'captcha-tasks.read',
+            ],
+            'ip_whitelist' => ['*'],
+            'expired_at' => $subscription->expires_at,
+            'status' => ApiKey::STATUS_ACTIVE,
+        ]);
+
+        return [
+            'api_key' => $apiKey,
+            'api_secret' => $credentials['api_secret'],
+            'is_new' => true,
+        ];
     }
 
-    private function walletTransactionDescription(PackageOrder $packageOrder): string
+    /**
+     * @return array{api_key:ApiKey, api_secret:string|null, is_new:bool}|null
+     */
+    private function findPackageApiKey(UserSubscription $subscription): ?array
     {
-        $sourceSubscription = $packageOrder->sourceSubscription;
+        $apiKey = ApiKey::query()
+            ->where('user_id', $subscription->user_id)
+            ->where('key_type', ApiKey::TYPE_PACKAGE)
+            ->where('user_subscription_id', $subscription->id)
+            ->first();
 
-        if ($sourceSubscription instanceof UserSubscription) {
-            if ($sourceSubscription->package_id === $packageOrder->package_id) {
-                return sprintf('Gia hạn gói qua đơn hàng %s', $packageOrder->order_code);
-            }
-
-            return sprintf('Nâng cấp gói qua đơn hàng %s', $packageOrder->order_code);
+        if (! $apiKey instanceof ApiKey) {
+            return null;
         }
 
-        return sprintf('Mua mới gói qua đơn hàng %s', $packageOrder->order_code);
+        return [
+            'api_key' => $apiKey,
+            'api_secret' => $apiKey->api_secret_encrypted,
+            'is_new' => false,
+        ];
     }
 
     private function sendPackagePaymentNotification(
@@ -386,33 +386,18 @@ class PackageCheckoutService
         UserSubscription $subscription,
         string $paymentMethod,
     ): void {
-        $quoteType = $this->resolveQuoteType(
-            $order->package,
-            null,
-            $order->sourceSubscription,
-        );
-
-        $title = match ($quoteType) {
-            'renewal' => 'Người dùng gia hạn gói thành công',
-            'upgrade' => 'Người dùng nâng cấp gói thành công',
-            default => 'Người dùng đăng ký gói mới thành công',
-        };
-
-        SendMessage::sendInfoReport($title, [
+        SendMessage::sendInfoReport('Người dùng đăng ký gói mới thành công', [
             'User ID' => $user->id,
             'Username' => $user->username,
             'Package' => $order->package?->name ?? $subscription->package_name,
             'Order code' => $order->order_code,
-            'Quote type' => $quoteType,
             'Thanh toán' => $paymentMethod,
             'Giá gói' => $order->price,
             'Giảm giá' => $order->discount_amount,
-            'Khấu trừ còn lại' => $order->credit_amount,
             'Thành tiền' => $order->final_amount,
             'Subscription ID' => $subscription->id,
             'Bắt đầu' => $subscription->starts_at,
             'Hết hạn' => $subscription->expires_at,
-            'Extra slots mang theo' => $subscription->extra_account_limit,
         ]);
     }
 }

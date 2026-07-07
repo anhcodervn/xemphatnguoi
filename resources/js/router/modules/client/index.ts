@@ -8,44 +8,24 @@ export default {
             component: () => import('@/pages/client/home/index.vue'),
         },
         {
-            path: 'cron-jobs',
-            name: 'client.cron-jobs',
-            component: () => import('@/pages/client/cron-jobs/index.vue'),
-        },
-        {
-            path: 'cron-jobs/create',
-            name: 'client.cron-jobs.create',
-            component: () => import('@/pages/client/cron-jobs/form/index.vue'),
-        },
-        {
-            path: 'cron-jobs/:cron_job_id(\\d+)',
-            name: 'client.cron-jobs.show',
-            component: () => import('@/pages/client/cron-jobs/detail/index.vue'),
-        },
-        {
-            path: 'cron-jobs/:cron_job_id(\\d+)/edit',
-            name: 'client.cron-jobs.edit',
-            component: () => import('@/pages/client/cron-jobs/form/index.vue'),
-        },
-        {
-            path: 'logs',
-            name: 'client.logs',
-            component: () => import('@/pages/client/logs/index.vue'),
-        },
-        {
-            path: 'alerts',
-            name: 'client.alerts',
-            component: () => import('@/pages/client/alerts/index.vue'),
-        },
-        {
-            path: 'package',
-            name: 'client.package',
-            component: () => import('@/pages/client/package/index.vue'),
-        },
-        {
             path: 'wallet',
             name: 'client.wallet',
             component: () => import('@/pages/client/wallet/index.vue'),
+        },
+        {
+            path: 'services',
+            name: 'client.services',
+            component: () => import('@/pages/client/services/index.vue'),
+        },
+        {
+            path: 'packages',
+            name: 'client.packages',
+            component: () => import('@/pages/client/packages/index.vue'),
+        },
+        {
+            path: 'captcha-history',
+            name: 'client.captcha-history',
+            component: () => import('@/pages/client/captcha-history/index.vue'),
         },
         {
             path: 'api-docs',

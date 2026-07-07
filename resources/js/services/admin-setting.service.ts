@@ -5,6 +5,7 @@ import type {
     ContentPageSettingsType,
     GeneralSettingType,
     HomeCategorySettingType,
+    MonitoringSettingType,
     OptionSettingType,
     SeoSettingType,
     SettingApiResponse,
@@ -64,6 +65,12 @@ export const adminSettingService = {
     },
     updateSeo(payload: SeoSettingType) {
         return updateTab<SeoSettingType>("seo", payload);
+    },
+    getMonitoring() {
+        return getTab<MonitoringSettingType>("monitoring");
+    },
+    updateMonitoring(payload: MonitoringSettingType) {
+        return updateTab<MonitoringSettingType>("monitoring", payload);
     },
     getOptions() {
         return getTab<OptionSettingType>("options");

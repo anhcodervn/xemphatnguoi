@@ -41,8 +41,23 @@ class ExtraAccountOrderService
         ]);
     }
 
-    public function markAsPaid(User $user, ExtraAccountOrder $extraAccountOrder): ExtraAccountOrder
+    public function markAsPaid(User|ExtraAccountOrder $user, ?ExtraAccountOrder $extraAccountOrder = null): ExtraAccountOrder
     {
+        if ($user instanceof ExtraAccountOrder) {
+            $extraAccountOrder = $user;
+            $subscription = $extraAccountOrder->subscription()->with('user')->first();
+
+            if (! $subscription instanceof UserSubscription || ! $subscription->user instanceof User) {
+                throw new ApiException('Không xác định được người dùng của đơn mua thêm slot.', 422);
+            }
+
+            $user = $subscription->user;
+        }
+
+        if (! $user instanceof User || ! $extraAccountOrder instanceof ExtraAccountOrder) {
+            throw new ApiException('Dữ liệu thanh toán extra account không hợp lệ.', 422);
+        }
+
         $shouldNotify = false;
 
         $paidOrder = DB::transaction(function () use ($user, $extraAccountOrder, &$shouldNotify): ExtraAccountOrder {

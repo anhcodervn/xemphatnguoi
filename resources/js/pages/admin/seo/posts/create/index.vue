@@ -20,26 +20,26 @@ const editingId = computed(() => {
 });
 
 const form = reactive<AdminSeoPostPayload>({
-    title: "Hướng dẫn tạo HTTP cron job đầu tiên trên AutoCron",
-    slug: "huong-dan-tao-http-cron-job-dau-tien-tren-autocron",
+    title: "Hướng dẫn tạo task captcha đầu tiên trên GiaiCaptcha",
+    slug: "huong-dan-tao-task-captcha-dau-tien-tren-giapcaptcha",
     seo_category_id: null,
-    excerpt: "Bài viết hướng dẫn tạo HTTP cron job, cấu hình lịch chạy và theo dõi logs trong AutoCron.",
+    excerpt: "Bài viết hướng dẫn tạo task captcha, gửi payload và theo dõi kết quả trả về trong GiaiCaptcha.",
     content: [
         {
             type: "paragraph",
             children: [
                 {
-                    text: "Bài viết này hướng dẫn luồng tạo cron job, thiết lập method, URL, timeout và cách theo dõi kết quả chạy ngay trong dashboard.",
+                    text: "Bài viết này hướng dẫn luồng tạo task captcha, chọn loại captcha, gửi payload và theo dõi kết quả trả về ngay trong dashboard.",
                 },
             ],
         },
     ],
-    seo_title: "Hướng dẫn tạo HTTP cron job đầu tiên | AutoCron",
-    seo_description: "Từng bước tạo HTTP cron job, cấu hình lịch chạy, logs và alerts trong AutoCron.",
-    canonical_url: "https://autocron.example/blog/huong-dan-tao-http-cron-job-dau-tien-tren-autocron",
+    seo_title: "Hướng dẫn tạo task captcha đầu tiên | GiaiCaptcha",
+    seo_description: "Từng bước tạo task captcha, tích hợp API, theo dõi task và nhận kết quả trong GiaiCaptcha.",
+    canonical_url: "https://giapcaptcha.vn/blog/huong-dan-tao-task-captcha-dau-tien-tren-giapcaptcha",
     robots: "index,follow",
-    focus_keyword: "http cron jobs",
-    cover_alt: "Minh họa quy trình tạo HTTP cron job trên AutoCron",
+    focus_keyword: "api giải captcha",
+    cover_alt: "Minh họa quy trình tạo task captcha trên GiaiCaptcha",
     article_schema: true,
     breadcrumb_schema: true,
     status: "draft",

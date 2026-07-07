@@ -8,22 +8,13 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-Schedule::command('cron:dispatch-due')
-    ->everySecond()
-    ->withoutOverlapping()
-    ->onOneServer();
+$heartbeatChannel = app()->environment('production') ? 'ops' : 'staging';
 
-Schedule::command('cron:prune-logs')
-    ->daily()
+Schedule::command(sprintf('monitor:discord-heartbeat --channel=%s', $heartbeatChannel))
+    ->everyTenMinutes()
     ->withoutOverlapping()
-    ->onOneServer();
+    ->when(static fn (): bool => filled(config(sprintf('services.discord.channels.%s', $heartbeatChannel))));
 
-Schedule::command('cron:reset-usage-quota')
-    ->daily()
-    ->withoutOverlapping()
-    ->onOneServer();
-
-Schedule::command('subscriptions:auto-renew-due')
-    ->everyMinute()
-    ->withoutOverlapping()
-    ->onOneServer();
+Schedule::command('captcha:sync-source-balances')
+    ->everyFiveMinutes()
+    ->withoutOverlapping();

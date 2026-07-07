@@ -15,13 +15,13 @@ test('project text files do not contain mojibake vietnamese sequences', function
         'tests'.DIRECTORY_SEPARATOR.'Unit'.DIRECTORY_SEPARATOR.'FeatureVietnameseEncodingTest.php',
     ];
     $suspiciousFragments = [
-        'Ãƒ',
-        'Ã„',
-        'Ã†',
-        'Ã‚',
-        'Ã¡Â»',
-        'Ã¡Âº',
-        'Ã¢â‚¬',
+        'Ã',
+        'Ä',
+        'Æ',
+        'Â',
+        'á»',
+        'áº',
+        'â€',
         'á»',
         'áº',
     ];

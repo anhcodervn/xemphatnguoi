@@ -4,72 +4,47 @@ namespace App\Support;
 
 class ApiPermissionCatalog
 {
-    /**
-     * @return array<int, array{
-     *     key:string,
-     *     group:string,
-     *     version:string,
-     *     label:string,
-     *     description:string,
-     *     endpoints:array<int, string>,
-     *     self_service:bool
-     * }>
-     */
     public static function all(): array
     {
         return [
             [
-                'key' => 'cron-jobs.read',
-                'group' => 'cron',
+                'key' => 'captcha-services.read',
+                'group' => 'captcha',
                 'version' => 'v1',
-                'label' => 'Xem cron jobs',
-                'description' => 'Đọc danh sách cron job và chi tiết từng cron job.',
+                'label' => 'Xem dịch vụ captcha',
+                'description' => 'Đọc danh sách dịch vụ captcha đang được hệ thống cung cấp.',
                 'endpoints' => [
-                    'GET /api/v1/cron-jobs',
-                    'GET /api/v1/cron-jobs/{cron_job}',
+                    'GET /api/v1/services',
                 ],
                 'self_service' => true,
             ],
             [
-                'key' => 'cron-jobs.write',
-                'group' => 'cron',
+                'key' => 'captcha-tasks.create',
+                'group' => 'captcha',
                 'version' => 'v1',
-                'label' => 'Quản lý cron jobs',
-                'description' => 'Tạo, cập nhật, xóa, pause và resume cron job.',
+                'label' => 'Tạo yêu cầu giải captcha',
+                'description' => 'Gửi yêu cầu giải captcha mới qua API.',
                 'endpoints' => [
-                    'POST /api/v1/cron-jobs',
-                    'PATCH /api/v1/cron-jobs/{cron_job}',
-                    'DELETE /api/v1/cron-jobs/{cron_job}',
-                    'POST /api/v1/cron-jobs/{cron_job}/pause',
-                    'POST /api/v1/cron-jobs/{cron_job}/resume',
+                    'POST /api/v1/create',
                 ],
                 'self_service' => true,
             ],
             [
-                'key' => 'cron-logs.read',
-                'group' => 'cron',
+                'key' => 'captcha-tasks.read',
+                'group' => 'captcha',
                 'version' => 'v1',
-                'label' => 'Xem cron logs',
-                'description' => 'Đọc log theo từng cron job.',
+                'label' => 'Xem trạng thái yêu cầu',
+                'description' => 'Đọc thông tin tài khoản, số dư và kết quả task captcha đã gửi.',
                 'endpoints' => [
-                    'GET /api/v1/cron-jobs/{cron_job}/logs',
+                    'GET /api/v1/user',
+                    'GET /api/v1/balance',
+                    'POST /api/v1/result',
                 ],
                 'self_service' => true,
             ],
         ];
     }
 
-    /**
-     * @return array<string, array{
-     *     key:string,
-     *     group:string,
-     *     version:string,
-     *     label:string,
-     *     description:string,
-     *     endpoints:array<int, string>,
-     *     self_service:bool
-     * }>
-     */
     public static function keyed(): array
     {
         return collect(self::all())
@@ -77,9 +52,6 @@ class ApiPermissionCatalog
             ->all();
     }
 
-    /**
-     * @return array<int, string>
-     */
     public static function keys(): array
     {
         return array_values(array_map(static fn (array $permission): string => $permission['key'], self::all()));

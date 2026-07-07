@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Notifications\QueuedResetPasswordNotification;
+use App\Service\DiscordWebhookNotifier;
 use Illuminate\Auth\Passwords\CanResetPassword as CanResetPasswordTrait;
 use Illuminate\Contracts\Auth\CanResetPassword;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -74,6 +75,12 @@ class User extends Authenticatable implements CanResetPassword, JWTSubject
                 'total_recharge' => 0,
                 'total_spent' => 0,
             ]);
+
+            try {
+                app(DiscordWebhookNotifier::class)->sendUserRegistered($user);
+            } catch (\Throwable $exception) {
+                report($exception);
+            }
         });
     }
 
@@ -97,24 +104,9 @@ class User extends Authenticatable implements CanResetPassword, JWTSubject
         return $this->hasMany(self::class, 'referred_by');
     }
 
-    public function cronJobs(): HasMany
+    public function captchaTasks(): HasMany
     {
-        return $this->hasMany(CronJob::class);
-    }
-
-    public function cronJobLogs(): HasMany
-    {
-        return $this->hasMany(CronJobLog::class);
-    }
-
-    public function cronAlertChannels(): HasMany
-    {
-        return $this->hasMany(CronAlertChannel::class);
-    }
-
-    public function cronUsageCounters(): HasMany
-    {
-        return $this->hasMany(CronUsageCounter::class);
+        return $this->hasMany(CaptchaTask::class);
     }
 
     public function userSessions(): HasMany

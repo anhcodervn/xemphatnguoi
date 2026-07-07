@@ -131,6 +131,9 @@ class SettingController extends Controller
             'slider-images' => [
                 'items' => [],
             ],
+            'monitoring' => [
+                'discord_webhooks' => [],
+            ],
         ];
     }
 
@@ -198,6 +201,9 @@ class SettingController extends Controller
             ],
             'slider-images' => [
                 'items' => 'home_slider_items',
+            ],
+            'monitoring' => [
+                'discord_webhooks' => 'discord_webhooks',
             ],
         ];
     }

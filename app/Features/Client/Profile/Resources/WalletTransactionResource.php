@@ -21,11 +21,23 @@ class WalletTransactionResource extends JsonResource
             'code' => sprintf('WTX-%06d', $this->id),
             'time' => $this->created_at?->toISOString(),
             'content' => $this->description,
-            'amount' => (string) $this->amount,
+            'amount' => (string) $this->normalizedAmount(),
             'balance_after' => (string) $this->balance_after,
             'status' => $this->status,
             'type' => $this->normalizedType(),
         ];
+    }
+
+    private function normalizedAmount(): float
+    {
+        $amount = abs((float) $this->amount);
+
+        return match ($this->type) {
+            'debit', 'hold' => -$amount,
+            'refund', 'credit' => $amount,
+            'adjustment' => (float) $this->amount,
+            default => (float) $this->amount,
+        };
     }
 
     private function normalizedType(): string

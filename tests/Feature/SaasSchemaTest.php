@@ -1,100 +1,77 @@
 <?php
 
-use App\Models\CronAlertChannel;
-use App\Models\CronJob;
+use App\Models\ApiKey;
+use App\Models\CaptchaService;
+use App\Models\CaptchaSource;
+use App\Models\CaptchaTask;
 use App\Models\User;
 use Illuminate\Support\Facades\Schema;
 
-test('autocron schema contains the core SaaS tables and columns', function () {
+test('captcha saas schema contains the core application and captcha api tables', function () {
     expect(Schema::hasTable('users'))->toBeTrue()
         ->and(Schema::hasTable('user_sessions'))->toBeTrue()
         ->and(Schema::hasTable('wallets'))->toBeTrue()
         ->and(Schema::hasTable('wallet_transactions'))->toBeTrue()
-        ->and(Schema::hasTable('packages'))->toBeTrue()
-        ->and(Schema::hasTable('user_packages'))->toBeTrue()
-        ->and(Schema::hasTable('package_orders'))->toBeTrue()
-        ->and(Schema::hasTable('user_subscriptions'))->toBeTrue()
         ->and(Schema::hasTable('payment_transactions'))->toBeTrue()
         ->and(Schema::hasTable('notifications'))->toBeTrue()
         ->and(Schema::hasTable('user_logs'))->toBeTrue()
         ->and(Schema::hasTable('settings'))->toBeTrue()
-        ->and(Schema::hasTable('cron_jobs'))->toBeTrue()
-        ->and(Schema::hasTable('cron_job_logs'))->toBeTrue()
-        ->and(Schema::hasTable('cron_alert_channels'))->toBeTrue()
-        ->and(Schema::hasTable('cron_job_alert_channel'))->toBeTrue()
-        ->and(Schema::hasTable('cron_usage_counters'))->toBeTrue();
+        ->and(Schema::hasTable('api_keys'))->toBeTrue()
+        ->and(Schema::hasTable('api_logs'))->toBeTrue()
+        ->and(Schema::hasTable('captcha_sources'))->toBeTrue()
+        ->and(Schema::hasTable('captcha_services'))->toBeTrue()
+        ->and(Schema::hasTable('captcha_tasks'))->toBeTrue();
 
-    expect(Schema::hasColumns('cron_jobs', [
+    expect(Schema::hasColumns('api_keys', [
         'user_id',
-        'group_name',
         'name',
-        'url',
-        'method',
-        'body_type',
-        'cron_expression',
-        'interval_seconds',
-        'timeout_seconds',
-        'retry_count',
+        'api_key',
+        'api_secret_hash',
+        'permissions',
+        'ip_whitelist',
+        'expired_at',
         'status',
-        'last_run_at',
-        'next_run_at',
-        'consecutive_failures',
-        'total_runs',
-        'total_success',
-        'total_failed',
     ]))->toBeTrue();
 
-    expect(Schema::hasColumns('cron_job_logs', [
-        'cron_job_id',
+    expect(Schema::hasColumns('captcha_sources', [
+        'name',
+        'driver',
+        'api_base_url',
+        'credentials',
+        'settings',
+        'is_active',
+        'priority',
+    ]))->toBeTrue();
+
+    expect(Schema::hasColumns('captcha_services', [
+        'default_source_id',
+        'name',
+        'code',
+        'category',
+        'provider_service_code',
+        'base_price',
+        'selling_price',
+        'estimated_seconds',
+        'is_active',
+        'settings',
+    ]))->toBeTrue();
+
+    expect(Schema::hasColumns('captcha_tasks', [
         'user_id',
-        'run_uuid',
-        'attempt',
+        'api_key_id',
+        'captcha_service_id',
+        'captcha_source_id',
+        'task_code',
+        'external_task_id',
+        'service_code',
         'status',
-        'method',
-        'url',
-        'status_code',
-        'duration_ms',
-        'request_headers',
-        'response_headers',
-        'response_body_preview',
+        'request_payload',
+        'result_payload',
+        'provider_cost',
+        'selling_price',
         'error_message',
-        'started_at',
-        'finished_at',
-    ]))->toBeTrue();
-
-    expect(Schema::hasColumns('cron_alert_channels', [
-        'user_id',
-        'cron_job_id',
-        'name',
-        'type',
-        'target_url',
-        'telegram_bot_token',
-        'telegram_chat_id',
-        'email',
-        'events',
-        'is_enabled',
-    ]))->toBeTrue();
-
-    expect(Schema::hasColumns('packages', [
-        'duration_days',
-        'package_limits',
-    ]))->toBeTrue();
-
-    expect(Schema::hasColumns('user_subscriptions', [
-        'user_id',
-        'package_id',
-        'auto_renew_enabled',
-        'starts_at',
-        'expires_at',
-        'auto_renew_attempted_at',
-        'auto_renew_status',
-        'auto_renew_message',
-        'status',
-        'package_limits',
-    ]))->toBeTrue();
-
-    expect(Schema::hasColumns('package_orders', [
-        'auto_renew_enabled',
+        'requested_at',
+        'solved_at',
     ]))->toBeTrue();
 });
 
@@ -113,25 +90,27 @@ test('user model still auto-generates username and creates a default main wallet
         ->and((string) $user->wallet?->balance)->toBe('0.00');
 });
 
-test('cron job model casts array and schedule fields correctly', function () {
-    $cronJob = new CronJob;
-    $cronJob->headers = ['Authorization' => 'Bearer demo'];
-    $cronJob->query_params = ['page' => 1];
-    $cronJob->expected_status_codes = [200, 204];
-    $cronJob->follow_redirects = false;
+test('captcha models cast structured payload fields correctly', function () {
+    $apiKey = new ApiKey;
+    $apiKey->permissions = ['captcha-tasks.create'];
+    $apiKey->ip_whitelist = ['127.0.0.1'];
 
-    expect($cronJob->headers)->toBeArray()
-        ->and($cronJob->query_params)->toBeArray()
-        ->and($cronJob->expected_status_codes)->toBeArray()
-        ->and($cronJob->follow_redirects)->toBeFalse();
-});
+    $source = new CaptchaSource;
+    $source->credentials = ['api_key' => 'demo'];
+    $source->settings = ['timeout' => 120];
 
-test('cron alert channel supports structured events and encrypted fields', function () {
-    $channel = new CronAlertChannel;
-    $channel->events = ['on_fail', 'on_recovered'];
-    $channel->telegram_bot_token = 'bot-token';
+    $service = new CaptchaService;
+    $service->settings = ['fields' => ['site_key' => ['type' => 'string']]];
 
-    expect($channel->events)->toBeArray()
-        ->and($channel->events)->toContain('on_fail')
-        ->and($channel->telegram_bot_token)->toBe('bot-token');
+    $task = new CaptchaTask;
+    $task->request_payload = ['site_key' => 'abc'];
+    $task->result_payload = ['token' => 'xyz'];
+
+    expect($apiKey->permissions)->toBeArray()
+        ->and($apiKey->ip_whitelist)->toBeArray()
+        ->and($source->credentials)->toBeArray()
+        ->and($source->settings)->toBeArray()
+        ->and($service->settings)->toBeArray()
+        ->and($task->request_payload)->toBeArray()
+        ->and($task->result_payload)->toBeArray();
 });

@@ -8,6 +8,36 @@ export default {
             component: () => import('@/pages/admin/home/index.vue'),
         },
         {
+            path: 'analytics',
+            name: 'admin.analytics.index',
+            component: () => import('@/pages/admin/analytics/index.vue'),
+        },
+        {
+            path: 'captcha-sources',
+            name: 'admin.captcha-sources.index',
+            component: () => import('@/pages/admin/captcha-sources/index.vue'),
+        },
+        {
+            path: 'captcha-services',
+            name: 'admin.captcha-services.index',
+            component: () => import('@/pages/admin/captcha-services/index.vue'),
+        },
+        {
+            path: 'packages',
+            name: 'admin.packages.index',
+            component: () => import('@/pages/admin/packages/index.vue'),
+        },
+        {
+            path: 'captcha-tasks',
+            name: 'admin.captcha-tasks.index',
+            component: () => import('@/pages/admin/captcha-tasks/index.vue'),
+        },
+        {
+            path: 'api-logs',
+            name: 'admin.api-logs.index',
+            component: () => import('@/pages/admin/api-logs/index.vue'),
+        },
+        {
             path: 'users',
             children: [
                 {
@@ -29,41 +59,6 @@ export default {
                     path: 'wallet-transactions/:user_id(\\d+)',
                     name: 'admin.users.wallet-transaction.show',
                     component: () => import('@/pages/admin/users/wallet-transactions/index.vue'),
-                },
-            ],
-        },
-        {
-            path: 'cron-jobs',
-            name: 'admin.cron-jobs.index',
-            component: () => import('@/pages/admin/cron-jobs/index.vue'),
-        },
-        {
-            path: 'system-logs',
-            name: 'admin.system-logs.index',
-            component: () => import('@/pages/admin/system-logs/index.vue'),
-        },
-        {
-            path: 'packages',
-            children: [
-                {
-                    path: '',
-                    name: 'admin.packages.index',
-                    component: () => import('@/pages/admin/package/managers/list/index.vue'),
-                },
-                {
-                    path: 'create',
-                    name: 'admin.packages.create',
-                    component: () => import('@/pages/admin/package/managers/create/index.vue'),
-                },
-                {
-                    path: ':package_id(\\d+)/edit',
-                    name: 'admin.packages.edit',
-                    component: () => import('@/pages/admin/package/managers/create/index.vue'),
-                },
-                {
-                    path: 'orders',
-                    name: 'admin.packages.orders',
-                    component: () => import('@/pages/admin/package/orders/index.vue'),
                 },
             ],
         },
@@ -106,31 +101,6 @@ export default {
             path: 'feedbacks',
             name: 'admin.feedbacks.index',
             component: () => import('@/pages/admin/feedbacks/index.vue'),
-        },
-        {
-            path: 'couponts',
-            children: [
-                {
-                    path: '',
-                    name: 'admin.couponts.index',
-                    component: () => import('@/pages/admin/couponts/list/index.vue'),
-                },
-                {
-                    path: 'create',
-                    name: 'admin.couponts.create',
-                    component: () => import('@/pages/admin/couponts/create/index.vue'),
-                },
-                {
-                    path: ':coupont_id(\\d+)/edit',
-                    name: 'admin.couponts.edit',
-                    component: () => import('@/pages/admin/couponts/create/index.vue'),
-                },
-                {
-                    path: 'history',
-                    name: 'admin.couponts.history',
-                    component: () => import('@/pages/admin/couponts/history/index.vue'),
-                },
-            ],
         },
         {
             path: 'seo',

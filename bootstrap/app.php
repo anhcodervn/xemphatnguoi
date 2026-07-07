@@ -4,7 +4,6 @@ use App\Http\Controllers\SpaController;
 use App\Http\Middleware\AuthenticateApiKey;
 use App\Http\Middleware\EnsureAdminUser;
 use App\Http\Middleware\EnsureApiKeyPermission;
-use App\Http\Middleware\EnsureHasActiveSubscription;
 use App\Http\Middleware\EnsureSiteIsActive;
 use App\Http\Middleware\LogApiRequest;
 use App\Support\SettingStore;
@@ -35,7 +34,6 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->statefulApi();
         $middleware->alias([
             'admin' => EnsureAdminUser::class,
-            'active-subscription' => EnsureHasActiveSubscription::class,
             'api-key.auth' => AuthenticateApiKey::class,
             'api-key.permission' => EnsureApiKeyPermission::class,
             'api-key.log' => LogApiRequest::class,

@@ -10,6 +10,7 @@ use App\Models\PaymentTransaction;
 use App\Models\User;
 use App\Models\Wallet;
 use App\Models\WalletTransaction;
+use App\Service\DiscordWebhookNotifier;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
@@ -21,6 +22,7 @@ class WalletDepositService
     public function __construct(
         private readonly RechargeConfigService $rechargeConfigService,
         private readonly ApiBankVnPartnerService $apiBankVnPartnerService,
+        private readonly DiscordWebhookNotifier $discordWebhookNotifier,
     ) {}
 
     /**
@@ -334,6 +336,12 @@ class WalletDepositService
                 'status' => 'success',
                 'raw_data' => $raw,
             ])->save();
+
+            try {
+                $this->discordWebhookNotifier->sendRechargeSuccess($lockedTransaction, $user);
+            } catch (\Throwable $exception) {
+                report($exception);
+            }
 
             return $lockedTransaction->refresh();
         });

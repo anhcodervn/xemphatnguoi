@@ -93,6 +93,19 @@ export interface ContactSettingType {
     [key: string]: unknown;
 }
 
+export interface DiscordWebhookSettingItemType {
+    name: string;
+    url: string;
+    is_active: boolean;
+    events: string[];
+    [key: string]: unknown;
+}
+
+export interface MonitoringSettingType {
+    discord_webhooks: DiscordWebhookSettingItemType[];
+    [key: string]: unknown;
+}
+
 export interface SeoSettingType {
     meta_title: string;
     meta_description: string;

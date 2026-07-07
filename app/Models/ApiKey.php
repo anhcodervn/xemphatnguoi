@@ -21,11 +21,18 @@ class ApiKey extends Model
 
     public const STATUS_REVOKED = 'revoked';
 
+    public const TYPE_WALLET = 'wallet';
+
+    public const TYPE_PACKAGE = 'package';
+
     protected $fillable = [
         'user_id',
+        'key_type',
+        'user_subscription_id',
         'name',
         'api_key',
         'api_secret_hash',
+        'api_secret_encrypted',
         'permissions',
         'ip_whitelist',
         'status',
@@ -35,6 +42,7 @@ class ApiKey extends Model
 
     protected $hidden = [
         'api_secret_hash',
+        'api_secret_encrypted',
     ];
 
     protected function casts(): array
@@ -42,6 +50,7 @@ class ApiKey extends Model
         return [
             'permissions' => 'array',
             'ip_whitelist' => 'array',
+            'api_secret_encrypted' => 'encrypted',
             'last_used_at' => 'datetime',
             'expired_at' => 'datetime',
         ];
@@ -50,6 +59,11 @@ class ApiKey extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function subscription(): BelongsTo
+    {
+        return $this->belongsTo(UserSubscription::class, 'user_subscription_id');
     }
 
     public function logs(): HasMany
@@ -89,6 +103,16 @@ class ApiKey extends Model
         }
 
         return $this->expired_at === null || $this->expired_at->isFuture();
+    }
+
+    public function isWalletKey(): bool
+    {
+        return $this->key_type === self::TYPE_WALLET;
+    }
+
+    public function isPackageKey(): bool
+    {
+        return $this->key_type === self::TYPE_PACKAGE;
     }
 
     public function markExpiredIfNeeded(): void

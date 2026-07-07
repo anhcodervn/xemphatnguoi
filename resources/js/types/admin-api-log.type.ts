@@ -4,6 +4,7 @@ export type AdminApiLogItem = {
     method: string;
     ip: string | null;
     request_data: Record<string, unknown> | null;
+    service_response_data: Record<string, unknown> | null;
     response_data: Record<string, unknown> | null;
     status_code: number | null;
     response_time_ms: number | null;

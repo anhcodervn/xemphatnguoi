@@ -12,7 +12,6 @@ class ProfileService
     public function profile(User $user): User
     {
         $profile = $user->fresh() ?? $user;
-        $profile->loadMissing('userSubscriptions.package');
 
         return $profile;
     }

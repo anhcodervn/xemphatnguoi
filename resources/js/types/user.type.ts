@@ -1,4 +1,3 @@
-import type { CurrentUserSubscriptionType } from "./user-subscription.type";
 import { WalletType } from "./wallet.type";
 
 export interface UserType {
@@ -18,5 +17,4 @@ export interface UserType {
     created_at: string;
     updated_at: string;
     wallet: WalletType;
-    user_subscriptions: CurrentUserSubscriptionType | null;
 }

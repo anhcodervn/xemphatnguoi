@@ -1,29 +1,13 @@
 export interface PackageLimitsType {
-    max_cron_jobs: number;
-    min_interval_seconds: number;
-    max_logs_per_job: number;
-    max_request_timeout_seconds: number;
-    max_response_size_kb: number;
-    max_retries_per_run: number;
-    max_headers_count: number;
-    max_body_size_kb: number;
-    allowed_methods: string[];
-    allow_custom_headers: boolean;
-    allow_custom_body: boolean;
-    allow_cron_expression: boolean;
-    allow_run_now: boolean;
-    allow_alerts: boolean;
-    max_alert_channels: number;
-    monthly_run_quota: number | null;
-    daily_run_quota: number | null;
-    concurrent_runs_limit: number;
-    priority: string;
-    queue_name: string;
-    allow_expected_body_check: boolean;
-    allow_webhook_alert: boolean;
-    allow_discord_alert: boolean;
-    allow_telegram_alert: boolean;
-    allow_email_alert?: boolean;
+    max_api_keys: number;
+    requests_per_minute: number;
+    monthly_captcha_quota: number | null;
+    max_concurrent_tasks: number;
+    max_whitelisted_ips: number;
+    supports_callback: boolean;
+    supports_priority_queue: boolean;
+    supports_manual_review: boolean;
+    service_whitelist: string[];
 }
 
 export interface UserSubscriptionPackageType {
@@ -55,9 +39,20 @@ export interface CurrentUserSubscriptionType {
     base_account_limit: number;
     extra_account_limit: number;
     used_account: number;
+    used_captcha_quota: number;
+    remaining_captcha_quota: number | null;
     auto_renew_enabled: boolean;
     starts_at: string | null;
     expires_at: string | null;
     status: string;
+    package_api_keys?: Array<{
+        id: number;
+        name: string;
+        api_key: string;
+        api_secret: string | null;
+        status: string;
+        expired_at: string | null;
+        created_at: string | null;
+    }>;
     package: UserSubscriptionPackageType;
 }

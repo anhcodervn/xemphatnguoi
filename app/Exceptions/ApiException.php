@@ -29,4 +29,12 @@ class ApiException extends Exception
 
         return null;
     }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function getData(): array
+    {
+        return $this->data;
+    }
 }

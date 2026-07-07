@@ -70,26 +70,26 @@ const isParentActive = (item: SidebarItemType): boolean => {
 // ✅ class tổng
 const itemClass = computed(() => {
     if (isParentActive(props.item)) {
-        return 'bg-[#1D5BD5] text-white font-bold';
+        return 'bg-teal-600 text-white font-bold';
     }
 
     if (isExactActive(props.item.path)) {
-        return 'text-blue-500 font-semibold';
+        return 'text-teal-600 font-semibold';
     }
 
-    return 'hover:bg-[#1D5BD5] hover:text-white';
+    return 'hover:bg-teal-600 hover:text-white';
 });
 
 // ✅ icon class
 const iconClass = computed(() => {
     if (isParentActive(props.item)) return 'text-white';
-    if (isExactActive(props.item.path)) return 'text-blue-500';
+    if (isExactActive(props.item.path)) return 'text-teal-600';
     return 'text-gray-500';
 });
 
 // ✅ label class
 const labelClass = computed(() => {
-    if (isExactActive(props.item.path)) return 'text-blue-500';
+    if (isExactActive(props.item.path)) return 'text-teal-600';
     return '';
 });
 
@@ -111,3 +111,4 @@ const handleClick = () => {
 </script>
 
 <style></style>
+

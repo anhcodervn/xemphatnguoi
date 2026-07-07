@@ -65,7 +65,7 @@ class PublicSeoPageController extends Controller
             ->get();
 
         $systemSettings = $this->systemSettings($settingStore);
-        $pageTitle = 'Blog AutoCron và kiến thức HTTP Cron';
+        $pageTitle = 'Blog GiaiCaptcha.vn và kiến thức captcha API';
         $pageDescription = 'Chia sẻ hướng dẫn cấu hình HTTP Cron Jobs, tối ưu lịch chạy, kiểm soát quota, log, cảnh báo và vận hành queue ổn định.';
 
         return view('pages.seo.index', [
@@ -74,7 +74,7 @@ class PublicSeoPageController extends Controller
             'pageDescription' => $pageDescription,
             'pageMetaTitle' => $search !== ''
                 ? "Tìm kiếm: {$search} | {$pageTitle}"
-                : $pageTitle.' | '.($systemSettings['site_name'] ?: config('app.name', 'AutoCron')),
+                : $pageTitle.' | '.($systemSettings['site_name'] ?: config('app.name', 'GiaiCaptcha.vn')),
             'pageMetaDescription' => $pageDescription,
             'pageMetaUrl' => $request->url().($request->getQueryString() ? '?'.$request->getQueryString() : ''),
             'featuredPost' => $featuredPost ? $this->transformPost($featuredPost) : null,
@@ -141,7 +141,7 @@ class PublicSeoPageController extends Controller
             'headingIndex' => $headingIndex,
             'relatedPosts' => $relatedPosts->map(fn (SeoPost $item) => $this->transformPost($item)),
             'sidebarCategories' => $sidebarCategories,
-            'pageMetaTitle' => $post->seo_title ?: $post->title.' | '.($systemSettings['site_name'] ?: config('app.name', 'AutoCron')),
+            'pageMetaTitle' => $post->seo_title ?: $post->title.' | '.($systemSettings['site_name'] ?: config('app.name', 'GiaiCaptcha.vn')),
             'pageMetaDescription' => $post->seo_description ?: ($post->excerpt ?: $this->contentRenderer->extractText($content)),
             'pageMetaCanonical' => $post->canonical_url ?: $request->url(),
             'pageMetaUrl' => $request->url(),
@@ -152,7 +152,7 @@ class PublicSeoPageController extends Controller
     protected function systemSettings(SettingStore $settingStore): array
     {
         return $settingStore->getMany([
-            'site_name' => config('app.name', 'AutoCron'),
+            'site_name' => config('app.name', 'GiaiCaptcha.vn'),
             'site_domain' => '',
             'site_description' => '',
             'support_email' => '',

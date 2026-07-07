@@ -7,7 +7,6 @@ use App\Features\Auth\Requests\ForgotPasswordRequest;
 use App\Features\Auth\Requests\LoginRequest;
 use App\Features\Auth\Requests\RegisterRequest;
 use App\Features\Auth\Services\GoogleAuthService;
-use App\Features\Client\Package\Services\PackageService;
 use App\Features\Client\Profile\Actions\RecordUserLogAction;
 use App\Features\Client\Wallet\Services\WalletService;
 use App\Http\Controllers\Controller;
@@ -28,7 +27,6 @@ class AuthController extends Controller
 {
     public function __construct(
         private readonly WalletService $walletService,
-        private readonly PackageService $packageService,
         private readonly RecordUserLogAction $recordUserLogAction,
         private readonly MailQueue $mailQueue,
         private readonly GoogleAuthService $googleAuthService,
@@ -297,8 +295,7 @@ class AuthController extends Controller
      *     full_name:?string,
      *     role:mixed,
      *     status:mixed,
-     *     wallet:array{id:int,user_id:int,type:string,balance:string,hold_balance:string,total_recharge:string,total_spent:string,created_at:?string,updated_at:?string},
-     *     user_subscriptions:?array<string, mixed>
+     *     wallet:array{id:int,user_id:int,type:string,balance:string,hold_balance:string,total_recharge:string,total_spent:string,created_at:?string,updated_at:?string}
      * }
      */
     protected function userPayload(User $user): array
@@ -314,7 +311,6 @@ class AuthController extends Controller
                 'status',
             ]),
             'wallet' => $this->walletService->getWalletInfo($user),
-            'user_subscriptions' => $this->packageService->getCurrentUserSubscriptionInfo($user),
         ];
     }
 

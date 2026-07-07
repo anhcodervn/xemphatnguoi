@@ -2,6 +2,8 @@
 
 namespace App\Features\Client\Package\Controllers;
 
+use App\Features\Captcha\Support\CaptchaPlanCatalog;
+use App\Features\Client\ApiKey\Resources\ApiKeyResource;
 use App\Features\Client\Package\Requests\PayPackageOrderRequest;
 use App\Features\Client\Package\Requests\QuotePackageOrderRequest;
 use App\Features\Client\Package\Requests\UpdateSubscriptionAutoRenewRequest;
@@ -10,7 +12,6 @@ use App\Features\Client\Package\Services\PackageService;
 use App\Features\Client\Profile\Actions\RecordUserLogAction;
 use App\Features\Client\Subscription\Requests\StorePackageOrderRequest;
 use App\Features\Client\Wallet\Services\WalletService;
-use App\Features\Cron\Support\CronPackageCatalog;
 use App\Http\Controllers\Controller;
 use App\Models\Package;
 use App\Models\PackageOrder;
@@ -56,12 +57,12 @@ class PackageController extends Controller
 
         $activeSubscriptions = $user->userSubscriptions()
             ->where('status', SubscriptionStatus::Active)
-            ->with('package:id,name,slug')
+            ->with(['package:id,name,slug', 'apiKeys:id,user_subscription_id,api_key,name,status,expired_at,created_at'])
             ->latest('id')
             ->get();
 
         $latestOrders = $user->packageOrders()
-            ->with(['package:id,name,slug', 'sourceSubscription'])
+            ->with(['package:id,name,slug'])
             ->latest('id')
             ->limit(5)
             ->get();
@@ -70,6 +71,8 @@ class PackageController extends Controller
             'status' => true,
             'data' => [
                 'packages' => $packages,
+                'current_subscription' => $this->packageService->getCurrentUserSubscriptionInfo($user),
+                'active_subscriptions' => $this->packageService->getActiveUserSubscriptionsInfo($user),
                 'active_subscription_package_ids' => $activeSubscriptions->pluck('package_id')->unique()->values(),
                 'summary' => [
                     'active_subscription_count' => $activeSubscriptions->count(),
@@ -77,8 +80,8 @@ class PackageController extends Controller
                     'wallet_balance' => $this->walletService->getWalletInfo($user)['balance'],
                 ],
                 'limits_catalog' => [
-                    'defaults' => CronPackageCatalog::defaults(),
-                    'presets' => CronPackageCatalog::presets(),
+                    'defaults' => CaptchaPlanCatalog::defaults(),
+                    'presets' => CaptchaPlanCatalog::presets(),
                 ],
                 'latest_orders' => $latestOrders,
             ],
@@ -119,7 +122,7 @@ class PackageController extends Controller
         return response()->json([
             'status' => true,
             'message' => 'Đã tạo đơn hàng gói. Vui lòng hoàn tất bước thanh toán.',
-            'data' => $packageOrder->fresh(['package', 'sourceSubscription']),
+            'data' => $packageOrder->fresh(['package']),
         ], 201);
     }
 
@@ -143,7 +146,13 @@ class PackageController extends Controller
             'message' => 'Đơn hàng gói đã được thanh toán bằng ví chính.',
             'data' => [
                 'order' => $result['order'],
-                'subscription' => $result['subscription'],
+                'subscription' => $this->packageService->getCurrentUserSubscriptionInfo($request->user()),
+                'active_subscriptions' => $this->packageService->getActiveUserSubscriptionsInfo($request->user()),
+                'package_api_key' => $result['package_api_key'] ? [
+                    'api_key' => ApiKeyResource::make($result['package_api_key']['api_key'])->resolve(),
+                    'api_secret' => $result['package_api_key']['api_secret'],
+                    'is_new' => $result['package_api_key']['is_new'],
+                ] : null,
                 'wallet' => $this->walletService->getWalletInfo($request->user()),
             ],
         ]);
@@ -176,6 +185,7 @@ class PackageController extends Controller
                 : 'Đã tắt tự gia hạn cho gói hiện tại.',
             'data' => [
                 'subscription' => $this->packageService->getCurrentUserSubscriptionInfo($request->user()),
+                'active_subscriptions' => $this->packageService->getActiveUserSubscriptionsInfo($request->user()),
             ],
         ]);
     }

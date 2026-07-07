@@ -28,7 +28,7 @@ const actionOptions = [
 ];
 
 const statusClasses: Record<string, string> = {
-    success: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200',
+    success: 'bg-teal-50 text-teal-700 ring-1 ring-teal-200',
     warning: 'bg-amber-50 text-amber-700 ring-1 ring-amber-200',
     failed: 'bg-rose-50 text-rose-700 ring-1 ring-rose-200',
 };
@@ -45,30 +45,30 @@ const getStatusLabel = (status: string): string => statusLabels[status] ?? 'Khô
 
 <template>
     <div class="space-y-3">
-        <div class="flex flex-col gap-2 rounded-[10px] bg-slate-50/80 p-3 md:flex-row md:items-center">
+        <div class="flex flex-col gap-2 rounded-[10px] bg-teal-50/70 p-3 md:flex-row md:items-center">
             <input
                 :value="props.filters.search"
                 type="text"
-                class="w-full rounded-[8px] border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
+                class="w-full rounded-[8px] border border-teal-100 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-teal-300 focus:ring-2 focus:ring-teal-100"
                 placeholder="Tìm theo IP, thiết bị, trình duyệt..."
                 @input="emit('update:search', ($event.target as HTMLInputElement).value)"
             />
 
             <select
                 :value="props.filters.action"
-                class="rounded-[8px] border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-blue-300 focus:ring-2 focus:ring-blue-100 md:w-[220px]"
+                class="rounded-[8px] border border-teal-100 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-teal-300 focus:ring-2 focus:ring-teal-100 md:w-[220px]"
                 @change="emit('update:action', ($event.target as HTMLSelectElement).value)"
             >
                 <option v-for="option in actionOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
             </select>
         </div>
 
-        <div class="overflow-hidden rounded-[10px] border border-slate-200/80">
-            <div v-if="props.loading" class="bg-slate-50 px-4 py-10 text-center text-sm text-slate-500">Đang tải lịch sử người dùng...</div>
+        <div class="overflow-hidden rounded-[10px] border border-teal-100">
+            <div v-if="props.loading" class="bg-teal-50/70 px-4 py-10 text-center text-sm text-slate-500">Đang tải lịch sử người dùng...</div>
 
             <div v-else class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-slate-200 text-sm">
-                    <thead class="bg-slate-50 text-left text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                    <thead class="bg-teal-50 text-left text-xs font-semibold uppercase tracking-[0.16em] text-teal-700">
                         <tr>
                             <th class="px-4 py-3">Thời gian</th>
                             <th class="px-4 py-3">Hành động</th>
@@ -115,7 +115,7 @@ const getStatusLabel = (status: string): string => statusLabels[status] ?? 'Khô
                 >
                     <ChevronLeft class="h-4 w-4" />
                 </button>
-                <span class="rounded-[10px] bg-slate-900 px-3 py-1.5 font-semibold text-white">{{ props.meta.current_page }} / {{ props.meta.last_page }}</span>
+                <span class="rounded-[10px] bg-teal-600 px-3 py-1.5 font-semibold text-white">{{ props.meta.current_page }} / {{ props.meta.last_page }}</span>
                 <button
                     type="button"
                     class="rounded-[10px] border border-slate-200 bg-white px-2.5 py-1.5"
@@ -129,3 +129,4 @@ const getStatusLabel = (status: string): string => statusLabels[status] ?? 'Khô
         </div>
     </div>
 </template>
+

@@ -60,6 +60,8 @@ export type AdminUserDetailResponse = {
         id: number;
         name: string;
         price: number;
+        used_captcha_quota: number;
+        remaining_captcha_quota: number | null;
         starts_at: string | null;
         expires_at: string | null;
         status: string | null;
@@ -67,9 +69,9 @@ export type AdminUserDetailResponse = {
     stats: {
         total_spent: number;
         package_order_count: number;
-        cron_job_count: number;
-        alert_channel_count: number;
-        runs_today: number;
+        captcha_task_count: number;
+        api_key_count: number;
+        solved_task_count: number;
     };
     latest_login: {
         at: string | null;

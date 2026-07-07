@@ -19,14 +19,6 @@ export type ClientProfileType = {
     api_access?: {
         can_create: boolean;
         message: string;
-        package: {
-            id: number | null;
-            name: string;
-            expires_at: string | null;
-            status: string;
-            request_limit: number | null;
-            request_per_minute: number | null;
-        } | null;
     } | null;
 };
 

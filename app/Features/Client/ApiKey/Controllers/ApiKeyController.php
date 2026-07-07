@@ -5,7 +5,6 @@ namespace App\Features\Client\ApiKey\Controllers;
 use App\Features\Client\ApiKey\Requests\StoreApiKeyRequest;
 use App\Features\Client\ApiKey\Requests\UpdateApiKeyRequest;
 use App\Features\Client\ApiKey\Resources\ApiKeyResource;
-use App\Features\Cron\Services\CronPlanService;
 use App\Http\Controllers\Controller;
 use App\Models\ApiKey;
 use App\Models\User;
@@ -17,14 +16,15 @@ use Illuminate\Support\Facades\Hash;
 
 class ApiKeyController extends Controller
 {
-    public function __construct(
-        private readonly CronPlanService $cronPlanService,
-    ) {}
-
     public function index(Request $request): JsonResponse
     {
         $user = $this->user($request);
-        $keys = $user->apiKeys()->withCount('logs')->latest('id')->get();
+        $keys = $user->apiKeys()
+            ->with(['subscription:id,package_id,package_name,expires_at,status'])
+            ->withCount('logs')
+            ->orderByRaw("case when key_type = 'wallet' then 0 else 1 end")
+            ->latest('id')
+            ->get();
 
         return response()->json(ApiResponse::success(data: [
             'data' => ApiKeyResource::collection($keys)->resolve(),
@@ -40,31 +40,24 @@ class ApiKeyController extends Controller
 
     public function permissions(Request $request): JsonResponse
     {
-        $subscription = $this->cronPlanService->activeSubscription($this->user($request));
-
         return response()->json(ApiResponse::success(data: [
             'permissions' => ApiPermissionCatalog::all(),
-            'note' => $subscription !== null
-                ? 'API key dùng cho bộ endpoint AutoCron V1.'
-                : 'Bạn cần gói đang hoạt động để tạo API key.',
+            'note' => 'API key ví dùng để gọi captcha API V1 và trừ trực tiếp số dư ví. API key gói được tạo tự động khi mua gói.',
         ]));
     }
 
     public function store(StoreApiKeyRequest $request): JsonResponse
     {
         $user = $this->user($request);
-        $this->cronPlanService->requireActiveSubscription($user);
-
-        if ($user->apiKeys()->exists()) {
-            return response()->json(ApiResponse::error('Mỗi tài khoản chỉ có một API key duy nhất. Hãy dùng chức năng đổi secret nếu cần cập nhật thông tin tích hợp.'), 422);
-        }
-
         $credentials = ApiKey::generateCredentials();
 
         $apiKey = $user->apiKeys()->create([
+            'key_type' => ApiKey::TYPE_WALLET,
+            'user_subscription_id' => null,
             'name' => $request->validated('name'),
             'api_key' => $credentials['api_key'],
             'api_secret_hash' => Hash::make($credentials['api_secret']),
+            'api_secret_encrypted' => $credentials['api_secret'],
             'permissions' => $request->validated('permissions'),
             'ip_whitelist' => $request->validated('ip_whitelist', []),
             'expired_at' => $request->validated('expired_at'),
@@ -74,7 +67,7 @@ class ApiKeyController extends Controller
         return response()->json(ApiResponse::success(
             message: 'Tạo API key thành công.',
             data: [
-                'api_key' => ApiKeyResource::make($apiKey->loadCount('logs'))->resolve(),
+                'api_key' => ApiKeyResource::make($apiKey->load(['subscription'])->loadCount('logs'))->resolve(),
                 'api_secret' => $credentials['api_secret'],
                 'permission_catalog' => ApiPermissionCatalog::all(),
             ],
@@ -85,14 +78,15 @@ class ApiKeyController extends Controller
     {
         $apiKey = $this->ownedKey($apiKey, $this->user($request));
 
-        $payload = $request->validated();
-        $apiKey->fill($payload);
+        abort_if($apiKey->isPackageKey(), 422, 'API key gói được tạo tự động và không hỗ trợ sửa thủ công.');
+
+        $apiKey->fill($request->validated());
         $apiKey->save();
 
         return response()->json(ApiResponse::success(
             message: 'Cập nhật API key thành công.',
             data: [
-                'api_key' => ApiKeyResource::make($apiKey->fresh()->loadCount('logs'))->resolve(),
+                'api_key' => ApiKeyResource::make($apiKey->fresh()->load(['subscription'])->loadCount('logs'))->resolve(),
             ],
         ));
     }
@@ -104,13 +98,14 @@ class ApiKeyController extends Controller
 
         $apiKey->forceFill([
             'api_secret_hash' => Hash::make($credentials['api_secret']),
+            'api_secret_encrypted' => $credentials['api_secret'],
             'status' => ApiKey::STATUS_ACTIVE,
         ])->save();
 
         return response()->json(ApiResponse::success(
             message: 'Đổi API secret thành công.',
             data: [
-                'api_key' => ApiKeyResource::make($apiKey->fresh()->loadCount('logs'))->resolve(),
+                'api_key' => ApiKeyResource::make($apiKey->fresh()->load(['subscription'])->loadCount('logs'))->resolve(),
                 'api_secret' => $credentials['api_secret'],
             ],
         ));

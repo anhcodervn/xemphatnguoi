@@ -1,13 +1,13 @@
 # PROJECT_BRIEF
 
 ## Product
-- Product name: `AutoCron`
-- Domain: SaaS cho thuê và quản lý `HTTP Cron Jobs`
+- Product name: `GiaiCaptcha`
+- Domain: SaaS cho dịch vụ `giải captcha qua API`
 - Core value:
-  - user mua package/subscription
-  - tạo cron job HTTP theo giới hạn gói
-  - hệ thống tự dispatch và chạy request theo lịch
-  - ghi log, tính quota, cảnh báo khi lỗi
+  - user nạp ví và sử dụng API key
+  - tạo task captcha theo từng loại dịch vụ
+  - hệ thống định tuyến task tới nguồn giải phù hợp
+  - ghi log, trừ số dư, thống kê tỷ lệ thành công và tốc độ
 
 ## Confirmed Stack
 - Backend: Laravel 12
@@ -24,38 +24,34 @@
   - package
   - subscription
   - wallet
-- Domain cũ liên quan API Bank được loại khỏi route/UI chính, thay bằng domain AutoCron
+- Domain cũ liên quan API Bank và nền tảng cũ được loại khỏi route/UI chính, thay bằng domain captcha SaaS
 
 ## Main Business Domains
-- `CronJob`
-  - cấu hình URL, method, headers, body, schedule, expected checks, retry, status
-- `CronJobLog`
-  - lịch sử mỗi lần chạy, request/response preview, error, duration
-- `CronAlertChannel`
-  - discord, telegram, webhook, email
-- `CronUsageCounter`
-  - thống kê số lần chạy theo ngày/tháng cho quota
-- `Package` / `UserSubscription`
-  - package limits cho cron SaaS
+- `CaptchaService`
+  - dịch vụ captcha công khai, icon, giá bán, tốc độ, tỷ lệ thành công
+- `CaptchaSource`
+  - nguồn solve bên thứ 3, driver, credentials, giá gốc, cấu hình routing
+- `CaptchaTask`
+  - task giải captcha, payload, status, provider response, kết quả
+- `ApiKey`
+  - khóa truy cập API của user
+- `Wallet`
+  - số dư, nạp tiền, chi phí task captcha
 
-## Scheduler And Queue Flow
-1. `cron:dispatch-due` chạy mỗi phút.
-2. Command tìm `cron_jobs` đến hạn.
-3. Kiểm tra subscription, quota, status, SSRF safety.
-4. Lock job để tránh dispatch trùng.
-5. Đẩy `RunHttpCronJob` vào queue theo priority package:
-   - `cron-low`
-   - `cron-default`
-   - `cron-high`
-6. Worker thực hiện HTTP request, ghi log, cập nhật counters và alert.
+## Task And Queue Flow
+1. Client gọi `POST /api/v1/create` để tạo task captcha.
+2. Hệ thống validate service, API key, số dư và payload.
+3. Task được route tới `CaptchaSource` phù hợp theo driver.
+4. Nếu provider trả kết quả ngay thì task chuyển `solved`.
+5. Nếu provider xử lý bất đồng bộ thì task giữ `pending` để poll.
+6. Client gọi API check task để lấy kết quả và sử dụng.
 
 ## Security
-- Có SSRF protection cho target URL:
-  - chỉ cho `http` / `https`
-  - chặn localhost, private IP, metadata IP
-  - chặn domain resolve sang private IP
-  - chặn dangerous ports
-  - chặn body/header/URL quá lớn
+- Có validation payload và provider credentials:
+  - validate theo từng loại captcha
+  - ẩn toàn bộ thông tin nguồn solve ở client
+  - giảm thiểu lộ token/credential bên thứ 3
+  - log response an toàn, không expose credentials
 
 ## Verification Commands
 1. `php artisan route:list`
@@ -64,6 +60,6 @@
 4. `npx eslint .`
 
 ## Current Refactor Status
-- Đã thêm domain backend/frontend AutoCron cơ bản.
-- Đã thay route và menu chính sang cron jobs, logs, alerts, packages.
-- Vẫn còn một số module cũ trên đĩa để tránh động vào migration/history không liên quan.
+- Đã chuyển trục nghiệp vụ chính sang captcha SaaS.
+- Đã thay route và menu chính sang services, tasks, api docs, wallet.
+- Vẫn còn một số file docs/test mẫu cần được giữ đồng bộ với thương hiệu mới.

@@ -1,15 +1,14 @@
 import {
+    BarChart3,
     BellRing,
     BookMarked,
+    Database,
     LayoutDashboard,
     ListChecks,
     Mail,
-    Package,
-    ReceiptText,
     Settings,
     Users,
     WalletCards,
-    Zap,
     type LucideIcon,
 } from "lucide-vue-next";
 
@@ -34,17 +33,35 @@ export const adminMenuGroups: AdminMenuGroup[] = [
         href: "/admin",
     },
     {
-        key: "cron-jobs",
-        label: "Cron Jobs",
-        icon: Zap,
+        key: "analytics",
+        label: "Báo cáo vận hành",
+        icon: BarChart3,
+        href: "/admin/analytics",
+    },
+    {
+        key: "captcha",
+        label: "Captcha API",
+        icon: Database,
         children: [
             {
-                label: "Tất cả cron jobs",
-                href: "/admin/cron-jobs",
+                label: "Nguồn solve",
+                href: "/admin/captcha-sources",
             },
             {
-                label: "Nhật ký hệ thống",
-                href: "/admin/system-logs",
+                label: "Dịch vụ captcha",
+                href: "/admin/captcha-services",
+            },
+            {
+                label: "Gói captcha",
+                href: "/admin/packages",
+            },
+            {
+                label: "Yêu cầu captcha",
+                href: "/admin/captcha-tasks",
+            },
+            {
+                label: "API log",
+                href: "/admin/api-logs",
             },
         ],
     },
@@ -79,25 +96,6 @@ export const adminMenuGroups: AdminMenuGroup[] = [
         ],
     },
     {
-        key: "packages",
-        label: "Quản lý gói thuê",
-        icon: Package,
-        children: [
-            {
-                label: "Tạo gói mới",
-                href: "/admin/packages/create",
-            },
-            {
-                label: "Danh sách gói",
-                href: "/admin/packages",
-            },
-            {
-                label: "Gói đã cho thuê",
-                href: "/admin/packages/orders",
-            },
-        ],
-    },
-    {
         key: "notifications",
         label: "Thông báo hệ thống",
         icon: BellRing,
@@ -109,25 +107,6 @@ export const adminMenuGroups: AdminMenuGroup[] = [
             {
                 label: "Danh sách thông báo",
                 href: "/admin/notifications",
-            },
-        ],
-    },
-    {
-        key: "coupons",
-        label: "Mã giảm giá",
-        icon: ReceiptText,
-        children: [
-            {
-                label: "Tạo mã giảm giá",
-                href: "/admin/couponts/create",
-            },
-            {
-                label: "Danh sách coupon",
-                href: "/admin/couponts",
-            },
-            {
-                label: "Lịch sử coupon",
-                href: "/admin/couponts/history",
             },
         ],
     },

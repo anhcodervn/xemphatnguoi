@@ -42,6 +42,8 @@ return [
     ],
 
     'discord' => [
+        'bot_name' => env('DISCORD_BOT_NAME', 'GiaiCaptcha Monitor'),
+        'bot_avatar_url' => env('DISCORD_BOT_AVATAR_URL'),
         'channels' => [
             'queue' => env('DISCORD_WEBHOOK_QUEUE'),
             'info' => env('DISCORD_WEBHOOK_INFO'),
@@ -50,6 +52,15 @@ return [
             'alerts' => env('DISCORD_WEBHOOK_ALERTS'),
             'recovered' => env('DISCORD_WEBHOOK_RECOVERED'),
             'staging' => env('DISCORD_WEBHOOK_STAGING'),
+        ],
+        'context' => [
+            'app_name' => env('APP_NAME', 'GiaiCaptcha.vn'),
+            'app_env' => env('APP_ENV', 'production'),
+            'app_url' => env('APP_URL'),
+            'server_name' => env('DISCORD_SERVER_NAME', gethostname() ?: php_uname('n')),
+            'server_ip' => env('DISCORD_SERVER_IP'),
+            'server_role' => env('DISCORD_SERVER_ROLE', 'app'),
+            'server_region' => env('DISCORD_SERVER_REGION'),
         ],
     ],
 

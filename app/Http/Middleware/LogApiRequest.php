@@ -50,6 +50,7 @@ class LogApiRequest
             'method' => $request->method(),
             'ip' => $request->ip(),
             'request_data' => $this->requestPayload($request),
+            'service_response_data' => $this->serviceResponsePayload($request),
             'response_data' => $this->responsePayload($response),
             'status_code' => $response->getStatusCode(),
             'response_time_ms' => (int) round((microtime(true) - $startedAt) * 1000),
@@ -81,6 +82,7 @@ class LogApiRequest
             'method' => $request->method(),
             'ip' => $request->ip(),
             'request_data' => $this->requestPayload($request),
+            'service_response_data' => $this->serviceResponsePayload($request),
             'response_data' => [
                 'status' => false,
                 'message' => Str::limit($throwable->getMessage(), 1000, '...'),
@@ -120,5 +122,15 @@ class LogApiRequest
         return Str::isJson($content)
             ? json_decode($content, true, flags: JSON_THROW_ON_ERROR)
             : Str::limit($content, 2000, '...');
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function serviceResponsePayload(Request $request): ?array
+    {
+        $payload = $request->attributes->get('service_response_data');
+
+        return is_array($payload) ? $payload : null;
     }
 }

@@ -8,14 +8,21 @@ const isSidebarOpen = ref(false);
 </script>
 
 <template>
-    <div class="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top,_#f8fbff_0%,_#eef4f8_42%,_#e6edf3_100%)] text-slate-800">
+    <div
+        class="min-h-screen overflow-x-hidden text-slate-800"
+        style="
+            background:
+                radial-gradient(circle at top right, rgba(6, 182, 212, 0.12), transparent 30%),
+                linear-gradient(180deg, #f7fbff 0%, #ffffff 100%);
+        "
+    >
         <div class="flex min-h-screen overflow-x-hidden">
             <Sidebar :is-open="isSidebarOpen" @close="isSidebarOpen = false" />
 
             <div class="flex min-h-screen min-w-0 flex-1 flex-col overflow-x-hidden">
                 <Header @toggle-sidebar="isSidebarOpen = !isSidebarOpen" />
 
-                <main class="mx-auto w-full max-w-[1200px] min-w-0 px-3 pb-6 pt-[6rem] sm:px-4">
+                <main class="mx-auto w-full max-w-[1240px] min-w-0 px-3 pb-8 pt-[6rem] sm:px-5">
                     <router-view />
                 </main>
 

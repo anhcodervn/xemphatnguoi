@@ -8,7 +8,7 @@ import {
     type AdminUserWalletTransaction,
 } from '@/services/admin-user.service';
 import { handleErrorResponse, handleSuccessResponse } from '@/utils/response';
-import { ArrowLeft, Clock3, History, KeyRound, LoaderCircle, Minus, Package, Plus, Wallet, Webhook } from 'lucide-vue-next';
+import { ArrowLeft, CheckCheck, KeyRound, ListChecks, LoaderCircle, Minus, Package, Plus, Wallet } from 'lucide-vue-next';
 import { computed, onMounted, reactive, ref } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 
@@ -121,21 +121,21 @@ const statCards = computed(() => {
             iconClass: 'bg-violet-50 text-violet-600',
         },
         {
-            label: 'Cron jobs',
-            value: formatNumber(detail.value.stats.cron_job_count),
-            icon: Clock3,
+            label: 'Task captcha',
+            value: formatNumber(detail.value.stats.captcha_task_count),
+            icon: ListChecks,
             iconClass: 'bg-sky-50 text-sky-600',
         },
         {
-            label: 'Alert channels',
-            value: formatNumber(detail.value.stats.alert_channel_count),
-            icon: Webhook,
+            label: 'API keys',
+            value: formatNumber(detail.value.stats.api_key_count),
+            icon: KeyRound,
             iconClass: 'bg-amber-50 text-amber-600',
         },
         {
-            label: 'Runs hôm nay',
-            value: formatNumber(detail.value.stats.runs_today),
-            icon: History,
+            label: 'Task đã giải',
+            value: formatNumber(detail.value.stats.solved_task_count),
+            icon: CheckCheck,
             iconClass: 'bg-slate-100 text-slate-700',
         },
     ];

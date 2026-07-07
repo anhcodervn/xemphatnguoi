@@ -11,13 +11,13 @@
 - `app/Features`
   - `Admin/...`
   - `Client/...`
-  - `Cron/...`
+  - `Captcha/...`
 - `app/Models`
-  - Eloquent models cho package, subscription, wallet và cron domain
+  - Eloquent models cho wallet, user, captcha services, captcha tasks, api keys
 - `app/Console/Commands`
-  - command scheduler, pruning, quota reset
+  - command queue maintenance, pruning, syncing stats
 - `app/Jobs`
-  - queue jobs, bao gồm `RunHttpCronJob`
+  - queue jobs cho xử lý task captcha bất đồng bộ
 - `resources/js/pages`
   - page theo admin/client
 - `resources/js/services`
@@ -34,35 +34,25 @@ Mỗi feature ưu tiên giữ cấu trúc:
 - `Resources`
 - `routes.php`
 
-## AutoCron Backend Modules
+## Captcha Backend Modules
 
-### `app/Features/Cron`
-- `Services/CronPlanService`
-  - resolve package limits cho user/subscription
-- `Services/CronScheduleService`
-  - tính `next_run_at` theo interval hoặc cron expression
-- `Services/CronUsageService`
-  - đếm usage và quota
-- `Services/HttpTargetValidator`
-  - SSRF protection và URL validation
-- `Services/CronRunnerService`
-  - chạy HTTP request, ghi log, update stats, retry, alert
-- `Services/CronAlertService`
-  - gửi alert fail/recovered/test
+### `app/Features/Captcha`
+- `Actions/ApiCaptchaAction`
+  - điều phối create task API, validate ví và service
+- `Services/CaptchaTaskService`
+  - tạo task, route provider, xử lý sync/async response
 - `Resources/*`
-  - JSON response shape cho cron jobs, logs, channels
+  - JSON response shape cho services, tasks, API docs
 
 ### Client Features
-- `Client/CronJob`
-  - CRUD cron jobs, pause/resume/run-now, logs, stats
-- `Client/CronAlert`
-  - CRUD alert channels, test alert
+- `Client/Captcha`
+  - danh sách dịch vụ, lịch sử task captcha, tài liệu API
 
 ### Admin Features
-- `Admin/CronJob`
-  - quản lý tất cả cron jobs và logs
-- `Admin/Package`
-  - chỉnh package limits cho AutoCron
+- `Admin/Captcha`
+  - quản lý dịch vụ captcha, nguồn solve, giá gốc và giá bán
+- `Admin/User`
+  - xem thông tin user, ví, API key, lịch sử task captcha
 
 ## Core Data Flow
 1. Vue page gọi service trong `resources/js/services`.
@@ -71,49 +61,29 @@ Mỗi feature ưu tiên giữ cấu trúc:
 4. Service/Action xử lý nghiệp vụ.
 5. Model ghi dữ liệu và `Resource` trả JSON thống nhất.
 
-## Scheduler And Worker Flow
-1. `routes/console.php` schedule:
-   - `cron:dispatch-due` every minute
-   - `cron:prune-logs` daily
-   - `cron:reset-usage-quota` daily
-2. `cron:dispatch-due` tìm job `active` có `next_run_at <= now()`.
-3. Hệ thống lock theo job trước khi dispatch.
-4. Queue được chọn theo `package_limits.queue_name`.
-5. `RunHttpCronJob` thực thi request.
-6. Kết quả được lưu vào `cron_job_logs`.
-7. Counters trên `cron_jobs` và `cron_usage_counters` được cập nhật.
-8. Alert được gửi khi fail/recovered nếu package cho phép.
+## Task Processing Flow
+1. Client gọi `POST /api/v1/create`.
+2. Controller validate payload theo loại captcha.
+3. `CaptchaTaskService` chọn service và source phù hợp.
+4. Provider service trong `App/Service/Captcha` gọi API bên thứ 3.
+5. Nếu response có `captcha` ngay thì lưu task `solved`.
+6. Nếu response trả mã task provider thì lưu `pending` để poll tiếp.
+7. Queue có thể dùng cho refresh/truy vấn các task pending.
+8. Stats dịch vụ công khai có thể cập nhật từ 100 task gần nhất.
 
-## Package Limits
-Package limits được lưu trong `package_limits` và snapshot trên subscription. Các trường quan trọng:
-- `max_cron_jobs`
-- `min_interval_seconds`
-- `max_logs_per_job`
-- `max_request_timeout_seconds`
-- `max_response_size_kb`
-- `max_retries_per_run`
-- `allowed_methods`
-- `allow_custom_headers`
-- `allow_custom_body`
-- `allow_cron_expression`
-- `allow_run_now`
-- `allow_alerts`
-- `monthly_run_quota`
-- `daily_run_quota`
-- `concurrent_runs_limit`
-- `priority`
-- `queue_name`
+## Pricing And Routing
+- Mỗi `CaptchaService` có giá bán /1 lần giải.
+- Mỗi `CaptchaSource` có giá gốc, driver, credentials và mã dịch vụ nhà cung cấp.
+- Admin có thể bật/tắt source, điều chỉnh ưu tiên và định tuyến theo nhu cầu.
+- Toàn bộ dữ liệu nguồn solve được ẩn ở client/public API.
 
 ## Queue / Supervisor Notes
-- Queue names:
-  - `cron-low`
-  - `cron-default`
-  - `cron-high`
 - Production nên dùng Redis queue + Supervisor hoặc Horizon.
-- Worker cần scale theo priority package và lưu ý `withoutOverlapping` cho dispatch command.
+- Worker nên tách hàng đợi cho provider callback/polling nếu có.
+- Có thể thêm retry/backoff cho call provider bên thứ 3.
 
 ## Security Boundary
-- SSRF validation trước khi request.
-- Không cho redirect sang private IP.
-- Preview response body bị cắt theo package limit.
-- Log pruning theo package retention và giới hạn logs/job.
+- Credentials provider nên lưu an toàn và không trả về client.
+- Payload create task cần validate theo từng loại captcha.
+- Log response phải ẩn token/secret và dữ liệu nhạy cảm.
+- API key user cần có quota/rate limit phù hợp.

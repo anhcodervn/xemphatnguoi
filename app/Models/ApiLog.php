@@ -19,6 +19,7 @@ class ApiLog extends Model
         'method',
         'ip',
         'request_data',
+        'service_response_data',
         'response_data',
         'status_code',
         'response_time_ms',
@@ -29,6 +30,7 @@ class ApiLog extends Model
     {
         return [
             'request_data' => 'array',
+            'service_response_data' => 'array',
             'response_data' => 'array',
             'status_code' => 'integer',
             'response_time_ms' => 'integer',
