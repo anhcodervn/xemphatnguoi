@@ -73,4 +73,11 @@ return [
         'key' => env('AUTOCRON_INTERNAL_KEY'),
     ],
 
+    'captcha' => [
+        'pending_order_ttl_hours' => (int) env('CAPTCHA_PENDING_ORDER_TTL_HOURS', 24),
+        'api_log_retention_days' => (int) env('CAPTCHA_API_LOG_RETENTION_DAYS', 30),
+        'source_low_balance_threshold' => (float) env('CAPTCHA_SOURCE_LOW_BALANCE_THRESHOLD', 50000),
+        'source_low_balance_channel' => env('CAPTCHA_SOURCE_LOW_BALANCE_CHANNEL', 'alerts'),
+    ],
+
 ];

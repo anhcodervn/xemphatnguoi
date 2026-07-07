@@ -18,3 +18,11 @@ Schedule::command(sprintf('monitor:discord-heartbeat --channel=%s', $heartbeatCh
 Schedule::command('captcha:sync-source-balances')
     ->everyFiveMinutes()
     ->withoutOverlapping();
+
+Schedule::command('package:prune-pending-orders')
+    ->hourly()
+    ->withoutOverlapping();
+
+Schedule::command('api:prune-logs')
+    ->daily()
+    ->withoutOverlapping();

@@ -5,6 +5,7 @@ namespace App\Features\Captcha\Services;
 use App\Models\CaptchaSource;
 use App\Service\Captcha\AutoCaptchaPro;
 use App\Service\Captcha\Captcha69;
+use App\Utils\SendMessage;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
@@ -37,9 +38,16 @@ class CaptchaSourceBalanceService
 
             try {
                 $balance = $this->fetchBalance($source);
+                $settings = is_array($source->settings) ? $source->settings : [];
+                $settings = $this->updateBalanceAlertState(
+                    source: $source,
+                    settings: $settings,
+                    balance: $balance,
+                );
 
                 $source->forceFill([
                     'balance' => $balance,
+                    'settings' => $settings,
                 ])->save();
 
                 $updated++;
@@ -142,5 +150,87 @@ class CaptchaSourceBalanceService
     private function captcha69(CaptchaSource $source): Captcha69
     {
         return new Captcha69($source->credentials ?? [], $source->api_base_url);
+    }
+
+    /**
+     * @param  array<string, mixed>  $settings
+     * @return array<string, mixed>
+     */
+    private function updateBalanceAlertState(CaptchaSource $source, array $settings, string $balance): array
+    {
+        $threshold = max(0, (float) config('services.captcha.source_low_balance_threshold', 50000));
+        $channel = trim((string) config('services.captcha.source_low_balance_channel', 'alerts'));
+        $balanceValue = (float) $balance;
+        $monitor = is_array(Arr::get($settings, 'balance_monitor')) ? Arr::get($settings, 'balance_monitor') : [];
+        $wasAlerted = (bool) Arr::get($monitor, 'low_balance_alert_sent', false);
+
+        if ($balanceValue <= $threshold) {
+            if (! $wasAlerted && $channel !== '') {
+                $this->sendLowBalanceAlert($source, $balance, $threshold, $channel);
+            }
+
+            $monitor['low_balance_alert_sent'] = true;
+            $monitor['low_balance_alert_sent_at'] = now()->toISOString();
+            $settings['balance_monitor'] = $monitor;
+
+            return $settings;
+        }
+
+        if ($wasAlerted && $channel !== '') {
+            $this->sendRecoveredBalanceAlert($source, $balance, $threshold, $channel);
+        }
+
+        $monitor['low_balance_alert_sent'] = false;
+        $monitor['low_balance_recovered_at'] = now()->toISOString();
+        $settings['balance_monitor'] = $monitor;
+
+        return $settings;
+    }
+
+    private function sendLowBalanceAlert(CaptchaSource $source, string $balance, float $threshold, string $channel): void
+    {
+        $title = sprintf('Nguồn captcha %s sắp hết số dư', $source->name);
+        $payload = [
+            'Source ID' => $source->id,
+            'Nguồn' => $source->name,
+            'Driver' => $source->driver,
+            'Balance hiện tại' => $balance,
+            'Ngưỡng cảnh báo' => $threshold,
+        ];
+
+        $this->sendChannelReport($channel, $title, $payload, false);
+    }
+
+    private function sendRecoveredBalanceAlert(CaptchaSource $source, string $balance, float $threshold, string $channel): void
+    {
+        $title = sprintf('Nguồn captcha %s đã hồi số dư', $source->name);
+        $payload = [
+            'Source ID' => $source->id,
+            'Nguồn' => $source->name,
+            'Driver' => $source->driver,
+            'Balance hiện tại' => $balance,
+            'Ngưỡng cảnh báo' => $threshold,
+        ];
+
+        $this->sendChannelReport($channel, $title, $payload, true);
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    private function sendChannelReport(string $channel, string $title, array $payload, bool $recovered): void
+    {
+        match ($channel) {
+            'queue' => SendMessage::sendQueueReport($title, $payload),
+            'info' => SendMessage::sendInfoReport($title, $payload),
+            'ops' => SendMessage::sendOpsReport($title, $payload),
+            'security' => SendMessage::sendSecurityReport($title, $payload),
+            'alerts' => $recovered
+                ? SendMessage::sendRecoveredReport($title, $payload)
+                : SendMessage::sendAlertReport($title, $payload),
+            'recovered' => SendMessage::sendRecoveredReport($title, $payload),
+            'staging' => SendMessage::sendStagingReport($title, $payload),
+            default => SendMessage::sendAlertReport($title, $payload),
+        };
     }
 }

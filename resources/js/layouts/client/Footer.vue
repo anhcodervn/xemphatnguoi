@@ -1,84 +1,30 @@
 <script setup lang="ts">
-import { useSystemSetting } from '@/composables/useSystemSetting';
-import { computed, onMounted } from 'vue';
-
 type FooterLink = {
     label: string;
     href: string;
 };
 
-type FooterLinkGroup = {
-    title: string;
-    links: FooterLink[];
-};
-
-const { settings, fetchSettings } = useSystemSetting();
-
-const footerLinkGroups = computed<FooterLinkGroup[]>(() => [
-    {
-        title: 'Giới thiệu',
-        links: [
-            { label: 'Về GiaiCaptcha.vn', href: '/gioi-thieu' },
-            { label: 'Blog', href: '/blog' },
-            { label: 'Liên hệ', href: '/lien-he' },
-            { label: 'Câu hỏi thường gặp', href: '/cau-hoi-thuong-gap' },
-        ],
-    },
-    {
-        title: 'Chính sách',
-        links: [
-            { label: 'Điều khoản sử dụng', href: '/dieu-khoan-su-dung' },
-            { label: 'Chính sách bảo mật', href: '/chinh-sach-bao-mat' },
-            { label: 'Chính sách hoàn tiền', href: '/chinh-sach-hoan-tien' },
-            { label: 'Chính sách thanh toán', href: '/chinh-sach-thanh-toan' },
-            { label: 'Chính sách sử dụng dịch vụ', href: '/chinh-sach-su-dung-api' },
-            { label: 'Miễn trừ trách nhiệm', href: '/mien-tru-trach-nhiem' },
-        ],
-    },
-    {
-        title: 'Hệ thống',
-        links: [
-            { label: 'Trạng thái hệ thống', href: '/trang-thai-he-thong' },
-            { label: 'Cập nhật hệ thống', href: '/cap-nhat-he-thong' },
-        ],
-    },
-]);
-
-onMounted(async () => {
-    await fetchSettings();
-});
+const footerLinks: FooterLink[] = [
+    { label: 'Điều khoản sử dụng', href: '/dieu-khoan-su-dung' },
+    { label: 'Chính sách bảo mật', href: '/chinh-sach-bao-mat' },
+    { label: 'Liên hệ hỗ trợ', href: '/lien-he' },
+];
 </script>
 
 <template>
-    <footer class="mt-8 border-t border-sky-100/80 bg-white/85 backdrop-blur-sm">
-        <div class="mx-auto grid w-full max-w-[1240px] gap-8 px-3 py-8 lg:grid-cols-[minmax(0,1.2fr)_repeat(3,minmax(0,1fr))] sm:px-5">
-            <div class="space-y-3">
-                <h2 class="text-lg font-bold tracking-tight text-slate-950">
-                    {{ settings.site_name || 'GiaiCaptcha.vn' }}
-                </h2>
-                <p class="max-w-md text-sm leading-6 text-slate-600">
-                    {{
-                        settings.site_description ||
-                        'Nền tảng SaaS cung cấp dịch vụ giải captcha qua API với quản lý giá, ví người dùng và tài liệu tích hợp rõ ràng.'
-                    }}
-                </p>
-                <div class="flex flex-wrap gap-3 text-sm text-slate-500">
-                    <span v-if="settings.hotline">Hotline: {{ settings.hotline }}</span>
-                    <span v-if="settings.support_email">Email: {{ settings.support_email }}</span>
-                </div>
-            </div>
+    <footer class="border-t border-slate-200 bg-white">
+        <div class="mx-auto flex w-full max-w-[1200px] flex-col gap-3 px-4 py-5 text-sm text-slate-500 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
+            <p>© {{ new Date().getFullYear() }} GiaCaptcha.vn</p>
 
-            <div v-for="group in footerLinkGroups" :key="group.title" class="space-y-3">
-                <h3 class="text-sm font-semibold uppercase tracking-[0.16em] text-slate-900">
-                    {{ group.title }}
-                </h3>
-                <ul class="space-y-2 text-sm text-slate-600">
-                    <li v-for="link in group.links" :key="link.href">
-                        <a :href="link.href" class="transition hover:text-blue-700">
-                            {{ link.label }}
-                        </a>
-                    </li>
-                </ul>
+            <div class="flex flex-wrap gap-4">
+                <a
+                    v-for="link in footerLinks"
+                    :key="link.href"
+                    :href="link.href"
+                    class="transition hover:text-slate-900"
+                >
+                    {{ link.label }}
+                </a>
             </div>
         </div>
     </footer>
