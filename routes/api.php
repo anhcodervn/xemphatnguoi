@@ -21,7 +21,7 @@ if (file_exists(base_path('app/Features/Recharge/routes.php'))) {
 Route::prefix('')->group(function (): void {
     Route::get('/system-settings', function (SettingStore $settingStore) {
         $defaults = [
-            'site_name' => config('app.name', 'GiaiCaptcha.vn'),
+            'site_name' => config('app.name', 'DailyProxy.vn'),
             'site_domain' => '',
             'site_description' => '',
             'site_active' => true,
@@ -93,24 +93,12 @@ if (file_exists(base_path('app/Features/Client/Profile/routes.php'))) {
     require base_path('app/Features/Client/Profile/routes.php');
 }
 
-if (file_exists(base_path('app/Features/Client/Package/routes.php'))) {
-    require base_path('app/Features/Client/Package/routes.php');
-}
-
-if (file_exists(base_path('app/Features/Client/Subscription/routes.php'))) {
-    require base_path('app/Features/Client/Subscription/routes.php');
-}
-
 if (file_exists(base_path('app/Features/Client/Wallet/routes.php'))) {
     require base_path('app/Features/Client/Wallet/routes.php');
 }
 
 if (file_exists(base_path('app/Features/Client/Notification/routes.php'))) {
     require base_path('app/Features/Client/Notification/routes.php');
-}
-
-if (file_exists(base_path('app/Features/Client/Upload/routes.php'))) {
-    require base_path('app/Features/Client/Upload/routes.php');
 }
 
 if (file_exists(base_path('app/Features/Client/Contact/routes.php'))) {
@@ -127,10 +115,6 @@ if (file_exists(base_path('app/Features/Admin/RechargeConfig/routes.php'))) {
 
 if (file_exists(base_path('app/Features/Admin/RechargeHistory/routes.php'))) {
     require base_path('app/Features/Admin/RechargeHistory/routes.php');
-}
-
-if (file_exists(base_path('app/Features/Admin/Package/routes.php'))) {
-    require base_path('app/Features/Admin/Package/routes.php');
 }
 
 if (file_exists(base_path('app/Features/Admin/User/routes.php'))) {
@@ -177,6 +161,18 @@ if (file_exists(base_path('app/Features/Api/Auth/routes.php'))) {
     require base_path('app/Features/Api/Auth/routes.php');
 }
 
-if (file_exists(base_path('app/Features/Captcha/routes.php'))) {
-    require base_path('app/Features/Captcha/routes.php');
+if (file_exists(base_path('app/Features/Admin/Proxy/routes.php'))) {
+    require base_path('app/Features/Admin/Proxy/routes.php');
+}
+
+if (file_exists(base_path('app/Features/Client/Proxy/routes.php'))) {
+    require base_path('app/Features/Client/Proxy/routes.php');
+}
+
+if (file_exists(base_path('app/Features/Api/Proxy/routes.php'))) {
+    require base_path('app/Features/Api/Proxy/routes.php');
+}
+
+if (file_exists(base_path('app/Features/Api/User/routes.php'))) {
+    require base_path('app/Features/Api/User/routes.php');
 }

@@ -10,7 +10,8 @@ Route::middleware(['auth:sanctum', 'admin'])
     ->group(function (): void {
         Route::get('overview', 'overview')->name('overview');
         Route::get('logs', 'logs')->name('logs');
+        Route::post('logs/{queueLog}/replay', 'replayLog')->name('logs.replay');
         Route::get('failed-jobs', 'failedJobs')->name('failed-jobs');
-        Route::post('failed-jobs/{id}/retry', 'retryFailedJob')->name('failed-jobs.retry');
-        Route::delete('failed-jobs/{id}', 'deleteFailedJob')->name('failed-jobs.delete');
+        Route::post('failed-jobs/{uuid}/retry', 'retryFailedJob')->whereUuid('uuid')->name('failed-jobs.retry');
+        Route::delete('failed-jobs/{uuid}', 'deleteFailedJob')->whereUuid('uuid')->name('failed-jobs.delete');
     });

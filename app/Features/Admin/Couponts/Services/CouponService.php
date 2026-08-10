@@ -79,7 +79,6 @@ class CouponService
             'logs' => fn (HasMany $query) => $query->with([
                 'user:id,full_name,username,email',
                 'admin:id,full_name,username,email',
-                'packageOrder:id,order_code',
             ])->latest('id')->limit(10),
         ]);
     }
@@ -164,7 +163,6 @@ class CouponService
                 'coupon:id,code,name',
                 'user:id,full_name,username,email',
                 'admin:id,full_name,username,email',
-                'packageOrder:id,order_code',
             ])
             ->when($coupon !== null, fn (Builder $query) => $query->where('coupon_id', $coupon->id))
             ->when($coupon === null && $couponId > 0, fn (Builder $query) => $query->where('coupon_id', $couponId))
@@ -176,8 +174,7 @@ class CouponService
                     $logQuery
                         ->where('note', 'like', "%{$search}%")
                         ->orWhereHas('coupon', fn (Builder $couponQuery) => $couponQuery->where('code', 'like', "%{$search}%"))
-                        ->orWhereHas('user', fn (Builder $userQuery) => $userQuery->where('email', 'like', "%{$search}%")->orWhere('name', 'like', "%{$search}%"))
-                        ->orWhereHas('packageOrder', fn (Builder $orderQuery) => $orderQuery->where('order_code', 'like', "%{$search}%"));
+                        ->orWhereHas('user', fn (Builder $userQuery) => $userQuery->where('email', 'like', "%{$search}%")->orWhere('name', 'like', "%{$search}%"));
                 });
             })
             ->latest('id')
@@ -205,7 +202,6 @@ class CouponService
             'expired_at' => $payload['expired_at'] ?? null,
             'first_order_only' => (bool) ($payload['first_order_only'] ?? false),
             'is_active' => (bool) ($payload['is_active'] ?? true),
-            'applicable_package_ids' => array_values($payload['applicable_package_ids'] ?? []),
             'requirements' => $payload['requirements'] ?? [],
         ];
     }
@@ -220,7 +216,6 @@ class CouponService
         string $status,
         ?string $note = null,
         ?User $user = null,
-        ?int $packageOrderId = null,
         ?float $orderAmount = null,
         ?float $discountAmount = null,
         ?array $payload = null,
@@ -228,7 +223,6 @@ class CouponService
         return $coupon->logs()->create([
             'user_id' => $user?->id,
             'admin_id' => $admin?->id,
-            'package_order_id' => $packageOrderId,
             'action' => $action,
             'status' => $status,
             'order_amount' => $orderAmount,

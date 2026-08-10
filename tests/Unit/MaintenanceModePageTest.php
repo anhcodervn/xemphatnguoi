@@ -8,29 +8,9 @@ use Tests\TestCase;
 uses(TestCase::class);
 
 beforeEach(function () {
-    Schema::dropIfExists('packages');
     Schema::dropIfExists('settings');
     Schema::dropIfExists('wallets');
     Schema::dropIfExists('users');
-
-    Schema::create('packages', function ($table): void {
-        $table->id();
-        $table->string('name');
-        $table->string('slug')->nullable();
-        $table->text('description')->nullable();
-        $table->decimal('price', 16, 2)->default(0);
-        $table->integer('duration_days')->default(30);
-        $table->integer('account_limit')->default(1);
-        $table->boolean('can_buy_extra_account')->default(false);
-        $table->decimal('extra_account_price', 16, 2)->default(0);
-        $table->integer('request_limit')->default(0);
-        $table->integer('request_per_minute')->default(0);
-        $table->integer('concurrent_limit')->default(0);
-        $table->longText('features')->nullable();
-        $table->string('status')->default('active');
-        $table->softDeletes();
-        $table->timestamps();
-    });
 
     Schema::create('users', function ($table): void {
         $table->id();
@@ -75,7 +55,7 @@ beforeEach(function () {
 test('guest sees maintenance page when site is inactive', function () {
     DB::table('settings')->insert([
         ['key' => 'site_active', 'value' => '0', 'type' => 'boolean', 'created_at' => now(), 'updated_at' => now()],
-        ['key' => 'site_name', 'value' => 'GiaiCaptcha', 'type' => 'string', 'created_at' => now(), 'updated_at' => now()],
+        ['key' => 'site_name', 'value' => 'DailyProxy', 'type' => 'string', 'created_at' => now(), 'updated_at' => now()],
         ['key' => 'system_status_title', 'value' => 'Bao tri he thong', 'type' => 'string', 'created_at' => now(), 'updated_at' => now()],
         ['key' => 'system_status_excerpt', 'value' => 'He thong dang nang cap dich vu.', 'type' => 'string', 'created_at' => now(), 'updated_at' => now()],
         ['key' => 'support_email', 'value' => 'support@example.com', 'type' => 'string', 'created_at' => now(), 'updated_at' => now()],
@@ -93,7 +73,7 @@ test('guest sees maintenance page when site is inactive', function () {
 test('admin can still access the site while maintenance mode is enabled', function () {
     DB::table('settings')->insert([
         ['key' => 'site_active', 'value' => '0', 'type' => 'boolean', 'created_at' => now(), 'updated_at' => now()],
-        ['key' => 'site_name', 'value' => 'GiaiCaptcha', 'type' => 'string', 'created_at' => now(), 'updated_at' => now()],
+        ['key' => 'site_name', 'value' => 'DailyProxy', 'type' => 'string', 'created_at' => now(), 'updated_at' => now()],
     ]);
 
     $admin = User::factory()->create([

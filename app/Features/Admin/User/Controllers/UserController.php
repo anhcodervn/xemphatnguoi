@@ -5,7 +5,6 @@ namespace App\Features\Admin\User\Controllers;
 use App\Features\Admin\User\Actions\AdjustUserWalletAction;
 use App\Features\Admin\User\Actions\ListAdminUsersAction;
 use App\Features\Admin\User\Actions\ListUserLogsAction;
-use App\Features\Admin\User\Actions\ListUserPackageOrdersAction;
 use App\Features\Admin\User\Actions\ListUserWalletTransactionsAction;
 use App\Features\Admin\User\Actions\ResetAdminUserPasswordAction;
 use App\Features\Admin\User\Actions\ShowAdminUserAction;
@@ -44,7 +43,7 @@ class UserController extends Controller
 
         return response()->json(ApiResponse::success(
             'Cập nhật trạng thái người dùng thành công.',
-            ['user' => AdminUserResource::make($updatedUser->load(['wallet', 'userSubscriptions.package']))->resolve()],
+            ['user' => AdminUserResource::make($updatedUser->load('wallet'))->resolve()],
         ));
     }
 
@@ -75,14 +74,6 @@ class UserController extends Controller
         AdminUserRelatedListRequest $request,
         User $user,
         ListUserWalletTransactionsAction $action,
-    ): JsonResponse {
-        return response()->json(ApiResponse::success(data: $action->handle($user, $request->validated())));
-    }
-
-    public function packageOrders(
-        AdminUserRelatedListRequest $request,
-        User $user,
-        ListUserPackageOrdersAction $action,
     ): JsonResponse {
         return response()->json(ApiResponse::success(data: $action->handle($user, $request->validated())));
     }

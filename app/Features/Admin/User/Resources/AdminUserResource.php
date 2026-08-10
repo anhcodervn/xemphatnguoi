@@ -16,8 +16,6 @@ class AdminUserResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $currentSubscription = collect($this->userSubscriptions ?? [])->first();
-
         return [
             'id' => $this->id,
             'name' => $this->name,
@@ -27,12 +25,6 @@ class AdminUserResource extends JsonResource
             'role' => $this->role,
             'status' => $this->status === 'banned' ? 'blocked' : $this->status,
             'wallet_balance' => $this->wallet ? (float) $this->wallet->balance : null,
-            'current_package' => $currentSubscription ? [
-                'id' => $currentSubscription->package_id,
-                'name' => $currentSubscription->package_name,
-                'expires_at' => $currentSubscription->expires_at?->toISOString(),
-                'status' => $currentSubscription->status?->value ?? $currentSubscription->status,
-            ] : null,
             'created_at' => $this->created_at?->toISOString(),
             'last_login_at' => $this->last_login_at?->toISOString(),
         ];

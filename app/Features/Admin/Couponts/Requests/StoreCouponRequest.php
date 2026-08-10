@@ -3,6 +3,7 @@
 namespace App\Features\Admin\Couponts\Requests;
 
 use App\Exceptions\ApiException;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -15,7 +16,7 @@ class StoreCouponRequest extends FormRequest
     }
 
     /**
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -33,8 +34,6 @@ class StoreCouponRequest extends FormRequest
             'expired_at' => ['nullable', 'date', 'after:starts_at'],
             'first_order_only' => ['nullable', 'boolean'],
             'is_active' => ['nullable', 'boolean'],
-            'applicable_package_ids' => ['nullable', 'array'],
-            'applicable_package_ids.*' => ['integer', 'exists:packages,id'],
             'requirements' => ['nullable', 'array'],
             'requirements.note' => ['nullable', 'string', 'max:1000'],
         ];
@@ -59,7 +58,6 @@ class StoreCouponRequest extends FormRequest
             'expired_at' => 'ngày hết hạn',
             'first_order_only' => 'chỉ áp dụng đơn đầu',
             'is_active' => 'trạng thái',
-            'applicable_package_ids' => 'gói áp dụng',
             'requirements.note' => 'ghi chú điều kiện',
         ];
     }

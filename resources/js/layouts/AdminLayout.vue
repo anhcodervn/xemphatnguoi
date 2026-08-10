@@ -27,7 +27,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="min-h-screen bg-[radial-gradient(circle_at_top,_#f4fbf6_0%,_#ecf8f0_36%,_#e0f2e8_100%)] text-slate-800">
+    <div class="min-h-screen bg-[radial-gradient(circle_at_top_right,_#dff6ff_0%,_#f1f6fd_32%,_#f8fafc_72%)] text-slate-800">
         <Transition
             enter-active-class="transition-opacity duration-200"
             enter-from-class="opacity-0"
@@ -36,7 +36,7 @@ onUnmounted(() => {
             leave-from-class="opacity-100"
             leave-to-class="opacity-0"
         >
-            <div v-if="isSidebarOpen" class="fixed inset-0 z-40 bg-teal-950/30 lg:hidden" @click="isSidebarOpen = false" />
+            <div v-if="isSidebarOpen" class="fixed inset-0 z-40 bg-slate-950/45 backdrop-blur-sm lg:hidden" @click="isSidebarOpen = false" />
         </Transition>
 
         <div class="flex min-h-screen">
@@ -54,4 +54,3 @@ onUnmounted(() => {
         </div>
     </div>
 </template>
-

@@ -5,7 +5,8 @@
                 <div>
                     <h2 class="text-base font-semibold text-slate-900">Slider sản phẩm nổi bật</h2>
                     <p class="text-sm text-slate-500">
-                        Mỗi domain có danh sách slide riêng, gồm ảnh, tiêu đề và liên kết chuyển hướng. Bạn có thể sắp xếp lại thứ tự hiển thị trực tiếp trong danh sách này.
+                        Mỗi domain có danh sách slide riêng, gồm ảnh, tiêu đề và liên kết chuyển hướng. Bạn có thể sắp xếp lại thứ tự hiển thị trực
+                        tiếp trong danh sách này.
                     </p>
                 </div>
 
@@ -14,7 +15,7 @@
                     :disabled="isSaving"
                     @click="submitForm"
                 >
-                    {{ isSaving ? "Đang lưu..." : "Lưu slider nổi bật" }}
+                    {{ isSaving ? 'Đang lưu...' : 'Lưu slider nổi bật' }}
                 </button>
             </div>
 
@@ -26,11 +27,7 @@
                     </p>
 
                     <div class="mt-4 overflow-hidden rounded-2xl border border-dashed border-slate-300 bg-white p-3">
-                        <UploadImage
-                            :accept="['image/png', 'image/jpeg', 'image/webp']"
-                            :compress="true"
-                            @uploaded="appendImage"
-                        />
+                        <UploadImage :accept="['image/png', 'image/jpeg', 'image/webp']" :compress="true" @uploaded="appendImage" />
                     </div>
                 </div>
 
@@ -80,12 +77,12 @@
                                                 class="rounded-full px-2.5 py-1 text-xs font-medium"
                                                 :class="item.status ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-600'"
                                             >
-                                                {{ item.status ? "Đang hiển thị" : "Đã ẩn" }}
+                                                {{ item.status ? 'Đang hiển thị' : 'Đã ẩn' }}
                                             </span>
                                         </div>
 
                                         <p class="mt-1 truncate text-xs text-slate-500">
-                                            {{ item.link_redirect || "Chưa có liên kết chuyển hướng" }}
+                                            {{ item.link_redirect || 'Chưa có liên kết chuyển hướng' }}
                                         </p>
                                     </div>
                                 </div>
@@ -129,17 +126,11 @@
             </div>
         </section>
 
-        <Modal
-            :modelValue="isEditModalOpen"
-            panelClass="max-w-4xl"
-            @update:modelValue="closeEditModal"
-        >
+        <Modal :modelValue="isEditModalOpen" panelClass="max-w-4xl" @update:modelValue="closeEditModal">
             <template #header>
                 <div class="border-b border-slate-200 px-4 py-3 pr-12 md:px-5">
                     <h3 class="text-base font-semibold text-slate-900">Sửa slide nổi bật</h3>
-                    <p class="mt-1 text-sm text-slate-500">
-                        Chỉnh ảnh, tiêu đề và liên kết chuyển hướng cho slide đang chọn.
-                    </p>
+                    <p class="mt-1 text-sm text-slate-500">Chỉnh ảnh, tiêu đề và liên kết chuyển hướng cho slide đang chọn.</p>
                 </div>
             </template>
 
@@ -166,7 +157,7 @@
                                     v-model="editingItem.title"
                                     type="text"
                                     class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-500"
-                                    placeholder="Ví dụ: Gói dịch vụ nổi bật"
+                                    placeholder="Ví dụ: Dịch vụ proxy nổi bật"
                                 />
                             </div>
 
@@ -221,12 +212,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
-import Modal from "@/components/shared/Modal/index.vue";
-import UploadImage from "@/components/shared/UpladImage/index.vue";
-import { adminSettingService } from "@/services/admin-setting.service";
-import type { FeaturedSliderItemType, SliderImageSettingType } from "@/types/setting.type";
-import { handleErrorResponse, handleSuccessResponse } from "@/utils/response";
+import Modal from '@/components/shared/Modal/index.vue';
+import UploadImage from '@/components/shared/UpladImage/index.vue';
+import { adminSettingService } from '@/services/admin-setting.service';
+import type { FeaturedSliderItemType, SliderImageSettingType } from '@/types/setting.type';
+import { handleErrorResponse, handleSuccessResponse } from '@/utils/response';
+import { computed, onMounted, ref } from 'vue';
 
 const isSaving = ref(false);
 const isEditModalOpen = ref(false);
@@ -245,9 +236,9 @@ const editingItem = computed<FeaturedSliderItemType | null>(() => {
 
 const normalizeItem = (item: Partial<FeaturedSliderItemType>): FeaturedSliderItemType => ({
     id: item.id ?? null,
-    image: item.image ?? "",
-    title: item.title ?? "",
-    link_redirect: item.link_redirect ?? "",
+    image: item.image ?? '',
+    title: item.title ?? '',
+    link_redirect: item.link_redirect ?? '',
     status: item.status ?? true,
     sort_order: item.sort_order ?? 0,
 });
@@ -269,8 +260,8 @@ const appendImage = (url: string): void => {
             ...formData.value.items,
             normalizeItem({
                 image: url,
-                title: "",
-                link_redirect: "",
+                title: '',
+                link_redirect: '',
                 status: true,
             }),
         ],
@@ -310,8 +301,8 @@ const removeItem = (index: number): void => {
     }
 };
 
-const moveItem = (index: number, direction: "up" | "down"): void => {
-    const nextIndex = direction === "up" ? index - 1 : index + 1;
+const moveItem = (index: number, direction: 'up' | 'down'): void => {
+    const nextIndex = direction === 'up' ? index - 1 : index + 1;
 
     if (nextIndex < 0 || nextIndex >= formData.value.items.length) {
         return;
@@ -344,7 +335,7 @@ const submitForm = async (): Promise<void> => {
 
         const payload: SliderImageSettingType = {
             items: formData.value.items
-                .filter((item) => typeof item.image === "string" && item.image.trim() !== "")
+                .filter((item) => typeof item.image === 'string' && item.image.trim() !== '')
                 .map((item, index) => ({
                     id: item.id ?? null,
                     image: item.image.trim(),
@@ -363,7 +354,7 @@ const submitForm = async (): Promise<void> => {
         handleSuccessResponse({
             data: {
                 status: true,
-                message: "Cập nhật slider nổi bật thành công",
+                message: 'Cập nhật slider nổi bật thành công',
             },
         });
 

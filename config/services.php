@@ -42,7 +42,7 @@ return [
     ],
 
     'discord' => [
-        'bot_name' => env('DISCORD_BOT_NAME', 'GiaiCaptcha Monitor'),
+        'bot_name' => env('DISCORD_BOT_NAME', 'DailyProxy Monitor'),
         'bot_avatar_url' => env('DISCORD_BOT_AVATAR_URL'),
         'channels' => [
             'queue' => env('DISCORD_WEBHOOK_QUEUE'),
@@ -52,9 +52,13 @@ return [
             'alerts' => env('DISCORD_WEBHOOK_ALERTS'),
             'recovered' => env('DISCORD_WEBHOOK_RECOVERED'),
             'staging' => env('DISCORD_WEBHOOK_STAGING'),
+            'sales' => env('DISCORD_WEBHOOK_SALES') ?: env('DISCORD_WEBHOOK_OPS'),
+            'provider' => env('DISCORD_WEBHOOK_PROVIDER') ?: env('DISCORD_WEBHOOK_ALERTS'),
+            'feedback' => env('DISCORD_WEBHOOK_FEEDBACK') ?: env('DISCORD_WEBHOOK_INFO'),
+            'activity' => env('DISCORD_WEBHOOK_ACTIVITY') ?: env('DISCORD_WEBHOOK_INFO'),
         ],
         'context' => [
-            'app_name' => env('APP_NAME', 'GiaiCaptcha.vn'),
+            'app_name' => env('APP_NAME', 'DailyProxy.vn'),
             'app_env' => env('APP_ENV', 'production'),
             'app_url' => env('APP_URL'),
             'server_name' => env('DISCORD_SERVER_NAME', gethostname() ?: php_uname('n')),
@@ -73,11 +77,14 @@ return [
         'key' => env('AUTOCRON_INTERNAL_KEY'),
     ],
 
-    'captcha' => [
-        'pending_order_ttl_hours' => (int) env('CAPTCHA_PENDING_ORDER_TTL_HOURS', 24),
-        'api_log_retention_days' => (int) env('CAPTCHA_API_LOG_RETENTION_DAYS', 30),
-        'source_low_balance_threshold' => (float) env('CAPTCHA_SOURCE_LOW_BALANCE_THRESHOLD', 50000),
-        'source_low_balance_channel' => env('CAPTCHA_SOURCE_LOW_BALANCE_CHANNEL', 'alerts'),
+    'proxy' => [
+        'pending_order_ttl_hours' => (int) env('PROXY_PENDING_ORDER_TTL_HOURS', 24),
+        'api_log_retention_days' => (int) env('PROXY_API_LOG_RETENTION_DAYS', 30),
+        'source_low_balance_threshold' => (float) env('PROXY_SOURCE_LOW_BALANCE_THRESHOLD', 50000),
+        'source_low_balance_channel' => env('PROXY_SOURCE_LOW_BALANCE_CHANNEL', 'alerts'),
+        'check_url' => env('PROXY_CHECK_URL', 'https://api.ipify.org?format=json'),
+        'check_connect_timeout' => (int) env('PROXY_CHECK_CONNECT_TIMEOUT', 4),
+        'check_timeout' => (int) env('PROXY_CHECK_TIMEOUT', 8),
     ],
 
 ];

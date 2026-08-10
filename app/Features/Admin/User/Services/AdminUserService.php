@@ -2,18 +2,13 @@
 
 namespace App\Features\Admin\User\Services;
 
-use App\Features\Admin\PackageOrder\Resources\AdminPackageOrderResource;
 use App\Features\Admin\User\Resources\AdminUserResource;
 use App\Features\Admin\WalletTransaction\Resources\AdminWalletTransactionResource;
-use App\Models\CaptchaTask;
-use App\Models\PackageOrder;
 use App\Models\User;
 use App\Models\UserLog;
 use App\Models\Wallet;
 use App\Models\WalletTransaction;
-use App\Support\Enums\SubscriptionStatus;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class AdminUserService
@@ -48,34 +43,20 @@ class AdminUserService
     public function userDetail(User $user): array
     {
         $user = User::query()
-            ->with([
-                'wallet',
-                'userSubscriptions' => function (HasMany $query): void {
-                    $query->where('status', SubscriptionStatus::Active->value)
-                        ->with('package')
-                        ->orderByDesc('expires_at');
-                },
-            ])
-            ->withCount(['packageOrders', 'captchaTasks', 'apiKeys'])
+            ->with('wallet')
+            ->withCount('apiKeys')
             ->findOrFail($user->id);
 
         $wallet = $user->wallet;
-        $currentSubscription = $user->userSubscriptions->first();
-        $solvedTaskCount = (int) CaptchaTask::query()
-            ->where('user_id', $user->id)
-            ->where('status', CaptchaTask::STATUS_SOLVED)
-            ->count();
 
         return [
             'user' => $user,
             'wallet' => $wallet,
-            'current_subscription' => $currentSubscription,
             'stats' => [
                 'total_spent' => $wallet instanceof Wallet ? (float) $wallet->total_spent : 0.0,
-                'package_order_count' => $user->package_orders_count,
-                'captcha_task_count' => $user->captcha_tasks_count,
+                'proxy_task_count' => 0,
                 'api_key_count' => $user->api_keys_count,
-                'solved_task_count' => $solvedTaskCount,
+                'solved_task_count' => 0,
             ],
             'latest_login' => [
                 'at' => $user->last_login_at?->toISOString(),
@@ -126,35 +107,6 @@ class AdminUserService
      * @param  array<string, mixed>  $filters
      * @return array<string, mixed>
      */
-    public function paginateUserPackageOrders(User $user, array $filters = []): array
-    {
-        $perPage = (int) ($filters['per_page'] ?? 15);
-
-        $orders = PackageOrder::query()
-            ->where('user_id', $user->id)
-            ->with(['user', 'package', 'subscription'])
-            ->when(filled($filters['search'] ?? null), function (Builder $query) use ($filters): void {
-                $search = trim((string) $filters['search']);
-                $query->where('order_code', 'like', "%{$search}%");
-            })
-            ->when(filled($filters['package_id'] ?? null), fn (Builder $query) => $query->where('package_id', $filters['package_id']))
-            ->when(filled($filters['status'] ?? null), fn (Builder $query) => $query->where('status', $filters['status']))
-            ->when(filled($filters['date_from'] ?? null), fn (Builder $query) => $query->whereDate('created_at', '>=', $filters['date_from']))
-            ->when(filled($filters['date_to'] ?? null), fn (Builder $query) => $query->whereDate('created_at', '<=', $filters['date_to']))
-            ->latest('id')
-            ->paginate($perPage)
-            ->withQueryString();
-
-        return [
-            'data' => AdminPackageOrderResource::collection($orders->getCollection())->resolve(),
-            'meta' => $this->paginationMeta($orders),
-        ];
-    }
-
-    /**
-     * @param  array<string, mixed>  $filters
-     * @return array<string, mixed>
-     */
     public function paginateUserLogs(User $user, array $filters = []): array
     {
         $perPage = (int) ($filters['per_page'] ?? 15);
@@ -193,14 +145,7 @@ class AdminUserService
     private function userQuery(array $filters): Builder
     {
         return User::query()
-            ->with([
-                'wallet',
-                'userSubscriptions' => function (HasMany $query): void {
-                    $query->where('status', SubscriptionStatus::Active->value)
-                        ->with('package')
-                        ->orderByDesc('expires_at');
-                },
-            ])
+            ->with('wallet')
             ->when(filled($filters['search'] ?? null), function (Builder $query) use ($filters): void {
                 $search = trim((string) $filters['search']);
                 $query->where(function (Builder $builder) use ($search): void {

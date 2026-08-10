@@ -31,7 +31,6 @@ class Coupon extends Model
         'expired_at',
         'first_order_only',
         'is_active',
-        'applicable_package_ids',
         'requirements',
     ];
 
@@ -48,7 +47,6 @@ class Coupon extends Model
             'expired_at' => 'datetime',
             'first_order_only' => 'boolean',
             'is_active' => 'boolean',
-            'applicable_package_ids' => 'array',
             'requirements' => 'array',
         ];
     }

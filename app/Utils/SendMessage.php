@@ -19,6 +19,10 @@ class SendMessage
         'alerts' => 'alerts',
         'recovered' => 'recovered',
         'staging' => 'staging',
+        'sales' => 'sales',
+        'provider' => 'provider',
+        'feedback' => 'feedback',
+        'activity' => 'activity',
     ];
 
     private static function tele(string $message, string $chatId, string $token): void
@@ -41,6 +45,7 @@ class SendMessage
 
     public static function sendTelegram(string $message, ?string $chatId = null): void
     {
+        return;
         if (app()->environment('testing')) {
             return;
         }
@@ -70,13 +75,13 @@ class SendMessage
         $url = Arr::get($channels, $channelKey);
 
         if (! is_string($url) || trim($url) === '') {
-            throw new InvalidArgumentException(sprintf('Discord webhook URL is not configured for channel [%s].', $channelKey));
+            return;
         }
 
         Http::connectTimeout(5)
             ->timeout(10)
             ->post($url, [
-                'username' => (string) config('services.discord.bot_name', 'GiaiCaptcha Monitor'),
+                'username' => (string) config('services.discord.bot_name', 'DailyProxy Monitor'),
                 'avatar_url' => (string) config('services.discord.bot_avatar_url', ''),
                 'content' => $message,
             ])
@@ -157,6 +162,42 @@ class SendMessage
         self::safeSendDiscord(
             self::formatDiscordReport('STAGING', $title, $details),
             'staging',
+        );
+    }
+
+    /** @param array<string, mixed> $details */
+    public static function sendSalesReport(string $title, array $details = []): void
+    {
+        self::safeSendDiscord(
+            self::formatDiscordReport('SALES', $title, $details),
+            'sales',
+        );
+    }
+
+    /** @param array<string, mixed> $details */
+    public static function sendProviderReport(string $title, array $details = []): void
+    {
+        self::safeSendDiscord(
+            self::formatDiscordReport('PROVIDER', $title, $details),
+            'provider',
+        );
+    }
+
+    /** @param array<string, mixed> $details */
+    public static function sendFeedbackReport(string $title, array $details = []): void
+    {
+        self::safeSendDiscord(
+            self::formatDiscordReport('FEEDBACK', $title, $details),
+            'feedback',
+        );
+    }
+
+    /** @param array<string, mixed> $details */
+    public static function sendActivityReport(string $title, array $details = []): void
+    {
+        self::safeSendDiscord(
+            self::formatDiscordReport('ACTIVITY', $title, $details),
+            'activity',
         );
     }
 

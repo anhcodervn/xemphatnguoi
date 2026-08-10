@@ -10,7 +10,7 @@ import {
     Users,
     WalletCards,
     type LucideIcon,
-} from "lucide-vue-next";
+} from 'lucide-vue-next';
 
 export type AdminMenuChild = {
     label: string;
@@ -27,142 +27,138 @@ export type AdminMenuGroup = {
 
 export const adminMenuGroups: AdminMenuGroup[] = [
     {
-        key: "dashboard",
-        label: "Dashboard",
+        key: 'dashboard',
+        label: 'Dashboard',
         icon: LayoutDashboard,
-        href: "/admin",
+        href: '/admin',
     },
     {
-        key: "analytics",
-        label: "Báo cáo vận hành",
+        key: 'analytics',
+        label: 'Báo cáo vận hành',
         icon: BarChart3,
-        href: "/admin/analytics",
+        href: '/admin/analytics',
     },
     {
-        key: "captcha",
-        label: "Captcha API",
+        key: 'proxy',
+        label: 'Kho proxy',
         icon: Database,
         children: [
             {
-                label: "Nguồn solve",
-                href: "/admin/captcha-sources",
+                label: 'Chuyên mục proxy',
+                href: '/admin/proxy-taxonomy',
             },
             {
-                label: "Dịch vụ captcha",
-                href: "/admin/captcha-services",
+                label: 'Nhà cung cấp',
+                href: '/admin/proxy-providers',
             },
             {
-                label: "Gói captcha",
-                href: "/admin/packages",
+                label: 'Sản phẩm proxy',
+                href: '/admin/proxy-products',
             },
             {
-                label: "Yêu cầu captcha",
-                href: "/admin/captcha-tasks",
-            },
-            {
-                label: "API log",
-                href: "/admin/api-logs",
+                label: 'API log',
+                href: '/admin/api-logs',
             },
         ],
     },
     {
-        key: "recharge",
-        label: "Quản lý nạp tiền",
+        key: 'recharge',
+        label: 'Quản lý nạp tiền',
         icon: WalletCards,
         children: [
             {
-                label: "Cấu hình nạp tiền",
-                href: "/admin/recharge/config",
+                label: 'Cấu hình nạp tiền',
+                href: '/admin/recharge/config',
             },
             {
-                label: "Lịch sử nạp tiền",
-                href: "/admin/recharge/history",
+                label: 'Lịch sử nạp tiền',
+                href: '/admin/recharge/history',
             },
         ],
     },
     {
-        key: "users",
-        label: "Quản lý người dùng",
+        key: 'users',
+        label: 'Quản lý người dùng',
         icon: Users,
         children: [
             {
-                label: "Danh sách thành viên",
-                href: "/admin/users",
+                label: 'Danh sách thành viên',
+                href: '/admin/users',
             },
             {
-                label: "Lịch sử dòng tiền",
-                href: "/admin/users/wallet-transactions",
+                label: 'Lịch sử dòng tiền',
+                href: '/admin/users/wallet-transactions',
             },
         ],
     },
     {
-        key: "notifications",
-        label: "Thông báo hệ thống",
+        key: 'notifications',
+        label: 'Thông báo hệ thống',
         icon: BellRing,
         children: [
             {
-                label: "Tạo thông báo mới",
-                href: "/admin/notifications/create",
+                label: 'Tạo thông báo mới',
+                href: '/admin/notifications/create',
             },
             {
-                label: "Danh sách thông báo",
-                href: "/admin/notifications",
+                label: 'Danh sách thông báo',
+                href: '/admin/notifications',
             },
         ],
     },
     {
-        key: "seo-management",
-        label: "Quản trị SEO",
+        key: 'seo-management',
+        label: 'Quản trị SEO',
         icon: BookMarked,
         children: [
             {
-                label: "Tổng quan SEO",
-                href: "/admin/seo",
+                label: 'Tổng quan SEO',
+                href: '/admin/seo',
             },
             {
-                label: "Danh mục SEO",
-                href: "/admin/seo/categories",
+                label: 'Danh mục SEO',
+                href: '/admin/seo/categories',
             },
             {
-                label: "Bài viết SEO",
-                href: "/admin/seo/posts",
+                label: 'Bài viết SEO',
+                href: '/admin/seo/posts',
             },
             {
-                label: "Tạo bài viết",
-                href: "/admin/seo/posts/create",
+                label: 'Tạo bài viết',
+                href: '/admin/seo/posts/create',
             },
             {
-                label: "Sitemap & index",
-                href: "/admin/seo/sitemaps",
+                label: 'Sitemap & index',
+                href: '/admin/seo/sitemaps',
             },
         ],
     },
     {
-        key: "settings",
-        label: "Cấu hình hệ thống",
+        key: 'settings',
+        label: 'Cấu hình hệ thống',
         icon: Settings,
         children: [
             {
-                label: "Cấu hình chung",
-                href: "/admin/settings/general",
+                label: 'Cấu hình chung',
+                href: '/admin/settings/general',
             },
             {
-                label: "Cấu hình nội dung",
-                href: "/admin/settings/content",
+                label: 'Cấu hình nội dung',
+                href: '/admin/settings/content',
             },
         ],
     },
     {
-        key: "mail",
-        label: "Gửi email",
+        key: 'mail',
+        label: 'Gửi email',
         icon: Mail,
-        href: "/admin/mail",
+        href: '/admin/mail',
     },
     {
-        key: "queues",
-        label: "Quản lý queue",
+        key: 'queues',
+        label: 'Quản lý queue',
         icon: ListChecks,
-        href: "/admin/queues",
+        href: '/admin/queues',
     },
 ];
 
@@ -182,5 +178,5 @@ export const resolveAdminPageTitle = (path: string): string => {
         }
     }
 
-    return "Admin";
+    return 'Admin';
 };

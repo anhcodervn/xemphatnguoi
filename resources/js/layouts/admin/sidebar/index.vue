@@ -39,9 +39,9 @@ const isGroupActive = (group: AdminMenuGroup): boolean => {
 };
 
 const isChildActive = (href: string): boolean => {
-    const packageChildHrefs = adminMenuGroups.flatMap((group) => group.children?.map((child) => child.href) ?? []);
+    const menuChildHrefs = adminMenuGroups.flatMap((group) => group.children?.map((child) => child.href) ?? []);
 
-    return findBestMatchingChildHref(packageChildHrefs, route.path) === href;
+    return findBestMatchingChildHref(menuChildHrefs, route.path) === href;
 };
 
 const toggleGroup = (groupKey: string): void => {
@@ -78,22 +78,24 @@ watch(
     >
         <aside
             v-if="props.isOpen"
-            class="fixed inset-y-0 left-0 z-50 flex w-[290px] flex-col border-r border-teal-100 bg-white/95 shadow-[0_24px_80px_rgba(14,116,144,0.14)] backdrop-blur-xl lg:sticky lg:top-0 lg:shadow-none"
+            class="fixed inset-y-0 left-0 z-50 flex w-[290px] flex-col border-r border-slate-200 bg-white text-slate-700 shadow-[0_24px_80px_rgba(15,23,42,0.14)] lg:sticky lg:top-0 lg:shadow-none"
         >
-            <div class="flex items-center justify-between border-b border-teal-100 px-6 py-5">
+            <div class="flex items-center justify-between border-b border-slate-200 px-6 py-5">
                 <RouterLink to="/admin" class="flex items-center gap-3" @click="closeSidebarOnMobile">
-                    <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,_#0f766e_0%,_#06b6d4_100%)] text-white shadow-[0_12px_28px_rgba(6,182,212,0.28)]">
+                    <div
+                        class="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-400 text-white shadow-[0_12px_28px_rgba(6,182,212,0.24)]"
+                    >
                         <ShieldCheck class="h-5 w-5" />
                     </div>
                     <div>
-                        <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-teal-600">Dashboard</p>
-                        <h1 class="text-lg font-black tracking-tight text-teal-950">Admin Board</h1>
+                        <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-blue-600">DailyProxy</p>
+                        <h1 class="text-lg font-black tracking-tight text-slate-950">Admin Control</h1>
                     </div>
                 </RouterLink>
 
                 <button
                     type="button"
-                    class="rounded-2xl border border-teal-100 p-2 text-teal-700 transition hover:bg-teal-50 lg:hidden"
+                    class="rounded-2xl border border-slate-200 p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 lg:hidden"
                     @click="emit('close')"
                 >
                     <X class="h-5 w-5" />
@@ -102,7 +104,7 @@ watch(
 
             <nav class="flex-1 overflow-y-auto px-4 py-5">
                 <div class="mb-4 px-2">
-                    <p class="text-[11px] font-semibold uppercase tracking-[0.2em] text-teal-500/80">Navigation</p>
+                    <p class="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Điều hướng</p>
                 </div>
 
                 <div class="space-y-2">
@@ -113,8 +115,8 @@ watch(
                             class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition"
                             :class="
                                 isGroupActive(group)
-                                    ? 'bg-[linear-gradient(135deg,_#0f766e_0%,_#0891b2_100%)] text-white shadow-[0_14px_30px_rgba(6,182,212,0.22)]'
-                                    : 'text-slate-600 hover:bg-teal-50 hover:text-teal-950'
+                                    ? 'bg-blue-600 text-white shadow-[0_12px_24px_rgba(37,99,235,0.2)]'
+                                    : 'text-slate-600 hover:bg-blue-50 hover:text-blue-700'
                             "
                             @click="closeSidebarOnMobile"
                         >
@@ -122,18 +124,18 @@ watch(
                             <span>{{ group.label }}</span>
                         </RouterLink>
 
-                        <div v-else class="rounded-[1.35rem] border border-teal-100 bg-teal-50/70">
+                        <div v-else class="rounded-[1.35rem] border border-slate-200 bg-slate-50/80">
                             <button
                                 type="button"
                                 class="flex w-full items-center gap-3 px-4 py-3 text-left text-sm font-semibold transition"
-                                :class="isGroupActive(group) ? 'text-teal-950' : 'text-slate-600 hover:text-teal-950'"
+                                :class="isGroupActive(group) ? 'text-blue-700' : 'text-slate-600 hover:bg-blue-50 hover:text-blue-700'"
                                 @click="toggleGroup(group.key)"
                             >
                                 <component :is="group.icon" class="h-5 w-5" />
                                 <span class="flex-1">{{ group.label }}</span>
                                 <ChevronRight
                                     class="h-4 w-4 transition"
-                                    :class="expandedGroups[group.key] ? 'rotate-90 text-teal-600' : 'text-teal-300'"
+                                    :class="expandedGroups[group.key] ? 'rotate-90 text-blue-600' : 'text-slate-400'"
                                 />
                             </button>
 
@@ -153,8 +155,8 @@ watch(
                                         class="mt-1 flex items-center gap-3 rounded-2xl px-4 py-2.5 text-sm transition"
                                         :class="
                                             isChildActive(child.href)
-                                                ? 'bg-white font-semibold text-teal-700 shadow-sm ring-1 ring-teal-100'
-                                                : 'text-slate-500 hover:bg-white hover:text-teal-900'
+                                                ? 'bg-blue-50 font-semibold text-blue-700 ring-1 ring-blue-100'
+                                                : 'text-slate-500 hover:bg-white hover:text-blue-700'
                                         "
                                         @click="closeSidebarOnMobile"
                                     >
@@ -170,4 +172,3 @@ watch(
         </aside>
     </Transition>
 </template>
-

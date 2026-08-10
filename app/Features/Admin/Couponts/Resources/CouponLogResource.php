@@ -31,10 +31,6 @@ class CouponLogResource extends JsonResource
                 'name' => $this->admin->name,
                 'email' => $this->admin->email,
             ] : null),
-            'package_order' => $this->whenLoaded('packageOrder', fn (): ?array => $this->packageOrder ? [
-                'id' => $this->packageOrder->id,
-                'order_code' => $this->packageOrder->order_code,
-            ] : null),
             'order_amount' => $this->order_amount,
             'discount_amount' => $this->discount_amount,
             'note' => $this->note,

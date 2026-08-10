@@ -23,7 +23,6 @@ class CouponLogFactory extends Factory
             'coupon_id' => Coupon::factory(),
             'user_id' => User::factory(),
             'admin_id' => User::factory(),
-            'package_order_id' => null,
             'action' => fake()->randomElement(['created', 'updated', 'applied']),
             'status' => fake()->randomElement(['success', 'info']),
             'order_amount' => fake()->randomElement([null, 299000, 499000]),

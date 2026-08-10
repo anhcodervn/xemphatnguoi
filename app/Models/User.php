@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Notifications\QueuedResetPasswordNotification;
-use App\Service\DiscordWebhookNotifier;
 use Illuminate\Auth\Passwords\CanResetPassword as CanResetPasswordTrait;
 use Illuminate\Contracts\Auth\CanResetPassword;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -76,11 +75,6 @@ class User extends Authenticatable implements CanResetPassword, JWTSubject
                 'total_spent' => 0,
             ]);
 
-            try {
-                app(DiscordWebhookNotifier::class)->sendUserRegistered($user);
-            } catch (\Throwable $exception) {
-                report($exception);
-            }
         });
     }
 
@@ -102,11 +96,6 @@ class User extends Authenticatable implements CanResetPassword, JWTSubject
     public function referrals(): HasMany
     {
         return $this->hasMany(self::class, 'referred_by');
-    }
-
-    public function captchaTasks(): HasMany
-    {
-        return $this->hasMany(CaptchaTask::class);
     }
 
     public function userSessions(): HasMany
@@ -132,26 +121,6 @@ class User extends Authenticatable implements CanResetPassword, JWTSubject
     public function wallets(): HasMany
     {
         return $this->hasMany(Wallet::class);
-    }
-
-    public function userPackages(): HasMany
-    {
-        return $this->hasMany(UserPackage::class);
-    }
-
-    public function packageOrders(): HasMany
-    {
-        return $this->hasMany(PackageOrder::class);
-    }
-
-    public function userSubscriptions(): HasMany
-    {
-        return $this->hasMany(UserSubscription::class);
-    }
-
-    public function accounts(): HasMany
-    {
-        return $this->hasMany(Account::class);
     }
 
     public function paymentTransactions(): HasMany

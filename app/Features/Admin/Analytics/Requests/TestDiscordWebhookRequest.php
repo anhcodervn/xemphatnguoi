@@ -21,7 +21,7 @@ class TestDiscordWebhookRequest extends FormRequest
     {
         return [
             'webhook_index' => ['required', 'integer', 'min:0'],
-            'event' => ['required', 'string', 'in:test_ping,user_registered,recharge_success,captcha_task_failed'],
+            'event' => ['required', 'string', 'in:test_ping,user_registered,recharge_success'],
         ];
     }
 

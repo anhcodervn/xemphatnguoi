@@ -28,7 +28,7 @@ return new class extends Migration
                     $this->list([
                         'Tạo và quản lý HTTP Cron Jobs theo interval hoặc cron expression.',
                         'Ghi logs cho từng lần chạy với request/response preview, duration và lỗi chi tiết.',
-                        'Phân quyền theo package với giới hạn số task, quota, retention logs và priority queue.',
+                        'Phân quyền theo API key với giới hạn request, retention logs và priority queue.',
                         'Gửi cảnh báo qua Discord, Telegram, Webhook hoặc Email khi fail và khi recovered.',
                         'Chặn SSRF với scheme, IP, port và redirect nguy hiểm trước khi request.',
                     ]),
@@ -69,7 +69,7 @@ return new class extends Migration
                 'seo_description' => 'Quy định về quota, queue, alerts, logs và SSRF protection khi sử dụng dịch vụ AutoCron.',
                 'content' => [
                     $this->heading('1. Cron jobs và lịch chạy', 2),
-                    $this->paragraph('Người dùng được tạo cron jobs trong phạm vi giới hạn của gói dịch vụ. Hệ thống có thể từ chối cấu hình interval quá thấp hoặc tính năng không được gói hiện tại hỗ trợ.'),
+                    $this->paragraph('Người dùng được tạo cron jobs trong phạm vi giới hạn của dịch vụ. Hệ thống có thể từ chối cấu hình interval quá thấp hoặc tính năng chưa được hỗ trợ.'),
                     $this->heading('2. Quota và logs', 2),
                     $this->paragraph('Mỗi gói có thể áp dụng quota theo ngày hoặc theo tháng, đồng thời giới hạn số logs trên mỗi task và thời gian lưu trữ logs.'),
                     $this->heading('3. Alerts và kênh thông báo', 2),

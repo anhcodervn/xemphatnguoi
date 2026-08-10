@@ -9,13 +9,15 @@ import type {
     AdminQueueOverviewResponse,
 } from '@/types/admin-queue.type';
 import { handleErrorResponse, handleSuccessResponse } from '@/utils/response';
+import Swal from 'sweetalert2';
 import { computed, onMounted, reactive, ref } from 'vue';
 
 const loadingOverview = ref(false);
 const loadingLogs = ref(false);
 const loadingFailedJobs = ref(false);
-const retryingId = ref<number | null>(null);
-const deletingId = ref<number | null>(null);
+const retryingUuid = ref<string | null>(null);
+const deletingUuid = ref<string | null>(null);
+const replayingLogId = ref<number | null>(null);
 
 const overview = ref<AdminQueueOverviewResponse | null>(null);
 const queueLogs = ref<AdminQueueLogItem[]>([]);
@@ -114,31 +116,65 @@ const refreshAll = async (): Promise<void> => {
     await Promise.all([fetchOverview(), fetchLogs(1), fetchFailedJobs(1)]);
 };
 
-const retryFailedJob = async (id: number): Promise<void> => {
+const confirmReplay = async (jobLabel: string): Promise<boolean> => {
+    const result = await Swal.fire({
+        icon: 'warning',
+        title: 'Phát lại job?',
+        text: `${jobLabel} sẽ được đưa lại vào queue và worker sẽ chạy lại từ đầu.`,
+        showCancelButton: true,
+        confirmButtonText: 'Phát lại',
+        cancelButtonText: 'Hủy',
+        confirmButtonColor: '#4f46e5',
+    });
+
+    return result.isConfirmed;
+};
+
+const replayQueueLog = async (log: AdminQueueLogItem): Promise<void> => {
+    if (!(await confirmReplay(`Queue log #${log.id}`))) {
+        return;
+    }
+
     try {
-        retryingId.value = id;
-        await adminQueueService.retryFailedJob(id);
-        handleSuccessResponse({ data: { status: true, message: `Đã retry failed job #${id}.` } });
-        await fetchFailedJobs(failedMeta.current_page);
-        await fetchOverview();
+        replayingLogId.value = log.id;
+        await adminQueueService.replayQueueLog(log.id);
+        handleSuccessResponse({ data: { status: true, message: `Đã phát lại queue log #${log.id}.` } });
+        await Promise.all([fetchLogs(logsMeta.current_page), fetchFailedJobs(failedMeta.current_page), fetchOverview()]);
     } catch (error) {
         handleErrorResponse(error);
     } finally {
-        retryingId.value = null;
+        replayingLogId.value = null;
     }
 };
 
-const deleteFailedJob = async (id: number): Promise<void> => {
+const retryFailedJob = async (uuid: string): Promise<void> => {
+    if (!(await confirmReplay(`Failed job ${uuid}`))) {
+        return;
+    }
+
     try {
-        deletingId.value = id;
-        await adminQueueService.deleteFailedJob(id);
-        handleSuccessResponse({ data: { status: true, message: `Đã xóa failed job #${id}.` } });
+        retryingUuid.value = uuid;
+        await adminQueueService.retryFailedJob(uuid);
+        handleSuccessResponse({ data: { status: true, message: 'Đã đưa job vào queue để phát lại.' } });
+        await Promise.all([fetchLogs(logsMeta.current_page), fetchFailedJobs(failedMeta.current_page), fetchOverview()]);
+    } catch (error) {
+        handleErrorResponse(error);
+    } finally {
+        retryingUuid.value = null;
+    }
+};
+
+const deleteFailedJob = async (uuid: string): Promise<void> => {
+    try {
+        deletingUuid.value = uuid;
+        await adminQueueService.deleteFailedJob(uuid);
+        handleSuccessResponse({ data: { status: true, message: 'Đã xóa failed job.' } });
         await fetchFailedJobs(failedMeta.current_page);
         await fetchOverview();
     } catch (error) {
         handleErrorResponse(error);
     } finally {
-        deletingId.value = null;
+        deletingUuid.value = null;
     }
 };
 
@@ -257,14 +293,15 @@ onMounted(async () => {
                             <th class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Status</th>
                             <th class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Attempts</th>
                             <th class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Error</th>
+                            <th class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Thao tác</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 bg-white">
                         <tr v-if="loadingLogs">
-                            <td colspan="6" class="px-3 py-6 text-center text-sm text-slate-500">Đang tải queue logs...</td>
+                            <td colspan="7" class="px-3 py-6 text-center text-sm text-slate-500">Đang tải queue logs...</td>
                         </tr>
                         <tr v-else-if="queueLogs.length === 0">
-                            <td colspan="6" class="px-3 py-6 text-center text-sm text-slate-500">Không có queue log phù hợp.</td>
+                            <td colspan="7" class="px-3 py-6 text-center text-sm text-slate-500">Không có queue log phù hợp.</td>
                         </tr>
                         <tr v-for="log in queueLogs" :key="log.id">
                             <td class="px-3 py-2 text-xs text-slate-500">#{{ log.id }}</td>
@@ -281,6 +318,19 @@ onMounted(async () => {
                             <td class="px-3 py-2 text-sm text-slate-700">{{ log.attempts }}</td>
                             <td class="px-3 py-2 text-xs text-rose-600">
                                 <p class="line-clamp-2">{{ log.error_message || '-' }}</p>
+                            </td>
+                            <td class="px-3 py-2">
+                                <button
+                                    v-if="log.can_replay"
+                                    type="button"
+                                    class="rounded-[5px] bg-indigo-600 px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-indigo-700 disabled:opacity-60"
+                                    :disabled="replayingLogId === log.id"
+                                    @click="replayQueueLog(log)"
+                                >
+                                    {{ replayingLogId === log.id ? 'Đang phát lại...' : 'Phát lại' }}
+                                </button>
+                                <span v-else-if="log.status === 'failed'" class="text-xs text-slate-400">Không còn job gốc</span>
+                                <span v-else class="text-xs text-slate-400">—</span>
                             </td>
                         </tr>
                     </tbody>
@@ -339,19 +389,19 @@ onMounted(async () => {
                                 <div class="flex gap-2">
                                     <button
                                         type="button"
-                                        class="rounded-[8px] bg-indigo-600 px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-indigo-700 disabled:opacity-60"
-                                        :disabled="retryingId === job.id"
-                                        @click="retryFailedJob(job.id)"
+                                        class="rounded-[5px] bg-indigo-600 px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-indigo-700 disabled:opacity-60"
+                                        :disabled="retryingUuid === job.uuid || deletingUuid === job.uuid"
+                                        @click="retryFailedJob(job.uuid)"
                                     >
-                                        {{ retryingId === job.id ? 'Đang retry...' : 'Retry' }}
+                                        {{ retryingUuid === job.uuid ? 'Đang phát lại...' : 'Phát lại' }}
                                     </button>
                                     <button
                                         type="button"
                                         class="rounded-[8px] border border-rose-200 px-2.5 py-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-50 disabled:opacity-60"
-                                        :disabled="deletingId === job.id"
-                                        @click="deleteFailedJob(job.id)"
+                                        :disabled="deletingUuid === job.uuid || retryingUuid === job.uuid"
+                                        @click="deleteFailedJob(job.uuid)"
                                     >
-                                        {{ deletingId === job.id ? 'Đang xóa...' : 'Xóa' }}
+                                        {{ deletingUuid === job.uuid ? 'Đang xóa...' : 'Xóa' }}
                                     </button>
                                 </div>
                             </td>

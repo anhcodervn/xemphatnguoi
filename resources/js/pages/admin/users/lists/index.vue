@@ -124,13 +124,6 @@ const statusStyles: Record<string, string> = {
     inactive: 'border border-slate-200 bg-slate-100 text-slate-600',
 };
 
-const packageStyles = [
-    'border border-violet-200 bg-violet-50 text-violet-700',
-    'border border-emerald-200 bg-emerald-50 text-emerald-700',
-    'border border-blue-200 bg-blue-50 text-blue-700',
-    'border border-amber-200 bg-amber-50 text-amber-700',
-];
-
 const summaryCards = computed<SummaryCard[]>(() => {
     const totalUsers = stats.total_users || meta.total;
     const activeRate = totalUsers > 0 ? (stats.active_users / totalUsers) * 100 : 0;
@@ -445,7 +438,6 @@ onMounted(async () => {
                             <th class="w-[90px] px-6 py-4">ID</th>
                             <th class="min-w-[280px] px-6 py-4">Thành viên</th>
                             <th class="w-[170px] px-6 py-4">Số điện thoại</th>
-                            <th class="w-[180px] px-6 py-4">Gói hiện tại</th>
                             <th class="w-[160px] px-6 py-4">Số dư</th>
                             <th class="w-[150px] px-6 py-4">Trạng thái</th>
                             <th class="w-[140px] px-6 py-4">Ngày tham gia</th>
@@ -455,7 +447,7 @@ onMounted(async () => {
 
                     <tbody>
                         <tr v-if="users.length === 0">
-                            <td colspan="8" class="px-6 py-16 text-center text-sm text-slate-500">
+                            <td colspan="7" class="px-6 py-16 text-center text-sm text-slate-500">
                                 Không có thành viên phù hợp với bộ lọc hiện tại.
                             </td>
                         </tr>
@@ -488,21 +480,6 @@ onMounted(async () => {
                                 </div>
                             </td>
                             <td class="px-6 py-5 text-sm text-slate-600">{{ user.phone || '--' }}</td>
-                            <td class="px-6 py-5">
-                                <span
-                                    v-if="user.current_package"
-                                    class="inline-flex rounded-[8px] px-2.5 py-1 text-xs font-semibold"
-                                    :class="packageStyles[index % packageStyles.length]"
-                                >
-                                    {{ user.current_package.name }}
-                                </span>
-                                <span
-                                    v-else
-                                    class="inline-flex rounded-[8px] border border-slate-200 bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-500"
-                                >
-                                    Chưa có gói
-                                </span>
-                            </td>
                             <td class="px-6 py-5 text-sm font-semibold text-slate-700">{{ formatCurrency(user.wallet_balance) }}</td>
                             <td class="px-6 py-5">
                                 <span

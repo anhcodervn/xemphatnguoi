@@ -13,24 +13,19 @@ export default {
             component: () => import('@/pages/admin/analytics/index.vue'),
         },
         {
-            path: 'captcha-sources',
-            name: 'admin.captcha-sources.index',
-            component: () => import('@/pages/admin/captcha-sources/index.vue'),
+            path: 'proxy-taxonomy',
+            name: 'admin.proxy-taxonomy.index',
+            component: () => import('@/pages/admin/proxy-taxonomy/index.vue'),
         },
         {
-            path: 'captcha-services',
-            name: 'admin.captcha-services.index',
-            component: () => import('@/pages/admin/captcha-services/index.vue'),
+            path: 'proxy-providers',
+            name: 'admin.proxy-providers.index',
+            component: () => import('@/pages/admin/proxy-providers/index.vue'),
         },
         {
-            path: 'packages',
-            name: 'admin.packages.index',
-            component: () => import('@/pages/admin/packages/index.vue'),
-        },
-        {
-            path: 'captcha-tasks',
-            name: 'admin.captcha-tasks.index',
-            component: () => import('@/pages/admin/captcha-tasks/index.vue'),
+            path: 'proxy-products',
+            name: 'admin.proxy-products.index',
+            component: () => import('@/pages/admin/proxy-products/index.vue'),
         },
         {
             path: 'api-logs',

@@ -33,7 +33,6 @@ class CouponFactory extends Factory
             'expired_at' => now()->addDays(7),
             'first_order_only' => false,
             'is_active' => true,
-            'applicable_package_ids' => [],
             'requirements' => [
                 'note' => fake()->sentence(),
             ],

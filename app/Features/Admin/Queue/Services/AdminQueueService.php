@@ -2,6 +2,7 @@
 
 namespace App\Features\Admin\Queue\Services;
 
+use App\Exceptions\ApiException;
 use App\Models\QueueLog;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
@@ -65,7 +66,7 @@ class AdminQueueService
     }
 
     /**
-     * @param array{queue?:string,status?:string,search?:string,per_page?:int} $filters
+     * @param  array{queue?:string,status?:string,search?:string,per_page?:int}  $filters
      * @return array<string, mixed>
      */
     public function logs(array $filters): array
@@ -89,14 +90,27 @@ class AdminQueueService
             ->latest('id')
             ->paginate($perPage);
 
+        $logItems = collect($logs->items());
+        $replayableUuids = DB::table('failed_jobs')
+            ->whereIn('uuid', $logItems->pluck('job_uuid')->filter()->unique()->values())
+            ->pluck('uuid')
+            ->flip();
+
         return [
-            'data' => $logs->items(),
+            'data' => $logItems->map(function (QueueLog $log) use ($replayableUuids): array {
+                return [
+                    ...$log->toArray(),
+                    'can_replay' => $log->status === 'failed'
+                        && filled($log->job_uuid)
+                        && $replayableUuids->has($log->job_uuid),
+                ];
+            })->values()->all(),
             'meta' => $this->meta($logs),
         ];
     }
 
     /**
-     * @param array{queue?:string,search?:string,per_page?:int} $filters
+     * @param  array{queue?:string,search?:string,per_page?:int}  $filters
      * @return array<string, mixed>
      */
     public function failedJobs(array $filters): array
@@ -133,20 +147,45 @@ class AdminQueueService
         ];
     }
 
-    public function retryFailedJob(int|string $id): void
+    public function replayFailedJob(string $uuid): void
     {
-        Artisan::call('queue:retry', [
-            'id' => [(string) $id],
+        if (! DB::table('failed_jobs')->where('uuid', $uuid)->exists()) {
+            throw new ApiException('Failed job không còn tồn tại.', 404);
+        }
+
+        $exitCode = Artisan::call('queue:retry', [
+            'id' => [$uuid],
             '--no-interaction' => true,
         ]);
+
+        if ($exitCode !== 0 || DB::table('failed_jobs')->where('uuid', $uuid)->exists()) {
+            throw new ApiException('Không thể đưa job vào queue để phát lại.', 500);
+        }
     }
 
-    public function deleteFailedJob(int|string $id): void
+    public function replayQueueLog(QueueLog $queueLog): void
     {
-        Artisan::call('queue:forget', [
-            'id' => (string) $id,
+        if ($queueLog->status !== 'failed' || blank($queueLog->job_uuid)) {
+            throw new ApiException('Chỉ có thể phát lại queue log ở trạng thái thất bại.', 422);
+        }
+
+        $this->replayFailedJob($queueLog->job_uuid);
+    }
+
+    public function deleteFailedJob(string $uuid): void
+    {
+        if (! DB::table('failed_jobs')->where('uuid', $uuid)->exists()) {
+            throw new ApiException('Failed job không còn tồn tại.', 404);
+        }
+
+        $exitCode = Artisan::call('queue:forget', [
+            'id' => $uuid,
             '--no-interaction' => true,
         ]);
+
+        if ($exitCode !== 0 || DB::table('failed_jobs')->where('uuid', $uuid)->exists()) {
+            throw new ApiException('Không thể xóa failed job.', 500);
+        }
     }
 
     /**

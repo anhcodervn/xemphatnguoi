@@ -4,18 +4,37 @@
 
 @layer base {
     :root {
-        --gc-page-bg: #f7fbff;
-        --gc-surface: #ffffff;
-        --gc-surface-soft: #f8fbff;
-        --gc-border: #dbeafe;
-        --gc-border-muted: #e2e8f0;
-        --gc-text: #0f172a;
-        --gc-text-muted: #64748b;
-        --gc-primary: #2563eb;
-        --gc-cyan: #06b6d4;
-        --gc-aqua: #22c7b8;
-        --gc-primary-soft: #eaf6ff;
-        --gc-aqua-soft: #dff7f4;
+        --proxy-page: #f5f8fc;
+        --proxy-surface: #ffffff;
+        --proxy-surface-soft: #f0f7ff;
+        --proxy-border: #dbe7f5;
+        --proxy-ink: #0b1220;
+        --proxy-muted: #64748b;
+        --proxy-primary: #2563eb;
+        --proxy-primary-strong: #1d4ed8;
+        --proxy-signal: #06b6d4;
+        --proxy-success: #10b981;
+
+        --background: 214 45% 98%;
+        --foreground: 222 47% 11%;
+        --card: 0 0% 100%;
+        --card-foreground: 222 47% 11%;
+        --popover: 0 0% 100%;
+        --popover-foreground: 222 47% 11%;
+        --primary: 221 83% 53%;
+        --primary-foreground: 210 40% 98%;
+        --secondary: 210 40% 96%;
+        --secondary-foreground: 222 47% 11%;
+        --muted: 210 40% 96%;
+        --muted-foreground: 215 16% 47%;
+        --accent: 188 86% 43%;
+        --accent-foreground: 222 47% 11%;
+        --destructive: 0 72% 51%;
+        --destructive-foreground: 210 40% 98%;
+        --border: 214 32% 91%;
+        --input: 214 32% 91%;
+        --ring: 221 83% 53%;
+        --radius: 0.875rem;
     }
 
     html {
@@ -23,10 +42,21 @@
     }
 
     body {
-        @apply bg-slate-50 text-slate-900 antialiased;
+        @apply bg-slate-50 text-slate-900 antialiased selection:bg-cyan-200 selection:text-slate-950;
         background:
-            radial-gradient(circle at top right, rgba(6, 182, 212, 0.12), transparent 30%),
-            linear-gradient(180deg, #f7fbff 0%, #ffffff 100%);
+            radial-gradient(circle at 85% 0%, rgba(6, 182, 212, 0.1), transparent 26rem),
+            radial-gradient(circle at 15% 10%, rgba(37, 99, 235, 0.08), transparent 28rem),
+            linear-gradient(180deg, var(--proxy-page) 0%, #ffffff 100%);
+    }
+}
+
+@layer components {
+    .proxy-panel {
+        @apply rounded-2xl border border-slate-200/80 bg-white shadow-[0_18px_50px_-34px_rgba(15,23,42,0.38)];
+    }
+
+    .proxy-focus {
+        @apply outline-none transition focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2;
     }
 }
 

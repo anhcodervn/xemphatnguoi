@@ -65,7 +65,7 @@ class UpdateTabSettingRequest extends FormRequest
                 'discord_webhooks.*.url' => ['required', 'url', 'max:2048'],
                 'discord_webhooks.*.is_active' => ['required', 'boolean'],
                 'discord_webhooks.*.events' => ['nullable', 'array'],
-                'discord_webhooks.*.events.*' => ['string', 'in:test_ping,user_registered,recharge_success,captcha_task_failed'],
+                'discord_webhooks.*.events.*' => ['string', 'in:test_ping,user_registered,recharge_success'],
             ],
             default => [],
         };

@@ -4,7 +4,6 @@
         flex-wrap items-center justify-between"
     >
         <div >
-            hehe
         </div>
         <div class="flex gap-2 flex-wrap items-center">
             <!-- PREV -->
@@ -78,11 +77,6 @@ const props = defineProps<{
     totalPages: number;
     goToPage: (p: number) => void;
 }>();
-
-console.log({
-    currentpage: props.currentPage,
-    totalPage: props.totalPages,
-});
 
 // tạo list page hiển thị
 const pages = computed(() => {

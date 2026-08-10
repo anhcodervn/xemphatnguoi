@@ -1,7 +1,5 @@
 <?php
 
-test('returns a successful response', function () {
-    $response = $this->get('/');
-
-    $response->assertStatus(200);
+test('landing page renders the proxy catalog successfully', function () {
+    $this->get('/')->assertOk();
 });

@@ -3,7 +3,7 @@ import type { SystemSettingType } from "@/types/setting.type";
 import { ref } from "vue";
 
 const defaultSettings: SystemSettingType = {
-    site_name: "GiaiCaptcha.vn",
+    site_name: "DailyProxy.vn",
     site_domain: "",
     site_description: "",
     site_active: true,

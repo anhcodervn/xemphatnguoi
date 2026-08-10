@@ -125,7 +125,7 @@ class AuthController extends Controller
         }
 
         event(new Registered($user));
-        SendMessage::sendInfoReport('Người dùng đăng ký mới', [
+        SendMessage::sendActivityReport('Người dùng đăng ký mới', [
             'Loại đăng ký' => 'form',
             'User ID' => $user->id,
             'Username' => $user->username,
@@ -243,7 +243,7 @@ class AuthController extends Controller
             $this->recordUserLogAction->handle($user, 'google_login', 'Đăng nhập bằng Google', $request);
 
             if ($isNewUser) {
-                SendMessage::sendInfoReport('Người dùng đăng ký mới', [
+                SendMessage::sendActivityReport('Người dùng đăng ký mới', [
                     'Loại đăng ký' => 'google',
                     'User ID' => $user->id,
                     'Username' => $user->username,

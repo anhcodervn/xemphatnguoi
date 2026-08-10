@@ -2,6 +2,7 @@
 
 namespace App\Features\Client\Wallet\Services;
 
+use App\Events\WalletBalanceChanged;
 use App\Exceptions\ApiException;
 use App\Models\User;
 use App\Models\Wallet;
@@ -88,7 +89,7 @@ class WalletService
             'total_spent' => (float) $wallet->total_spent + $amount,
         ])->save();
 
-        WalletTransaction::query()->create([
+        $transaction = WalletTransaction::query()->create([
             'wallet_id' => $wallet->id,
             'type' => 'debit',
             'amount' => $amount,
@@ -100,6 +101,66 @@ class WalletService
             'status' => 'success',
         ]);
 
-        return $wallet->refresh();
+        $wallet = $wallet->refresh();
+        $this->broadcastBalanceChanged($user, $wallet, $transaction, -$amount);
+
+        return $wallet;
+    }
+
+    public function credit(
+        User $user,
+        float $amount,
+        string $referenceType,
+        int $referenceId,
+        string $description,
+        string $type = Wallet::TYPE_MAIN,
+    ): Wallet {
+        $wallet = Wallet::query()
+            ->where('user_id', $user->id)
+            ->where('type', $type)
+            ->lockForUpdate()
+            ->firstOrFail();
+
+        $balanceBefore = (float) $wallet->balance;
+        $balanceAfter = $balanceBefore + $amount;
+
+        $wallet->forceFill([
+            'balance' => $balanceAfter,
+            'total_spent' => max(0, (float) $wallet->total_spent - $amount),
+        ])->save();
+
+        $transaction = WalletTransaction::query()->create([
+            'wallet_id' => $wallet->id,
+            'type' => 'credit',
+            'amount' => $amount,
+            'balance_before' => $balanceBefore,
+            'balance_after' => $balanceAfter,
+            'reference_type' => $referenceType,
+            'reference_id' => $referenceId,
+            'description' => $description,
+            'status' => 'success',
+        ]);
+
+        $wallet = $wallet->refresh();
+        $this->broadcastBalanceChanged($user, $wallet, $transaction, $amount);
+
+        return $wallet;
+    }
+
+    private function broadcastBalanceChanged(User $user, Wallet $wallet, WalletTransaction $transaction, float $signedAmount): void
+    {
+        WalletBalanceChanged::dispatch(
+            userId: $user->id,
+            walletType: $wallet->type,
+            balance: (string) $wallet->balance,
+            holdBalance: (string) $wallet->hold_balance,
+            totalRecharge: (string) $wallet->total_recharge,
+            totalSpent: (string) $wallet->total_spent,
+            changeType: $transaction->type,
+            amount: number_format($signedAmount, 2, '.', ''),
+            transactionId: $transaction->id,
+            description: (string) $transaction->description,
+            changedAt: $transaction->created_at?->toISOString() ?? now()->toISOString(),
+        );
     }
 }

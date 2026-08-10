@@ -20,26 +20,26 @@ const editingId = computed(() => {
 });
 
 const form = reactive<AdminSeoPostPayload>({
-    title: "Hướng dẫn tạo task captcha đầu tiên trên GiaiCaptcha",
-    slug: "huong-dan-tao-task-captcha-dau-tien-tren-giapcaptcha",
+    title: "Hướng dẫn tạo đơn proxy đầu tiên trên DailyProxy",
+    slug: "huong-dan-tao-task-proxy-dau-tien-tren-giapproxy",
     seo_category_id: null,
-    excerpt: "Bài viết hướng dẫn tạo task captcha, gửi payload và theo dõi kết quả trả về trong GiaiCaptcha.",
+    excerpt: "Bài viết hướng dẫn tạo đơn proxy, gửi payload và theo dõi kết quả trả về trong DailyProxy.",
     content: [
         {
             type: "paragraph",
             children: [
                 {
-                    text: "Bài viết này hướng dẫn luồng tạo task captcha, chọn loại captcha, gửi payload và theo dõi kết quả trả về ngay trong dashboard.",
+                    text: "Bài viết này hướng dẫn luồng tạo đơn proxy, chọn loại proxy, gửi payload và theo dõi kết quả trả về ngay trong dashboard.",
                 },
             ],
         },
     ],
-    seo_title: "Hướng dẫn tạo task captcha đầu tiên | GiaiCaptcha",
-    seo_description: "Từng bước tạo task captcha, tích hợp API, theo dõi task và nhận kết quả trong GiaiCaptcha.",
-    canonical_url: "https://giapcaptcha.vn/blog/huong-dan-tao-task-captcha-dau-tien-tren-giapcaptcha",
+    seo_title: "Hướng dẫn tạo đơn proxy đầu tiên | DailyProxy",
+    seo_description: "Từng bước tạo đơn proxy, tích hợp API, theo dõi task và nhận kết quả trong DailyProxy.",
+    canonical_url: "https://giapproxy.vn/blog/huong-dan-tao-task-proxy-dau-tien-tren-giapproxy",
     robots: "index,follow",
-    focus_keyword: "api giải captcha",
-    cover_alt: "Minh họa quy trình tạo task captcha trên GiaiCaptcha",
+    focus_keyword: "api mua proxy",
+    cover_alt: "Minh họa quy trình tạo đơn proxy trên DailyProxy",
     article_schema: true,
     breadcrumb_schema: true,
     status: "draft",

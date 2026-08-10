@@ -1,20 +1,18 @@
 <template>
-    <div class="flex flex-col gap-2 rounded-[18px] border border-teal-100 bg-white/90 px-5 py-4 shadow-[0_18px_40px_-26px_rgba(8,145,178,0.28)] backdrop-blur-sm">
-        <div class="flex items-center gap-2 text-sm text-teal-700/75">
+    <div
+        class="flex flex-col gap-2 rounded-[18px] border border-blue-100 bg-white/90 px-5 py-4 shadow-[0_18px_40px_-26px_rgba(37,99,235,0.24)] backdrop-blur-sm"
+    >
+        <div class="flex items-center gap-2 text-sm text-blue-700/75">
             <template v-for="(item, index) in resolvedItems" :key="`${item.label}-${index}`">
                 <template v-if="index > 0">
-                    <span class="mr-2 text-teal-200">/</span>
+                    <span class="mr-2 text-blue-200">/</span>
                 </template>
 
-                <router-link
-                    v-if="item.to && !item.active"
-                    :to="item.to"
-                    class="transition-colors hover:text-teal-700"
-                >
+                <router-link v-if="item.to && !item.active" :to="item.to" class="transition-colors hover:text-blue-700">
                     {{ item.label }}
                 </router-link>
 
-                <span v-else class="font-medium text-teal-950">
+                <span v-else class="font-medium text-slate-950">
                     {{ item.label }}
                 </span>
             </template>
@@ -22,7 +20,7 @@
 
         <div class="flex items-center justify-between gap-3">
             <div>
-                <h1 class="text-lg font-semibold text-teal-950">
+                <h1 class="text-lg font-semibold text-slate-950">
                     {{ resolvedTitle }}
                 </h1>
                 <p v-if="description" class="text-sm text-slate-600">
@@ -65,7 +63,6 @@ const props = withDefaults(
 const routeLabelMap: Record<string, string> = {
     'admin.dashboard': 'Dashboard',
     'admin.users.index': 'Người dùng',
-    'admin.packages.index': 'Gói captcha',
     'admin.users.show': 'Chi tiết người dùng',
     'admin.users.wallet-transaction': 'Lịch sử dòng tiền',
     'admin.users.wallet-transaction.show': 'Lịch sử dòng tiền',
@@ -87,10 +84,10 @@ const routeLabelMap: Record<string, string> = {
     'admin.settings.recharge': 'Cấu hình nạp tiền',
     'admin.error.404': 'Trang quản trị không tồn tại',
     'client.home': 'Trang chủ',
-    'client.services': 'Dịch vụ captcha',
-    'client.packages': 'Gói captcha',
-    'client.captcha-history': 'Lịch sử giải captcha',
+    'client.services': 'Dịch vụ proxy',
+    'client.proxy-orders': 'Quản lý proxy',
     'client.wallet': 'Ví và nạp tiền',
+    'client.proxy-check': 'Check Proxy',
     'client.api-docs': 'Tài liệu API',
     'client.profile': 'Hồ sơ tài khoản',
     'client.contact': 'Liên hệ và góp ý',

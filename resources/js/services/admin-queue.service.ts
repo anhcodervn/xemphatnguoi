@@ -21,11 +21,15 @@ export const adminQueueService = {
         return response.data.data as AdminQueueFailedJobsResponse;
     },
 
-    async retryFailedJob(id: number): Promise<void> {
-        await api.post(`/api/admin-api/queues/failed-jobs/${id}/retry`);
+    async replayQueueLog(id: number): Promise<void> {
+        await api.post(`/api/admin-api/queues/logs/${id}/replay`);
     },
 
-    async deleteFailedJob(id: number): Promise<void> {
-        await api.delete(`/api/admin-api/queues/failed-jobs/${id}`);
+    async retryFailedJob(uuid: string): Promise<void> {
+        await api.post(`/api/admin-api/queues/failed-jobs/${uuid}/retry`);
+    },
+
+    async deleteFailedJob(uuid: string): Promise<void> {
+        await api.delete(`/api/admin-api/queues/failed-jobs/${uuid}`);
     },
 };

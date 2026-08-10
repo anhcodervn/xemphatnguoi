@@ -24,13 +24,6 @@ class ApiKeyResource extends JsonResource
             )),
             'ip_whitelist' => $this->ip_whitelist ?? [],
             'status' => $this->status,
-            'subscription' => $this->subscription ? [
-                'id' => $this->subscription->id,
-                'package_id' => $this->subscription->package_id,
-                'package_name' => $this->subscription->package_name,
-                'expires_at' => $this->subscription->expires_at?->toISOString(),
-                'status' => $this->subscription->status?->value ?? (string) $this->subscription->status,
-            ] : null,
             'last_used_at' => $this->last_used_at?->toISOString(),
             'expired_at' => $this->expired_at?->toISOString(),
             'created_at' => $this->created_at?->toISOString(),

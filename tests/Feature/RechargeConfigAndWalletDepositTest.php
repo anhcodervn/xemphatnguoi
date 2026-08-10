@@ -1,11 +1,15 @@
 <?php
 
+use App\Events\WalletDepositCredited;
+use App\Features\Client\Wallet\Services\WalletDepositService;
 use App\Models\ConfigRecharge;
+use App\Models\Notification;
 use App\Models\PaymentTransaction;
 use App\Models\User;
 use App\Models\Wallet;
 use App\Models\WalletTransaction;
 use Illuminate\Http\Client\Request;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Http;
 use Laravel\Sanctum\Sanctum;
 
@@ -380,6 +384,7 @@ test('apibankvn callback rejects invalid webhook secret', function () {
         'api_base_url' => 'https://apibankvn.com',
         'api_key' => 'partner-key',
         'api_secret' => 'callback-secret',
+        'webhook_secret' => 'callback-secret',
         'api_bank_id' => 34,
         'is_active' => true,
     ]);
@@ -409,6 +414,7 @@ test('apibankvn callback updates deposit status and credits wallet balance', fun
         'api_base_url' => 'https://apibankvn.com',
         'api_key' => 'partner-key',
         'api_secret' => 'partner-secret',
+        'webhook_secret' => 'partner-secret',
         'api_bank_id' => 25,
         'is_active' => false,
     ]);
@@ -431,6 +437,8 @@ test('apibankvn callback updates deposit status and credits wallet balance', fun
             'remote_status' => 'pending',
         ],
     ]);
+
+    Event::fake([WalletDepositCredited::class]);
 
     $this->postJson('/api/recharge/callbacks/apibankvn', [
         'bank_id' => 25,
@@ -467,6 +475,35 @@ test('apibankvn callback updates deposit status and credits wallet balance', fun
         ->and($transaction->raw_data['remote_status'] ?? null)->toBe('paid')
         ->and($transaction->raw_data['confirmed_at'] ?? null)->not->toBeNull()
         ->and(WalletTransaction::query()->where('reference_type', PaymentTransaction::class)->where('reference_id', $transaction->id)->count())->toBe(1);
+
+    $notification = Notification::query()
+        ->where('scope', Notification::SCOPE_USER)
+        ->where('user_id', $user->id)
+        ->sole();
+
+    expect($notification->title)->toBe('Nạp tiền thành công')
+        ->and($notification->redirect_url)->toBe("/wallet?view=payment&request={$transaction->id}&from=deposit");
+
+    Event::assertDispatched(WalletDepositCredited::class, fn (WalletDepositCredited $event): bool => $event->userId === $user->id
+        && $event->paymentTransactionId === $transaction->id
+        && $event->transactionCode === 'DEPAPI002'
+        && $event->amount === '200000.00'
+        && $event->balance === '200000.00'
+        && $event->notification['id'] === $notification->id
+        && $event->broadcastAs() === 'wallet.deposit.credited');
+
+    app(WalletDepositService::class)->handleApiBankVnCallback([
+        'order_code' => 'RCL2606270002',
+        'client_order_code' => 'DEPAPI002',
+        'amount' => 200000,
+        'status' => 'paid',
+    ]);
+
+    expect(Notification::query()->where('user_id', $user->id)->count())->toBe(1)
+        ->and(WalletTransaction::query()->where('reference_id', $transaction->id)->count())->toBe(1)
+        ->and((float) $wallet->fresh()->balance)->toBe(200000.0);
+
+    Event::assertDispatchedTimes(WalletDepositCredited::class, 1);
 });
 
 test('apibankvn bank transaction webhook matches deposit by description and credits wallet balance', function () {
@@ -482,6 +519,7 @@ test('apibankvn bank transaction webhook matches deposit by description and cred
         'api_base_url' => 'https://apibankvn.com',
         'api_key' => 'partner-key',
         'api_secret' => 'partner-secret',
+        'webhook_secret' => 'partner-secret',
         'api_bank_id' => 34,
         'is_active' => true,
     ]);

@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware('site.active')->get('/', function (SettingStore $settingStore) {
     $defaults = [
-        'site_name' => config('app.name', 'GiaiCaptcha.vn'),
+        'site_name' => config('app.name', 'DailyProxy.vn'),
         'site_domain' => '',
         'site_description' => '',
         'support_email' => '',
@@ -106,7 +106,7 @@ Route::controller(PublicSeoPageController::class)->group(function (): void {
 Route::middleware(['auth', 'site.active'])->get('/{any}', function (SettingStore $settingStore) {
     return view('app', [
         'systemSettings' => $settingStore->getMany([
-            'site_name' => config('app.name', 'GiaiCaptcha.vn'),
+            'site_name' => config('app.name', 'DailyProxy.vn'),
             'meta_title' => '',
             'meta_description' => '',
             'gtm_id' => '',

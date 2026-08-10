@@ -18,14 +18,14 @@ export default {
             component: () => import('@/pages/client/services/index.vue'),
         },
         {
-            path: 'packages',
-            name: 'client.packages',
-            component: () => import('@/pages/client/packages/index.vue'),
+            path: 'proxy-orders',
+            name: 'client.proxy-orders',
+            component: () => import('@/pages/client/proxy-orders/index.vue'),
         },
         {
-            path: 'captcha-history',
-            name: 'client.captcha-history',
-            component: () => import('@/pages/client/captcha-history/index.vue'),
+            path: 'proxy-check',
+            name: 'client.proxy-check',
+            component: () => import('@/pages/client/proxy-check/index.vue'),
         },
         {
             path: 'api-docs',

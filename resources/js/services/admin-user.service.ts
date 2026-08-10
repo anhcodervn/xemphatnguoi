@@ -11,12 +11,6 @@ export type AdminUserListItem = {
     role: string;
     status: AdminUserStatus;
     wallet_balance: number | null;
-    current_package: {
-        id: number;
-        name: string;
-        expires_at: string | null;
-        status: string | null;
-    } | null;
     created_at: string | null;
     last_login_at: string | null;
 };
@@ -56,20 +50,9 @@ export type AdminUserDetailResponse = {
         hold_balance: number;
         total_spent: number;
     } | null;
-    current_package: {
-        id: number;
-        name: string;
-        price: number;
-        used_captcha_quota: number;
-        remaining_captcha_quota: number | null;
-        starts_at: string | null;
-        expires_at: string | null;
-        status: string | null;
-    } | null;
     stats: {
         total_spent: number;
-        package_order_count: number;
-        captcha_task_count: number;
+        proxy_task_count: number;
         api_key_count: number;
         solved_task_count: number;
     };
@@ -101,27 +84,6 @@ export type AdminUserWalletTransaction = {
     balance_after: number;
     content: string | null;
     status: string;
-    created_at: string | null;
-};
-
-export type AdminUserPackageOrder = {
-    id: number;
-    code: string;
-    user: {
-        id: number;
-        name: string;
-        email: string | null;
-        phone: string | null;
-    } | null;
-    package: {
-        id: number;
-        name: string;
-    } | null;
-    price: number;
-    duration_days: number | null;
-    started_at: string | null;
-    expired_at: string | null;
-    status: string | null;
     created_at: string | null;
 };
 
@@ -167,12 +129,6 @@ export const adminUserService = {
         params: Record<string, unknown> = {},
     ): Promise<PaginatedAdminUserRelation<AdminUserWalletTransaction>> {
         const response = await api.get(`/api/admin-api/users/${userId}/wallet-transactions`, { params });
-
-        return response.data.data;
-    },
-
-    async packageOrders(userId: number | string, params: Record<string, unknown> = {}): Promise<PaginatedAdminUserRelation<AdminUserPackageOrder>> {
-        const response = await api.get(`/api/admin-api/users/${userId}/package-orders`, { params });
 
         return response.data.data;
     },

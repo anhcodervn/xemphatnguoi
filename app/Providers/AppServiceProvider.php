@@ -22,14 +22,6 @@ use Throwable;
 class AppServiceProvider extends ServiceProvider
 {
     /**
-     * Register any application services.
-     */
-    public function register(): void
-    {
-        //
-    }
-
-    /**
      * Bootstrap any application services.
      */
     public function boot(): void
@@ -88,6 +80,19 @@ class AppServiceProvider extends ServiceProvider
             $jobUuid = $event->job->uuid() ?: Arr::get($event->job->payload(), 'uuid');
             if (! is_string($jobUuid) || $jobUuid === '') {
                 $jobUuid = null;
+            }
+
+            if ($event->job->isReleased()) {
+                if ($this->canWriteQueueLogs() && is_string($jobUuid) && $jobUuid !== '') {
+                    QueueLog::query()
+                        ->where('job_uuid', $jobUuid)
+                        ->where('status', 'processing')
+                        ->latest('id')
+                        ->limit(1)
+                        ->delete();
+                }
+
+                return;
             }
 
             if ($this->canWriteQueueLogs() && is_string($jobUuid) && $jobUuid !== '') {

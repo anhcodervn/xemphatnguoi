@@ -12,18 +12,11 @@ export interface ClientApiKeyType {
     id: number;
     name: string;
     api_key: string;
-    key_type: 'wallet' | 'package' | string;
+    key_type: 'wallet' | string;
     permissions: string[];
     permission_details: ApiKeyPermissionType[];
     ip_whitelist: string[];
     status: 'active' | 'inactive' | 'expired' | 'revoked';
-    subscription?: {
-        id: number;
-        package_id: number;
-        package_name: string;
-        expires_at: string | null;
-        status: string;
-    } | null;
     last_used_at: string | null;
     expired_at: string | null;
     created_at: string | null;

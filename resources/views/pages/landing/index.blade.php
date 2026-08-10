@@ -5,23 +5,23 @@
         $settings = $systemSettings ?? [];
         $supportEmail = $settings['support_email'] ?? '';
         $hotline = $settings['hotline'] ?? '';
-        $services = \App\Features\Captcha\Resources\PublicCaptchaServiceResource::collection(
-            \App\Models\CaptchaService::query()
+        $services = \App\Features\Client\Proxy\Resources\ProxyProductResource::collection(
+            \App\Models\ProxyProduct::query()
                 ->where('is_active', true)
                 ->orderBy('sort_order')
                 ->orderBy('id')
                 ->get()
         )->resolve();
         $features = [
-            ['title' => 'Một API chung', 'content' => 'Tạo task, kiểm tra kết quả, xem ví và theo dõi lịch sử giải chỉ trong một chuẩn API ngắn gọn.'],
-            ['title' => 'Bảng dịch vụ rõ ràng', 'content' => 'Mỗi loại captcha hiển thị đúng giá /1 lần giải, tốc độ và tỷ lệ thành công để khách dễ đối chiếu.'],
-            ['title' => 'Quản trị linh hoạt', 'content' => 'Admin có thể chủ động cấu hình dịch vụ, biểu phí, request mẫu và luồng xử lý cho từng loại captcha.'],
-            ['title' => 'Sẵn sàng tích hợp', 'content' => 'Phù hợp cho tool nội bộ, bot, agency và các hệ thống cần solve captcha ổn định qua API.'],
+            ['title' => 'Một API chung', 'content' => 'Mua proxy, kiểm tra bàn giao, xem ví và theo dõi đơn hàng trong một chuẩn API ngắn gọn.'],
+            ['title' => 'Bảng dịch vụ rõ ràng', 'content' => 'Mỗi loại proxy hiển thị đúng giá /1 lần giải, tốc độ và tỷ lệ thành công để khách dễ đối chiếu.'],
+            ['title' => 'Quản trị linh hoạt', 'content' => 'Admin có thể chủ động cấu hình dịch vụ, biểu phí, request mẫu và luồng xử lý cho từng loại proxy.'],
+            ['title' => 'Sẵn sàng tích hợp', 'content' => 'Phù hợp cho tool nội bộ, bot, agency và các hệ thống cần mua proxy ổn định qua API.'],
         ];
         $faqs = [
-            ['question' => 'Tạo task như thế nào?', 'answer' => 'Gửi request đến /api/v1/create với service_code và task data tương ứng từng loại captcha.'],
-            ['question' => 'Nhận kết quả ra sao?', 'answer' => 'Dùng task_code gọi API kiểm tra task. Khi hoàn tất, hệ thống trả về captcha dưới dạng chuỗi gọn để dùng ngay.'],
-            ['question' => 'Có tài liệu mẫu sẵn không?', 'answer' => 'Có. Khu vực tài liệu API cung cấp request mẫu theo từng loại captcha và response mẫu ngắn gọn.'],
+            ['question' => 'Xem sản phẩm qua API như thế nào?', 'answer' => 'Gửi request GET đến /api/v1/proxy/products để lấy danh mục và sản phẩm đang mở bán.'],
+            ['question' => 'Khi nào có API mua proxy?', 'answer' => 'Luồng order đang được xây dựng lại và sẽ được công bố sau khi hoàn tất kiểm thử.'],
+            ['question' => 'Có tài liệu mẫu sẵn không?', 'answer' => 'Có. Khu vực tài liệu API cung cấp request mẫu theo từng loại proxy và response mẫu ngắn gọn.'],
             ['question' => 'Quản lý chi phí thế nào?', 'answer' => 'Bạn có thể dùng số dư ví hoặc cơ chế gói, đồng thời theo dõi lịch sử solve và chi phí theo từng task.'],
         ];
     @endphp
@@ -37,17 +37,17 @@
             <div class="grid gap-8 lg:grid-cols-[minmax(0,1.05fr)_420px] lg:items-center">
                 <div>
                     <div class="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-white/80 px-4 py-2 text-xs font-bold uppercase tracking-[0.22em] text-sky-700 shadow-sm">
-                        giapcaptcha.vn
+                        giapproxy.vn
                         <span class="h-1.5 w-1.5 rounded-full bg-cyan-500"></span>
-                        Captcha Solving API
+                        Proxy Infrastructure
                     </div>
 
                     <h1 class="mt-6 max-w-4xl font-['Space_Grotesk'] text-4xl font-bold leading-tight tracking-[-0.04em] text-slate-950 sm:text-5xl lg:text-[3.7rem]">
-                        Dịch vụ giải captcha qua API gọn, rõ giá và dễ tích hợp.
+                        Dịch vụ mua proxy qua nguồn thứ ba gọn, rõ giá và dễ tích hợp.
                     </h1>
 
                     <p class="mt-5 max-w-2xl text-base leading-8 text-slate-600 sm:text-lg">
-                        Xây dựng luồng solve captcha thương mại với bảng dịch vụ trực quan, tài liệu API ngắn gọn, ví người dùng và lịch sử task đầy đủ cho vận hành thực tế.
+                        Xây dựng luồng mua proxy thương mại với bảng dịch vụ trực quan, tài liệu API ngắn gọn, ví người dùng và lịch sử task đầy đủ cho vận hành thực tế.
                     </p>
 
                     <div class="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -75,8 +75,8 @@
                     <div class="overflow-hidden rounded-[24px] bg-[linear-gradient(135deg,#2563eb_0%,#38bdf8_48%,#67e8f9_100%)] p-6 text-white">
                         <div class="flex items-start justify-between gap-4">
                             <div>
-                                <p class="text-xs font-bold uppercase tracking-[0.24em] text-white/80">Request mẫu</p>
-                                <h2 class="mt-3 text-2xl font-bold leading-tight">Tạo task captcha nhanh bằng một endpoint.</h2>
+                                <p class="text-xs font-bold uppercase tracking-[0.24em] text-white/80">Catalog API</p>
+                                <h2 class="mt-3 text-2xl font-bold leading-tight">Lấy danh sách sản phẩm bằng một endpoint.</h2>
                             </div>
                             <div class="hidden h-16 w-16 rounded-2xl bg-white/20 lg:flex lg:items-center lg:justify-center">
                                 <svg viewBox="0 0 24 24" class="h-9 w-9 fill-none stroke-current" stroke-width="1.8" aria-hidden="true">
@@ -87,24 +87,19 @@
                         </div>
 
                         <div class="mt-6 rounded-[20px] bg-slate-950/85 p-5 font-mono text-xs leading-6 text-slate-200 shadow-inner">
-                            <p class="text-cyan-300">POST /api/v1/create</p>
-                            <p class="mt-3 text-slate-400">{</p>
-                            <p class="pl-4">"service_code": "turnstile-token",</p>
-                            <p class="pl-4">"task": {</p>
-                            <p class="pl-8">"website_url": "https://example.com",</p>
-                            <p class="pl-8">"website_key": "site-key"</p>
-                            <p class="pl-4">}</p>
-                            <p class="text-slate-400">}</p>
+                            <p class="text-cyan-300">GET /api/v1/proxy/products</p>
+                            <p class="mt-3 text-slate-400">X-API-KEY: your_api_key</p>
+                            <p class="text-slate-400">X-API-SECRET: your_api_secret</p>
                         </div>
 
                         <div class="mt-5 grid gap-3 sm:grid-cols-3">
                             <div class="rounded-2xl bg-white/16 px-4 py-3">
                                 <p class="text-xs text-white/75">Response</p>
-                                <p class="mt-1 font-semibold">task_code</p>
+                                <p class="mt-1 font-semibold">order_code</p>
                             </div>
                             <div class="rounded-2xl bg-white/16 px-4 py-3">
                                 <p class="text-xs text-white/75">Result</p>
-                                <p class="mt-1 font-semibold">captcha string</p>
+                                <p class="mt-1 font-semibold">proxy string</p>
                             </div>
                             <div class="rounded-2xl bg-white/16 px-4 py-3">
                                 <p class="text-xs text-white/75">Flow</p>
@@ -122,7 +117,7 @@
             <div class="mb-8 max-w-2xl">
                 <p class="text-sm font-bold uppercase tracking-[0.2em] text-sky-600">Tính năng cốt lõi</p>
                 <h2 class="mt-3 text-3xl font-extrabold tracking-tight text-slate-950 sm:text-4xl">
-                    Tập trung vào dịch vụ solve captcha thương mại.
+                    Tập trung vào dịch vụ mua proxy thương mại.
                 </h2>
             </div>
 
@@ -147,7 +142,7 @@
         <div class="mx-auto max-w-7xl">
             <div class="mx-auto max-w-2xl text-center">
                 <p class="text-sm font-bold uppercase tracking-[0.2em] text-sky-600">Bảng dịch vụ</p>
-                <h2 class="mt-3 text-3xl font-extrabold tracking-tight text-slate-950 sm:text-4xl">Danh sách captcha đang mở bán</h2>
+                <h2 class="mt-3 text-3xl font-extrabold tracking-tight text-slate-950 sm:text-4xl">Danh sách proxy đang mở bán</h2>
                 <p class="mt-4 text-base leading-7 text-slate-600">
                     Giá hiển thị theo đơn vị đ /1 lần giải, đi kèm tốc độ và tỷ lệ thành công để khách hàng theo dõi nhanh.
                 </p>
@@ -158,7 +153,7 @@
                     <table class="w-full min-w-[920px]">
                         <thead class="bg-[linear-gradient(135deg,#2563eb,#2563eb_35%,#0ea5e9)] text-left text-sm font-bold text-white">
                             <tr>
-                                <th class="px-6 py-4">Loại captcha</th>
+                                <th class="px-6 py-4">Loại proxy</th>
                                 <th class="px-4 py-4">Giá /1 lần giải</th>
                                 <th class="px-4 py-4">Tốc độ</th>
                                 <th class="px-4 py-4">Tỷ lệ thành công</th>
@@ -208,7 +203,7 @@
                             @empty
                                 <tr>
                                     <td colspan="4" class="px-6 py-10 text-center text-sm text-slate-500">
-                                        Chưa có dịch vụ captcha nào được cấu hình để hiển thị trên landing page.
+                                        Chưa có dịch vụ proxy nào được cấu hình để hiển thị trên landing page.
                                     </td>
                                 </tr>
                             @endforelse

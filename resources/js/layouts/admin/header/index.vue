@@ -18,12 +18,12 @@ const searchKeyword = ref('');
 
 const notifications = [
     {
-        title: 'New package order created',
-        description: 'Review the latest payment and subscription activity.',
+        title: 'New proxy order created',
+        description: 'Review the latest proxy order and payment activity.',
     },
     {
-        title: 'Subscription nearing expiry',
-        description: 'Check renewal flow and quota continuity.',
+        title: 'Proxy nearing expiry',
+        description: 'Check renewal requests and provider status.',
     },
 ];
 
@@ -40,40 +40,42 @@ const userInitials = computed(() => {
 </script>
 
 <template>
-    <header class="sticky top-0 z-30 border-b border-teal-100 bg-white/80 backdrop-blur-xl">
+    <header class="sticky top-0 z-30 border-b border-slate-200/80 bg-white/85 shadow-[0_12px_35px_-28px_rgba(15,23,42,0.45)] backdrop-blur-xl">
         <div class="flex flex-wrap items-center justify-between gap-4 px-4 py-4 sm:px-6 xl:px-8">
             <div class="flex items-center gap-3">
                 <button
                     type="button"
-                    class="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-teal-100 bg-white text-teal-700 shadow-sm transition hover:bg-teal-50 lg:hidden"
+                    class="proxy-focus inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-blue-700 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 lg:hidden"
                     @click="$emit('openSidebar')"
                 >
                     <MenuIcon class="h-5 w-5" />
                 </button>
 
                 <div class="hidden xl:flex xl:flex-col">
-                    <p class="text-xs font-semibold uppercase tracking-[0.22em] text-teal-600">Admin workspace</p>
-                    <h2 class="mt-1 text-2xl font-black tracking-tight text-teal-950">{{ pageTitle }}</h2>
+                    <p class="text-xs font-semibold uppercase tracking-[0.22em] text-blue-600">Proxy operations</p>
+                    <h2 class="mt-1 text-2xl font-black tracking-tight text-slate-950">{{ pageTitle }}</h2>
                 </div>
             </div>
 
             <div class="flex flex-1 items-center justify-end gap-3">
-                <label class="hidden min-w-[280px] items-center gap-3 rounded-2xl border border-teal-100 bg-white px-4 py-3 shadow-sm md:flex">
-                    <Search class="h-4 w-4 text-teal-400" />
+                <label
+                    class="hidden min-w-[280px] items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm transition focus-within:border-blue-300 focus-within:ring-2 focus-within:ring-blue-100 md:flex"
+                >
+                    <Search class="h-4 w-4 text-blue-500" />
                     <input
                         v-model="searchKeyword"
                         type="text"
-                        placeholder="Search modules, users, packages..."
+                        placeholder="Search modules, users, proxies..."
                         class="w-full border-0 bg-transparent p-0 text-sm text-slate-700 outline-none placeholder:text-slate-400"
                     />
                 </label>
 
                 <Menu as="div" class="relative">
                     <MenuButton
-                        class="relative inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-teal-100 bg-white text-teal-700 shadow-sm transition hover:bg-teal-50"
+                        class="proxy-focus relative inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-blue-700 shadow-sm transition hover:border-blue-200 hover:bg-blue-50"
                     >
                         <Bell class="h-5 w-5" />
-                        <span class="absolute right-2.5 top-2.5 h-2.5 w-2.5 rounded-full bg-teal-400 ring-2 ring-white" />
+                        <span class="absolute right-2.5 top-2.5 h-2.5 w-2.5 rounded-full bg-cyan-400 ring-2 ring-white" />
                     </MenuButton>
 
                     <Transition
@@ -85,12 +87,12 @@ const userInitials = computed(() => {
                         leave-to-class="translate-y-1 scale-[0.98] opacity-0"
                     >
                         <MenuItems
-                            class="absolute right-0 mt-3 w-[320px] max-w-[calc(100vw-2rem)] origin-top-right rounded-[1.75rem] border border-teal-100 bg-white p-2 shadow-[0_22px_60px_rgba(14,116,144,0.16)] outline-none"
+                            class="absolute right-0 mt-3 w-[320px] max-w-[calc(100vw-2rem)] origin-top-right rounded-[1.75rem] border border-slate-200 bg-white p-2 shadow-[0_22px_60px_rgba(15,23,42,0.16)] outline-none"
                         >
                             <div class="flex items-center justify-between px-3 py-3">
                                 <div>
-                                    <p class="text-sm font-semibold text-teal-950">Notifications</p>
-                                    <p class="text-xs text-teal-500">{{ notifications.length }} items</p>
+                                    <p class="text-sm font-semibold text-slate-950">Thông báo</p>
+                                    <p class="text-xs text-blue-600">{{ notifications.length }} mục</p>
                                 </div>
                             </div>
 
@@ -99,7 +101,7 @@ const userInitials = computed(() => {
                                     <button
                                         type="button"
                                         class="w-full rounded-2xl px-3 py-3 text-left transition"
-                                        :class="active ? 'bg-teal-50' : ''"
+                                        :class="active ? 'bg-blue-50' : ''"
                                     >
                                         <p class="text-sm font-semibold text-slate-900">{{ notification.title }}</p>
                                         <p class="mt-1 text-xs leading-5 text-slate-500">{{ notification.description }}</p>
@@ -112,10 +114,10 @@ const userInitials = computed(() => {
 
                 <Menu as="div" class="relative">
                     <MenuButton
-                        class="inline-flex items-center gap-3 rounded-2xl border border-teal-100 bg-white py-1.5 pl-2 pr-3 shadow-sm transition hover:bg-teal-50"
+                        class="proxy-focus inline-flex items-center gap-3 rounded-2xl border border-slate-200 bg-white py-1.5 pl-2 pr-3 shadow-sm transition hover:border-blue-200 hover:bg-blue-50/60"
                     >
                         <div
-                            class="flex h-10 w-10 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,_#0f766e_0%,_#06b6d4_100%)] text-sm font-bold text-white"
+                            class="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-cyan-500 text-sm font-bold text-white"
                         >
                             {{ userInitials }}
                         </div>
@@ -125,7 +127,7 @@ const userInitials = computed(() => {
                             </p>
                             <p class="text-xs text-slate-400">{{ userStore.user?.email || 'admin@example.com' }}</p>
                         </div>
-                        <ChevronDown class="h-4 w-4 text-teal-400" />
+                        <ChevronDown class="h-4 w-4 text-blue-400" />
                     </MenuButton>
 
                     <Transition
@@ -137,11 +139,11 @@ const userInitials = computed(() => {
                         leave-to-class="translate-y-1 scale-[0.98] opacity-0"
                     >
                         <MenuItems
-                            class="absolute right-0 mt-3 w-64 origin-top-right rounded-[1.75rem] border border-teal-100 bg-white p-2 shadow-[0_22px_60px_rgba(14,116,144,0.16)] outline-none"
+                            class="absolute right-0 mt-3 w-64 origin-top-right rounded-[1.75rem] border border-slate-200 bg-white p-2 shadow-[0_22px_60px_rgba(15,23,42,0.16)] outline-none"
                         >
-                            <div class="border-b border-teal-100 px-3 py-3">
-                                <p class="text-sm font-semibold text-teal-950">{{ userStore.displayName || 'Administrator' }}</p>
-                                <p class="mt-1 text-xs text-teal-500">{{ userStore.user?.email || 'admin@example.com' }}</p>
+                            <div class="border-b border-slate-100 px-3 py-3">
+                                <p class="text-sm font-semibold text-slate-950">{{ userStore.displayName || 'Administrator' }}</p>
+                                <p class="mt-1 text-xs text-slate-500">{{ userStore.user?.email || 'admin@example.com' }}</p>
                             </div>
 
                             <div class="mt-2 space-y-1">
@@ -149,7 +151,7 @@ const userInitials = computed(() => {
                                     <RouterLink
                                         to="/admin/settings/general"
                                         class="flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm transition"
-                                        :class="active ? 'bg-teal-50 text-teal-950' : 'text-slate-600'"
+                                        :class="active ? 'bg-blue-50 text-blue-950' : 'text-slate-600'"
                                     >
                                         <Settings class="h-4 w-4" />
                                         <span>System settings</span>
@@ -160,7 +162,7 @@ const userInitials = computed(() => {
                                     <RouterLink
                                         to="/admin/users"
                                         class="flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm transition"
-                                        :class="active ? 'bg-teal-50 text-teal-950' : 'text-slate-600'"
+                                        :class="active ? 'bg-blue-50 text-blue-950' : 'text-slate-600'"
                                     >
                                         <UserCircle2 class="h-4 w-4" />
                                         <span>User management</span>
@@ -186,4 +188,3 @@ const userInitials = computed(() => {
         </div>
     </header>
 </template>
-

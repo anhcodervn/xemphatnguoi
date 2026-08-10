@@ -1,18 +1,33 @@
 <template>
     <Teleport to="body">
         <Transition name="fade">
-            <div v-if="modelValue" class="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/50 p-4" @click.self="close">
+            <div
+                v-if="modelValue"
+                class="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-slate-950/60 p-4 backdrop-blur-sm"
+                @click.self="close"
+            >
                 <Transition name="scale">
                     <div
                         v-if="modelValue"
-                        class="relative flex max-h-[calc(100vh-2rem)] w-full flex-col overflow-hidden rounded-lg bg-white shadow-xl"
+                        role="dialog"
+                        aria-modal="true"
+                        class="relative flex max-h-[calc(100vh-2rem)] w-full flex-col overflow-hidden rounded-2xl bg-white shadow-[0_28px_90px_-20px_rgba(15,23,42,0.5)]"
                         :class="panelClass ?? 'max-w-md'"
                     >
                         <div v-if="$slots.header" class="shrink-0 text-lg font-semibold">
                             <slot name="header" />
                         </div>
 
-                        <button class="absolute right-3 top-3 text-gray-500 hover:text-black" :class="iconClass" @click="close">✕</button>
+                        <button
+                            type="button"
+                            class="proxy-focus absolute right-4 top-4 z-10 rounded-xl border border-slate-200 bg-white p-2 text-slate-500 shadow-sm hover:bg-slate-50 hover:text-slate-900"
+                            :class="iconClass"
+                            title="Đóng"
+                            aria-label="Đóng hộp thoại"
+                            @click="close"
+                        >
+                            <X class="h-4 w-4" />
+                        </button>
 
                         <div class="min-h-0 flex-1 overflow-y-auto">
                             <slot />
@@ -29,6 +44,7 @@
 </template>
 
 <script setup lang="ts">
+import { X } from 'lucide-vue-next';
 import { onBeforeUnmount, onMounted } from 'vue';
 
 defineProps<{

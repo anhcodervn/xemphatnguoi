@@ -9,7 +9,7 @@ export type AnalyticsSummary = {
     wallet_recharge_total: number;
     wallet_spent_total: number;
     deposit_success_amount: number;
-    captcha_revenue: number;
+    proxy_revenue: number;
     provider_cost: number;
     gross_profit: number;
     gross_margin: number;
@@ -26,7 +26,7 @@ export type AnalyticsSummary = {
 };
 
 export type AnalyticsTopService = {
-    service_code: string;
+    product_code: string;
     total_tasks: number;
     revenue: number;
     cost: number;
@@ -44,8 +44,8 @@ export type AnalyticsDailyItem = {
 };
 
 export type AnalyticsTaskFailure = {
-    task_code: string;
-    service_code: string;
+    order_code: string;
+    product_code: string;
     user: string | null;
     error_message: string | null;
     created_at: string | null;

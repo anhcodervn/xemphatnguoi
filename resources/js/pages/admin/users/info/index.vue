@@ -4,15 +4,14 @@ import {
     type AdminPaginationMeta,
     type AdminUserDetailResponse,
     type AdminUserLog,
-    type AdminUserPackageOrder,
     type AdminUserWalletTransaction,
 } from '@/services/admin-user.service';
 import { handleErrorResponse, handleSuccessResponse } from '@/utils/response';
-import { ArrowLeft, CheckCheck, KeyRound, ListChecks, LoaderCircle, Minus, Package, Plus, Wallet } from 'lucide-vue-next';
+import { ArrowLeft, CheckCheck, KeyRound, ListChecks, LoaderCircle, Minus, Plus, Wallet } from 'lucide-vue-next';
 import { computed, onMounted, reactive, ref } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 
-type TabKey = 'overview' | 'transactions' | 'orders' | 'logs';
+type TabKey = 'overview' | 'transactions' | 'logs';
 
 type TabState<T> = {
     loading: boolean;
@@ -48,13 +47,6 @@ const transactionsState = reactive<TabState<AdminUserWalletTransaction>>({
     meta: { current_page: 1, last_page: 1, per_page: 10, total: 0 },
 });
 
-const ordersState = reactive<TabState<AdminUserPackageOrder>>({
-    loading: false,
-    loaded: false,
-    items: [],
-    meta: { current_page: 1, last_page: 1, per_page: 10, total: 0 },
-});
-
 const logsState = reactive<TabState<AdminUserLog>>({
     loading: false,
     loaded: false,
@@ -65,7 +57,6 @@ const logsState = reactive<TabState<AdminUserLog>>({
 const tabs = [
     { key: 'overview' as const, label: 'Tổng quan' },
     { key: 'transactions' as const, label: 'Dòng tiền' },
-    { key: 'orders' as const, label: 'Mua gói' },
     { key: 'logs' as const, label: 'Hoạt động' },
 ];
 
@@ -115,14 +106,8 @@ const statCards = computed(() => {
             iconClass: 'bg-emerald-50 text-emerald-600',
         },
         {
-            label: 'Đơn mua gói',
-            value: formatNumber(detail.value.stats.package_order_count),
-            icon: Package,
-            iconClass: 'bg-violet-50 text-violet-600',
-        },
-        {
-            label: 'Task captcha',
-            value: formatNumber(detail.value.stats.captcha_task_count),
+            label: 'Đơn proxy',
+            value: formatNumber(detail.value.stats.proxy_task_count),
             icon: ListChecks,
             iconClass: 'bg-sky-50 text-sky-600',
         },
@@ -172,19 +157,6 @@ const loadTransactions = async (page = 1): Promise<void> => {
     }
 };
 
-const loadOrders = async (page = 1): Promise<void> => {
-    ordersState.loading = true;
-
-    try {
-        const response = await adminUserService.packageOrders(userId, { page, per_page: 10 });
-        applyTabResponse(ordersState, response);
-    } catch (error) {
-        handleErrorResponse(error);
-    } finally {
-        ordersState.loading = false;
-    }
-};
-
 const loadLogs = async (page = 1): Promise<void> => {
     logsState.loading = true;
 
@@ -203,10 +175,6 @@ const openTab = async (tab: TabKey): Promise<void> => {
 
     if (tab === 'transactions' && !transactionsState.loaded) {
         await loadTransactions();
-    }
-
-    if (tab === 'orders' && !ordersState.loaded) {
-        await loadOrders();
     }
 
     if (tab === 'logs' && !logsState.loaded) {
@@ -308,10 +276,6 @@ const goToTabPage = async (tab: TabKey, page: number): Promise<void> => {
         await loadTransactions(page);
     }
 
-    if (tab === 'orders') {
-        await loadOrders(page);
-    }
-
     if (tab === 'logs') {
         await loadLogs(page);
     }
@@ -367,10 +331,6 @@ onMounted(async () => {
                     <div class="rounded-[10px] border border-slate-200 bg-white px-4 py-3 shadow-sm">
                         <p class="text-xs uppercase tracking-[0.18em] text-slate-400">Số dư ví</p>
                         <p class="mt-2 text-lg font-black tracking-tight text-slate-950">{{ formatCurrency(detail.wallet?.balance) }}</p>
-                    </div>
-                    <div class="rounded-[10px] border border-slate-200 bg-white px-4 py-3 shadow-sm">
-                        <p class="text-xs uppercase tracking-[0.18em] text-slate-400">Gói hiện tại</p>
-                        <p class="mt-2 text-sm font-bold text-slate-950">{{ detail.current_package?.name || 'Chưa kích hoạt' }}</p>
                     </div>
                     <div class="rounded-[10px] border border-slate-200 bg-white px-4 py-3 shadow-sm">
                         <p class="text-xs uppercase tracking-[0.18em] text-slate-400">Đăng nhập gần nhất</p>
@@ -499,7 +459,9 @@ onMounted(async () => {
 
                                 <article class="rounded-[10px] border border-slate-200 bg-slate-50 p-4">
                                     <h3 class="text-base font-bold text-slate-950">Cấp lại mật khẩu</h3>
-                                    <p class="mt-1 text-sm text-slate-500">Nhập mật khẩu mới cho người dùng. Sau khi cập nhật, các phiên đăng nhập khác sẽ bị đăng xuất.</p>
+                                    <p class="mt-1 text-sm text-slate-500">
+                                        Nhập mật khẩu mới cho người dùng. Sau khi cập nhật, các phiên đăng nhập khác sẽ bị đăng xuất.
+                                    </p>
 
                                     <div class="mt-4 grid gap-3">
                                         <label class="grid gap-1">
@@ -559,10 +521,6 @@ onMounted(async () => {
                                         <p class="text-xs uppercase tracking-[0.18em] text-slate-400">Hold balance</p>
                                         <p class="mt-2 text-sm font-semibold text-slate-900">{{ formatCurrency(detail.wallet?.hold_balance) }}</p>
                                     </div>
-                                    <div class="rounded-[8px] bg-slate-50 px-4 py-3">
-                                        <p class="text-xs uppercase tracking-[0.18em] text-slate-400">Gói hiện tại</p>
-                                        <p class="mt-2 text-sm font-semibold text-slate-900">{{ detail.current_package?.name || 'Chưa có gói' }}</p>
-                                    </div>
                                 </div>
                             </article>
                         </section>
@@ -613,39 +571,6 @@ onMounted(async () => {
                             >
                                 Xem thêm
                             </button>
-                        </div>
-                    </div>
-
-                    <div v-else-if="activeTab === 'orders'" class="space-y-4">
-                        <div v-if="ordersState.loading" class="flex items-center gap-2 text-sm text-slate-500">
-                            <LoaderCircle class="h-4 w-4 animate-spin" />
-                            Đang tải lịch sử mua gói...
-                        </div>
-                        <div v-else class="grid gap-3">
-                            <article
-                                v-for="item in ordersState.items"
-                                :key="item.id"
-                                class="rounded-[10px] border border-slate-200 bg-slate-50 px-4 py-4"
-                            >
-                                <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                                    <div>
-                                        <p class="text-sm font-bold text-slate-950">{{ item.package?.name || 'Gói không xác định' }}</p>
-                                        <p class="mt-1 text-sm text-slate-500">{{ item.code }} • {{ formatDate(item.created_at, true) }}</p>
-                                    </div>
-                                    <span class="text-sm font-semibold text-slate-700">{{ formatCurrency(item.price) }}</span>
-                                </div>
-                                <div class="mt-3 grid gap-2 text-sm text-slate-600 sm:grid-cols-3">
-                                    <p>Thời hạn: {{ item.duration_days ? `${item.duration_days} ngày` : '--' }}</p>
-                                    <p>Bắt đầu: {{ formatDate(item.started_at, true) }}</p>
-                                    <p>Hết hạn: {{ formatDate(item.expired_at, true) }}</p>
-                                </div>
-                            </article>
-                            <div
-                                v-if="ordersState.items.length === 0"
-                                class="rounded-[10px] border border-slate-200 px-4 py-10 text-center text-sm text-slate-500"
-                            >
-                                Chưa có đơn mua gói.
-                            </div>
                         </div>
                     </div>
 

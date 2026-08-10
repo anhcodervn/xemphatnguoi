@@ -11,8 +11,8 @@
             'services' => url('/#services'),
             'faq' => url('/#faq'),
         ];
-        $siteName = $settings['site_name'] ?? config('app.name', 'GiaiCaptcha.vn');
-        $siteDescription = $settings['meta_description'] ?? ($settings['site_description'] ?? 'Nền tảng captcha API thương mại với bảng dịch vụ rõ ràng, tài liệu ngắn gọn và hệ thống ví cho khách hàng.');
+        $siteName = $settings['site_name'] ?? config('app.name', 'DailyProxy.vn');
+        $siteDescription = $settings['meta_description'] ?? ($settings['site_description'] ?? 'Nền tảng proxy API thương mại với bảng dịch vụ rõ ràng, tài liệu ngắn gọn và hệ thống ví cho khách hàng.');
         $metaTitle = $pageMetaTitle ?? ($settings['meta_title'] ?? $siteName);
         $favicon = $settings['favicon'] ?? null;
         $shareImage = $pageMetaImage ?? ($settings['og_image'] ?? ($settings['dark_logo'] ?? ($settings['light_logo'] ?? null)));
@@ -71,7 +71,7 @@
                         </div>
                         <div>
                             <div class="text-lg font-extrabold tracking-tight text-slate-950">{{ $siteName }}</div>
-                            <div class="text-[11px] uppercase tracking-[0.22em] text-sky-600">Captcha Solving API</div>
+                            <div class="text-[11px] uppercase tracking-[0.22em] text-blue-600">Proxy Infrastructure</div>
                         </div>
                     @endif
                 </a>
@@ -81,7 +81,6 @@
                         <a href="/" class="transition hover:text-sky-600">Dashboard</a>
                         <a href="/services" class="transition hover:text-sky-600">Dịch vụ</a>
                         <a href="/api-docs" class="transition hover:text-sky-600">Tài liệu API</a>
-                        <a href="/captcha-history" class="transition hover:text-sky-600">Lịch sử</a>
                     @else
                         <a href="{{ $landingSectionLinks['features'] }}" class="transition hover:text-sky-600">Tính năng</a>
                         <a href="{{ $landingSectionLinks['services'] }}" class="transition hover:text-sky-600">Bảng giá</a>
@@ -118,11 +117,11 @@
                     <div>
                         <p class="text-sm font-extrabold uppercase tracking-[0.18em] text-sky-600">{{ $siteName }}</p>
                         <h2 class="mt-2 max-w-md text-2xl font-extrabold tracking-tight text-slate-950">
-                            Hạ tầng API giải captcha sẵn sàng để tích hợp và mở rộng.
+                            Hạ tầng API mua proxy sẵn sàng để tích hợp và mở rộng.
                         </h2>
                     </div>
                     <p class="max-w-xl text-sm leading-7 text-slate-600">
-                        Dùng một chuẩn API thống nhất để tạo task, kiểm tra kết quả, quản lý ví và theo dõi lịch sử xử lý captcha trong cùng một hệ thống.
+                        Dùng một chuẩn API thống nhất để mua proxy, theo dõi bàn giao, quản lý ví và kiểm tra lịch sử đơn hàng trong cùng một hệ thống.
                     </p>
 
                     <div class="flex flex-wrap gap-3 text-sm text-slate-600">
@@ -143,7 +142,7 @@
                     <h3 class="text-sm font-bold uppercase tracking-[0.16em] text-slate-900">Khám phá</h3>
                     <div class="mt-4 flex flex-col gap-3 text-sm text-slate-600">
                         <a href="{{ url('/#features') }}" class="transition hover:text-sky-600">Tính năng</a>
-                        <a href="{{ url('/#services') }}" class="transition hover:text-sky-600">Dịch vụ captcha</a>
+                        <a href="{{ url('/#services') }}" class="transition hover:text-sky-600">Dịch vụ proxy</a>
                         <a href="{{ route('seo.index') }}" class="transition hover:text-sky-600">Blog</a>
                         <a href="{{ route('content.faq') }}" class="transition hover:text-sky-600">Câu hỏi thường gặp</a>
                     </div>
@@ -179,7 +178,7 @@
             <div class="border-t border-sky-100">
                 <div class="mx-auto flex w-full max-w-7xl flex-col gap-2 px-4 py-5 text-sm text-slate-500 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
                     <p>© {{ now()->year }} {{ $siteName }}. All rights reserved.</p>
-                    <p>API captcha thương mại cho tích hợp nhanh, gọn và ổn định.</p>
+                    <p>API proxy thương mại cho tích hợp nhanh, gọn và ổn định.</p>
                 </div>
             </div>
         </footer>

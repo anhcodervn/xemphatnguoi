@@ -35,8 +35,6 @@ class CouponResource extends JsonResource
             'first_order_only' => (bool) $this->first_order_only,
             'is_active' => (bool) $this->is_active,
             'is_available' => $this->isAvailable(),
-            'applicable_package_ids' => $this->applicable_package_ids ?? [],
-            'applicable_package_count' => count($this->applicable_package_ids ?? []),
             'requirements' => $this->requirements ?? [],
             'logs_count' => $this->whenCounted('logs'),
             'usage_percent' => $usagePercent,

@@ -32,7 +32,7 @@ const tabs: Array<{ key: TabKey; label: string; description: string }> = [
     {
         key: "monitoring",
         label: "Webhook Discord",
-        description: "Bot cảnh báo vận hành cho đăng ký mới, nạp tiền và task captcha lỗi.",
+        description: "Bot cảnh báo vận hành cho đăng ký mới, nạp tiền và đơn proxy lỗi.",
     },
 ];
 
@@ -90,7 +90,6 @@ const webhookEventOptions = [
     { label: "Ping kiểm tra", value: "test_ping" },
     { label: "Đăng ký mới", value: "user_registered" },
     { label: "Nạp tiền thành công", value: "recharge_success" },
-    { label: "Task captcha lỗi", value: "captcha_task_failed" },
 ];
 
 const currentTab = computed(() => tabs.find((tab) => tab.key === activeTab.value) ?? tabs[0]);
@@ -222,7 +221,7 @@ onMounted(async () => {
 
 <template>
     <div class="space-y-4">
-        <Breadcrumb title="Cấu hình chung" description="Quản lý thông tin vận hành, nhận diện thương hiệu, liên hệ và SEO của hệ thống giapcaptcha.vn." />
+        <Breadcrumb title="Cấu hình chung" description="Quản lý thông tin vận hành, nhận diện thương hiệu, liên hệ và SEO của hệ thống giapproxy.vn." />
 
         <section class="overflow-hidden rounded-[10px] border border-slate-200 bg-white shadow-sm">
             <div class="border-b border-slate-200 px-4 py-4">
@@ -596,7 +595,7 @@ onMounted(async () => {
                             </div>
 
                             <div v-if="monitoringForm.discord_webhooks.length === 0" class="rounded-[14px] border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
-                                Chưa có webhook nào. Thêm bot Discord để nhận cảnh báo đăng ký mới, nạp tiền và task captcha lỗi.
+                                Chưa có webhook nào. Thêm bot Discord để nhận cảnh báo đăng ký mới, nạp tiền và đơn proxy lỗi.
                             </div>
                         </div>
                     </article>
@@ -604,7 +603,7 @@ onMounted(async () => {
                     <aside class="rounded-[10px] border border-slate-200 bg-slate-50 p-4">
                         <p class="text-xs uppercase tracking-[0.18em] text-slate-400">Gợi ý vận hành</p>
                         <div class="mt-3 space-y-3 rounded-[10px] border border-slate-200 bg-white p-4 text-sm text-slate-600">
-                            <p>Tạo ít nhất 2 bot riêng: một bot cho giao dịch nạp tiền, một bot cho cảnh báo task captcha lỗi.</p>
+                            <p>Tạo ít nhất 2 bot riêng: một bot cho giao dịch nạp tiền, một bot cho cảnh báo đơn proxy lỗi.</p>
                             <p>Bật sự kiện <span class="font-semibold text-slate-900">test_ping</span> để kiểm tra kết nối trước khi đưa vào dùng thật.</p>
                             <p>Trang <span class="font-semibold text-slate-900">Báo cáo vận hành</span> có nút gửi test nhanh cho từng webhook sau khi lưu.</p>
                         </div>

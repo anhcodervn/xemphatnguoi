@@ -3,6 +3,7 @@
 namespace App\Features\Admin\User\Requests;
 
 use App\Exceptions\ApiException;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -14,7 +15,7 @@ class AdminUserRelatedListRequest extends FormRequest
     }
 
     /**
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -24,7 +25,6 @@ class AdminUserRelatedListRequest extends FormRequest
             'type' => ['nullable', 'string', 'max:50'],
             'action' => ['nullable', 'string', 'max:100'],
             'event' => ['nullable', 'string', 'max:100'],
-            'package_id' => ['nullable', 'integer', 'exists:packages,id'],
             'date_from' => ['nullable', 'date'],
             'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],

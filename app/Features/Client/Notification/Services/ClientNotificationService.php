@@ -12,6 +12,26 @@ use Illuminate\Pagination\LengthAwarePaginator;
 class ClientNotificationService
 {
     /**
+     * @return array{unread: int, notifications: array<int, array<string, mixed>>}
+     */
+    public function dashboard(User $user, int $limit = 4): array
+    {
+        $filters = ['scope' => Notification::SCOPE_SYSTEM];
+        $notifications = $this->queryForUser($user, $filters)
+            ->limit($limit)
+            ->get();
+
+        $unread = $this->baseStatsQuery($user, $filters)
+            ->whereDoesntHave('reads', fn (Builder $query) => $query->where('user_id', $user->id))
+            ->count();
+
+        return [
+            'unread' => $unread,
+            'notifications' => ClientNotificationResource::collection($notifications)->resolve(),
+        ];
+    }
+
+    /**
      * @param  array<string,mixed>  $filters
      * @return array<string,mixed>
      */

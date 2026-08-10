@@ -98,11 +98,11 @@ class LogApiRequest
      */
     private function requestPayload(Request $request): array
     {
-        return [
+        return $this->sanitizeSensitiveData([
             'query' => Arr::except($request->query(), ['api_secret', 'x-api-secret']),
             'body' => Arr::except($request->all(), ['api_secret', 'x-api-secret']),
             'route' => $request->route()?->parametersWithoutNulls() ?? [],
-        ];
+        ]);
     }
 
     /**
@@ -111,7 +111,7 @@ class LogApiRequest
     private function responsePayload(Response $response): array|string|null
     {
         if ($response instanceof JsonResponse) {
-            return $response->getData(true);
+            return $this->sanitizeSensitiveData($response->getData(true));
         }
 
         $content = $response->getContent();
@@ -120,7 +120,7 @@ class LogApiRequest
         }
 
         return Str::isJson($content)
-            ? json_decode($content, true, flags: JSON_THROW_ON_ERROR)
+            ? $this->sanitizeSensitiveData(json_decode($content, true, flags: JSON_THROW_ON_ERROR))
             : Str::limit($content, 2000, '...');
     }
 
@@ -131,6 +131,43 @@ class LogApiRequest
     {
         $payload = $request->attributes->get('service_response_data');
 
-        return is_array($payload) ? $payload : null;
+        return is_array($payload) ? $this->sanitizeSensitiveData($payload) : null;
+    }
+
+    /**
+     * Không lưu thông tin kết nối proxy hoặc credential vào lịch sử API dạng văn bản thuần.
+     *
+     * @param  array<string, mixed>|list<mixed>  $data
+     * @return array<string, mixed>|list<mixed>
+     */
+    private function sanitizeSensitiveData(array $data): array
+    {
+        $sensitiveKeys = [
+            'api_secret',
+            'x-api-secret',
+            'password',
+            'username',
+            'host',
+            'proxy',
+            'access_key',
+            'provider_proxy_id',
+            'provider_code',
+            'external_order_id',
+            'connection',
+        ];
+
+        foreach ($data as $key => $value) {
+            if (is_string($key) && in_array(mb_strtolower($key), $sensitiveKeys, true)) {
+                $data[$key] = filled($value) ? '[REDACTED]' : null;
+
+                continue;
+            }
+
+            if (is_array($value)) {
+                $data[$key] = $this->sanitizeSensitiveData($value);
+            }
+        }
+
+        return $data;
     }
 }

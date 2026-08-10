@@ -3,11 +3,14 @@ import api from '@/config/axios';
 import { clientNotificationService } from '@/services/client-notification.service';
 import { useUserStore } from '@/stores/user.store';
 import type { ClientNotificationItem } from '@/types/client-notification.type';
+import type { WalletBalanceChangedEvent, WalletDepositCreditedEvent } from '@/types/wallet.type';
 import formatCash from '@/utils/helpers/formatCash';
 import { handleErrorResponse } from '@/utils/response';
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/vue';
-import { Bell, CheckCheck, ChevronDown, LogOut, Menu as MenuIcon, Settings, UserRound, Wallet } from 'lucide-vue-next';
-import { computed, onMounted, ref } from 'vue';
+import { echo } from '@laravel/echo-vue';
+import { Bell, CheckCheck, ChevronDown, LogOut, Menu as MenuIcon, Settings, ShieldAlert, UserRound, Wallet } from 'lucide-vue-next';
+import Swal, { type SweetAlertIcon } from 'sweetalert2';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { RouterLink } from 'vue-router';
 
 type UserActionItem = {
@@ -115,16 +118,111 @@ const logout = async (): Promise<void> => {
     }
 };
 
+let subscribedWalletUserId: number | null = null;
+
+const leaveWalletChannel = (): void => {
+    if (subscribedWalletUserId === null) {
+        return;
+    }
+
+    echo().leave(`users.${subscribedWalletUserId}.wallet`);
+    subscribedWalletUserId = null;
+};
+
+const updateUserWallet = (snapshot: Pick<WalletBalanceChangedEvent, 'balance' | 'hold_balance' | 'total_recharge' | 'total_spent'>): void => {
+    if (!userStore.user?.wallet) {
+        return;
+    }
+
+    userStore.user.wallet = {
+        ...userStore.user.wallet,
+        balance: snapshot.balance,
+        hold_balance: snapshot.hold_balance,
+        total_recharge: snapshot.total_recharge,
+        total_spent: snapshot.total_spent,
+    };
+};
+
+const prependNotification = (notification: ClientNotificationItem | null): boolean => {
+    if (!notification || notifications.value.some((item) => item.id === notification.id)) {
+        return false;
+    }
+
+    notifications.value = [notification, ...notifications.value].slice(0, 10);
+
+    return true;
+};
+
+const showRealtimeNotification = (notification: ClientNotificationItem): void => {
+    const supportedIcons: SweetAlertIcon[] = ['success', 'error', 'warning', 'info', 'question'];
+    const icon = supportedIcons.includes(notification.type as SweetAlertIcon) ? (notification.type as SweetAlertIcon) : 'info';
+
+    void Swal.fire({
+        icon,
+        title: notification.title,
+        text: notification.content,
+        confirmButtonText: 'Đã hiểu',
+        confirmButtonColor: '#2563eb',
+        allowOutsideClick: false,
+    });
+};
+
+watch(
+    () => userStore.user?.id ?? null,
+    (userId) => {
+        if (userId === subscribedWalletUserId) {
+            return;
+        }
+
+        leaveWalletChannel();
+
+        if (userId === null) {
+            return;
+        }
+
+        subscribedWalletUserId = userId;
+        const walletChannel = echo().private(`users.${userId}.wallet`);
+
+        walletChannel.listen('.wallet.deposit.credited', (event: WalletDepositCreditedEvent) => {
+            if (userStore.user?.wallet) {
+                userStore.user.wallet = {
+                    ...userStore.user.wallet,
+                    balance: event.balance,
+                    total_recharge: event.total_recharge,
+                };
+            }
+
+            prependNotification(event.notification);
+            window.dispatchEvent(new CustomEvent<WalletDepositCreditedEvent>('wallet:deposit-credited', { detail: event }));
+        });
+
+        walletChannel.listen('.wallet.balance.changed', (event: WalletBalanceChangedEvent) => {
+            updateUserWallet(event);
+
+            if (event.notification && prependNotification(event.notification)) {
+                showRealtimeNotification(event.notification);
+            }
+
+            window.dispatchEvent(new CustomEvent<WalletBalanceChangedEvent>('wallet:balance-changed', { detail: event }));
+        });
+    },
+    { immediate: true },
+);
+
 onMounted(loadNotifications);
+
+onBeforeUnmount(leaveWalletChannel);
 </script>
 
 <template>
-    <header class="fixed left-0 right-0 top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur lg:left-72">
+    <header
+        class="fixed left-0 right-0 top-0 z-30 border-b border-slate-200/80 bg-white/85 shadow-[0_12px_35px_-28px_rgba(15,23,42,0.45)] backdrop-blur-xl lg:left-72"
+    >
         <div class="flex items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
             <div class="flex items-center">
                 <button
                     type="button"
-                    class="rounded-xl border border-slate-200 bg-white p-2.5 text-slate-600 transition hover:bg-slate-50 lg:hidden"
+                    class="proxy-focus rounded-xl border border-slate-200 bg-white p-2.5 text-slate-600 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 lg:hidden"
                     @click="$emit('toggleSidebar')"
                 >
                     <MenuIcon class="h-5 w-5" />
@@ -133,7 +231,9 @@ onMounted(loadNotifications);
 
             <div class="flex items-center gap-3">
                 <Menu as="div" class="relative">
-                    <MenuButton class="relative rounded-full border border-slate-200 bg-white p-3 text-slate-700 transition hover:bg-slate-50">
+                    <MenuButton
+                        class="proxy-focus relative rounded-full border border-slate-200 bg-white p-3 text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                    >
                         <Bell class="h-4 w-4" />
                         <span v-if="unreadCount > 0" class="absolute right-3 top-3 h-2 w-2 rounded-full bg-amber-500" />
                     </MenuButton>
@@ -147,7 +247,7 @@ onMounted(loadNotifications);
                         leave-to-class="translate-y-1 scale-[0.98] opacity-0"
                     >
                         <MenuItems
-                            class="fixed inset-x-4 top-16 z-40 w-auto rounded-2xl border border-slate-200 bg-white p-2 shadow-lg outline-none sm:absolute sm:left-auto sm:right-0 sm:top-auto sm:mt-3 sm:w-[19rem] sm:origin-top-right"
+                            class="fixed inset-x-4 top-28 z-40 w-auto rounded-2xl border border-slate-200 bg-white p-2 shadow-lg outline-none sm:absolute sm:left-auto sm:right-0 sm:top-auto sm:mt-3 sm:w-[19rem] sm:origin-top-right"
                         >
                             <div class="flex items-center justify-between px-3 py-2">
                                 <div>
@@ -186,8 +286,12 @@ onMounted(loadNotifications);
                 </Menu>
 
                 <Menu as="div" class="relative">
-                    <MenuButton class="flex items-center gap-3 rounded-full border border-slate-200 bg-white px-3.5 py-2 transition hover:bg-slate-50">
-                        <div class="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-sm font-semibold text-white">
+                    <MenuButton
+                        class="proxy-focus flex items-center gap-3 rounded-full border border-slate-200 bg-white px-3.5 py-2 transition hover:border-blue-200 hover:bg-blue-50/60"
+                    >
+                        <div
+                            class="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-cyan-500 text-sm font-semibold text-white shadow-sm"
+                        >
                             {{ userInitial }}
                         </div>
                         <div class="text-left">
@@ -205,7 +309,9 @@ onMounted(loadNotifications);
                         leave-from-class="translate-y-0 scale-100 opacity-100"
                         leave-to-class="translate-y-1 scale-[0.98] opacity-0"
                     >
-                        <MenuItems class="absolute right-0 mt-3 w-56 max-w-[calc(100vw-2rem)] origin-top-right rounded-2xl border border-slate-200 bg-white p-2 shadow-lg outline-none">
+                        <MenuItems
+                            class="absolute right-0 mt-3 w-56 max-w-[calc(100vw-2rem)] origin-top-right rounded-2xl border border-slate-200 bg-white p-2 shadow-lg outline-none"
+                        >
                             <div class="px-3 py-2">
                                 <p class="text-sm font-semibold text-slate-950">{{ userStore.user?.full_name ?? userStore.user?.username }}</p>
                                 <p class="text-xs text-slate-500">{{ userStore.user?.email }}</p>
@@ -241,5 +347,38 @@ onMounted(loadNotifications);
                 </Menu>
             </div>
         </div>
+
+        <div class="flex h-10 overflow-hidden border-t border-amber-300 bg-amber-50 text-amber-950" role="note" aria-label="Cảnh báo sử dụng dịch vụ">
+            <div class="relative z-10 flex shrink-0 items-center border-r border-amber-300 bg-amber-100 px-3" aria-hidden="true">
+                <ShieldAlert class="h-5 w-5 text-amber-700" />
+            </div>
+            <div class="global-warning-marquee relative min-w-0 flex-1 overflow-hidden">
+                <div class="global-warning-marquee-track flex h-full w-max items-center whitespace-nowrap text-sm font-bold">
+                    <p class="pr-12">
+                        Nghiêm cấm sử dụng Proxy với mục đích trái pháp luật. Người dùng phải chịu toàn bộ trách nhiệm trước pháp luật khi sử dụng
+                        dịch vụ của chúng tôi.
+                    </p>
+                </div>
+            </div>
+        </div>
     </header>
 </template>
+
+<style scoped>
+.global-warning-marquee-track {
+    min-width: 100%;
+    padding-left: 100%;
+    will-change: transform;
+    animation: global-warning-marquee 24s linear infinite;
+}
+
+@keyframes global-warning-marquee {
+    from {
+        transform: translate3d(0, 0, 0);
+    }
+
+    to {
+        transform: translate3d(-100%, 0, 0);
+    }
+}
+</style>

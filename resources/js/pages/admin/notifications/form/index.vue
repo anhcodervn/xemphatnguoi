@@ -120,7 +120,7 @@ onMounted(loadDetail);
                             v-model="form.type"
                             type="text"
                             class="w-full rounded-[10px] border border-slate-200 px-3 py-2 text-sm outline-none focus:border-indigo-400"
-                            placeholder="system, payment, captcha..."
+                            placeholder="system, payment, proxy..."
                         />
                     </label>
                 </div>
@@ -164,7 +164,7 @@ onMounted(loadDetail);
                         v-model="form.redirect_url"
                         type="url"
                         class="w-full rounded-[10px] border border-slate-200 px-3 py-2 text-sm outline-none focus:border-indigo-400"
-                        placeholder="https://giapcaptcha.vn/api-docs"
+                        placeholder="https://giapproxy.vn/api-docs"
                     />
                 </label>
 

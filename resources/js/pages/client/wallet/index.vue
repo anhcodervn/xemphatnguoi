@@ -2,7 +2,7 @@
 import { clientWalletService } from '@/services/client-wallet.service';
 import { useUserStore } from '@/stores/user.store';
 import type { DepositRequestItem, RechargeConfigType } from '@/types/recharge-config.type';
-import type { WalletType } from '@/types/wallet.type';
+import type { WalletBalanceChangedEvent, WalletDepositCreditedEvent, WalletType } from '@/types/wallet.type';
 import { handleErrorResponse } from '@/utils/response';
 import Swal from 'sweetalert2';
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
@@ -48,7 +48,6 @@ const countdownSeconds = ref(0);
 const handlingPaidRequest = ref(false);
 
 let countdownTimerId: number | null = null;
-let paymentPollTimerId: number | null = null;
 
 watch([historySearch, historyStatus], () => {
     currentPage.value = 1;
@@ -150,7 +149,9 @@ const historyStats = computed(() => {
     };
 });
 const isPaymentView = computed(() => route.query.view === 'payment' && activePaymentRequest.value !== null);
-const isPaymentExpired = computed(() => activePaymentRequest.value?.status === 'expired' || (countdownSeconds.value <= 0 && activePaymentRequest.value?.status === 'pending'));
+const isPaymentExpired = computed(
+    () => activePaymentRequest.value?.status === 'expired' || (countdownSeconds.value <= 0 && activePaymentRequest.value?.status === 'pending'),
+);
 const countdownLabel = computed(() => formatCountdown(countdownSeconds.value));
 const countdownProgress = computed(() => {
     const request = activePaymentRequest.value;
@@ -167,6 +168,9 @@ const countdownProgress = computed(() => {
 });
 
 onMounted(async () => {
+    window.addEventListener('wallet:deposit-credited', onWalletDepositCredited);
+    window.addEventListener('wallet:balance-changed', onWalletBalanceChanged);
+
     if (!userStore.user) {
         await userStore.bootstrap({ silent: true });
     }
@@ -182,6 +186,8 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
     stopPaymentTimers();
+    window.removeEventListener('wallet:deposit-credited', onWalletDepositCredited);
+    window.removeEventListener('wallet:balance-changed', onWalletBalanceChanged);
 });
 
 async function loadOverview(): Promise<void> {
@@ -379,7 +385,9 @@ async function refreshActivePaymentRequest(silent = false): Promise<void> {
             status: 'all',
         });
 
-        const matched = response.data.find((item) => String(item.id) === String(activePaymentRequest.value?.id) || item.code === activePaymentRequest.value?.code);
+        const matched = response.data.find(
+            (item) => String(item.id) === String(activePaymentRequest.value?.id) || item.code === activePaymentRequest.value?.code,
+        );
 
         if (matched) {
             activePaymentRequest.value = matched;
@@ -475,7 +483,69 @@ function clearActivePaymentState(): void {
     stopPaymentTimers();
 }
 
-async function handlePaidDepositSuccess(): Promise<void> {
+async function applyRealtimeWalletCredit(event: WalletDepositCreditedEvent): Promise<void> {
+    if (wallet.value) {
+        wallet.value.balance = event.balance;
+        wallet.value.total_recharge = event.total_recharge;
+    }
+
+    historyRows.value = historyRows.value.map((item) =>
+        String(item.id) === String(event.payment_transaction_id) || item.code === event.transaction_code
+            ? { ...item, status: 'paid', confirmed_at: event.credited_at, can_confirm: false }
+            : item,
+    );
+
+    const isActivePayment =
+        String(activePaymentRequest.value?.id) === String(event.payment_transaction_id) ||
+        activePaymentRequest.value?.code === event.transaction_code;
+
+    if (isActivePayment && activePaymentRequest.value) {
+        activePaymentRequest.value = {
+            ...activePaymentRequest.value,
+            status: 'paid',
+            confirmed_at: event.credited_at,
+            can_confirm: false,
+        };
+        persistPaymentState(activePaymentRequest.value);
+        await handlePaidDepositSuccess(event.balance);
+
+        return;
+    }
+
+    await Swal.fire({
+        icon: 'success',
+        title: 'Nạp tiền thành công',
+        text: `${formatMoney(event.amount)} đã được cộng vào ví. Số dư mới: ${formatMoney(event.balance)}.`,
+        timer: 5000,
+        showConfirmButton: false,
+        toast: true,
+        position: 'top-end',
+    });
+}
+
+function onWalletDepositCredited(event: Event): void {
+    const walletEvent = event as CustomEvent<WalletDepositCreditedEvent>;
+
+    void applyRealtimeWalletCredit(walletEvent.detail);
+}
+
+function onWalletBalanceChanged(event: Event): void {
+    const walletEvent = event as CustomEvent<WalletBalanceChangedEvent>;
+
+    if (!wallet.value || wallet.value.type !== walletEvent.detail.wallet_type) {
+        return;
+    }
+
+    wallet.value = {
+        ...wallet.value,
+        balance: walletEvent.detail.balance,
+        hold_balance: walletEvent.detail.hold_balance,
+        total_recharge: walletEvent.detail.total_recharge,
+        total_spent: walletEvent.detail.total_spent,
+    };
+}
+
+async function handlePaidDepositSuccess(creditedBalance?: string): Promise<void> {
     if (handlingPaidRequest.value) {
         return;
     }
@@ -484,7 +554,9 @@ async function handlePaidDepositSuccess(): Promise<void> {
     stopPaymentTimers();
 
     try {
-        await loadOverview();
+        if (creditedBalance === undefined) {
+            await loadOverview();
+        }
 
         await Swal.fire({
             icon: 'success',
@@ -497,13 +569,14 @@ async function handlePaidDepositSuccess(): Promise<void> {
         handleErrorResponse(error);
     } finally {
         redirectToWalletOverview();
+        handlingPaidRequest.value = false;
     }
 }
 
 function redirectToWalletOverview(): void {
     clearActivePaymentState();
-    const targetUrl = router.resolve({ name: 'client.wallet' }).href;
-    window.location.assign(targetUrl);
+    activeTab.value = 'deposit';
+    void router.replace({ name: 'client.wallet', query: {} });
 }
 
 function startPaymentTimers(): void {
@@ -517,23 +590,12 @@ function startPaymentTimers(): void {
     countdownTimerId = window.setInterval(() => {
         syncCountdown();
     }, 1000);
-
-    if (['pending', 'processing'].includes(activePaymentRequest.value.status)) {
-        paymentPollTimerId = window.setInterval(() => {
-            void refreshActivePaymentRequest(true);
-        }, 5000);
-    }
 }
 
 function stopPaymentTimers(): void {
     if (countdownTimerId !== null) {
         window.clearInterval(countdownTimerId);
         countdownTimerId = null;
-    }
-
-    if (paymentPollTimerId !== null) {
-        window.clearInterval(paymentPollTimerId);
-        paymentPollTimerId = null;
     }
 }
 

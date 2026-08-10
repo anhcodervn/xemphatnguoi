@@ -23,12 +23,9 @@ class ApiKey extends Model
 
     public const TYPE_WALLET = 'wallet';
 
-    public const TYPE_PACKAGE = 'package';
-
     protected $fillable = [
         'user_id',
         'key_type',
-        'user_subscription_id',
         'name',
         'api_key',
         'api_secret_hash',
@@ -59,11 +56,6 @@ class ApiKey extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
-    }
-
-    public function subscription(): BelongsTo
-    {
-        return $this->belongsTo(UserSubscription::class, 'user_subscription_id');
     }
 
     public function logs(): HasMany
@@ -108,11 +100,6 @@ class ApiKey extends Model
     public function isWalletKey(): bool
     {
         return $this->key_type === self::TYPE_WALLET;
-    }
-
-    public function isPackageKey(): bool
-    {
-        return $this->key_type === self::TYPE_PACKAGE;
     }
 
     public function markExpiredIfNeeded(): void

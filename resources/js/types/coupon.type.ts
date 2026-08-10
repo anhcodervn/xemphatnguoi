@@ -23,8 +23,6 @@ export interface CouponTypeModel {
     first_order_only: boolean;
     is_active: boolean;
     is_available: boolean;
-    applicable_package_ids: number[];
-    applicable_package_count: number;
     requirements: CouponRequirementType;
     logs_count?: number;
     usage_percent?: number | null;
@@ -50,10 +48,6 @@ export interface CouponLogModel {
         id: number;
         name: string;
         email: string;
-    } | null;
-    package_order?: {
-        id: number;
-        order_code: string;
     } | null;
     order_amount: string | number | null;
     discount_amount: string | number | null;
@@ -104,6 +98,5 @@ export interface CouponPayload {
     expired_at: string | null;
     first_order_only: boolean;
     is_active: boolean;
-    applicable_package_ids: number[];
     requirements: CouponRequirementType;
 }

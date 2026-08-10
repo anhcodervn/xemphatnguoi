@@ -52,7 +52,7 @@ Nên đẩy vào đây:
 
 Không nên dùng cho:
 
-- lỗi captcha trực tiếp của người dùng
+- lỗi proxy trực tiếp của người dùng
 - heartbeat server
 
 ### `DISCORD_WEBHOOK_INFO`
@@ -98,7 +98,7 @@ Dùng cho lỗi production đang xảy ra.
 
 Nên đẩy vào đây:
 
-- provider captcha lỗi hàng loạt
+- provider proxy lỗi hàng loạt
 - create task / check task fail tăng cao
 - service down
 - exception nghiêm trọng
@@ -112,7 +112,7 @@ Dùng cho thông báo hệ thống đã hồi phục.
 
 Nên đẩy vào đây:
 
-- provider captcha hoạt động lại
+- provider proxy hoạt động lại
 - queue xử lý ổn định lại
 - server hoặc service hết lỗi
 
@@ -132,7 +132,7 @@ Nên đẩy vào đây:
 
 Không nên trộn vào production.
 
-## Mapping khuyến nghị cho GiaCaptcha.vn
+## Mapping khuyến nghị cho GiaProxy.vn
 
 ### Tối thiểu nên bật
 
@@ -150,7 +150,7 @@ DISCORD_WEBHOOK_INFO=
 | Channel env | Mục đích | Ví dụ sự kiện |
 |---|---|---|
 | `DISCORD_WEBHOOK_OPS` | giám sát hệ thống | heartbeat server, DB ping, disk free, app health |
-| `DISCORD_WEBHOOK_ALERTS` | lỗi production | provider captcha fail, task fail tăng mạnh, lỗi ví/thanh toán |
+| `DISCORD_WEBHOOK_ALERTS` | lỗi production | provider proxy fail, task fail tăng mạnh, lỗi ví/thanh toán |
 | `DISCORD_WEBHOOK_SECURITY` | bảo mật / abuse | API key bất thường, IP lạ, spam request |
 | `DISCORD_WEBHOOK_INFO` | thông tin nhẹ | thông báo chung, log sự kiện không khẩn cấp |
 | `DISCORD_WEBHOOK_QUEUE` | queue nền | backlog, failed jobs, worker có vấn đề |
@@ -178,7 +178,6 @@ DISCORD_WEBHOOK_INFO=
 - `test_ping`
 - `user_registered`
 - `recharge_success`
-- `captcha_task_failed`
 
 Ý nghĩa:
 
@@ -198,7 +197,7 @@ Bạn có thể dùng song song cả hai.
 
 ### Nên gửi vào `ALERTS`
 
-- nguồn captcha chính chết
+- nguồn proxy chính chết
 - create task lỗi hàng loạt
 - check task timeout tăng mạnh
 - wallet deduction lỗi
@@ -225,7 +224,7 @@ Bạn có thể dùng song song cả hai.
 
 ### Nên gửi vào `RECOVERED`
 
-- provider captcha sống lại
+- provider proxy sống lại
 - queue xử lý bình thường lại
 - database / server hết cảnh báo
 
@@ -265,13 +264,13 @@ Ngoài ra hệ thống còn tự lấy:
 
 ## Channel gợi ý
 
-- `#giapcaptcha-ops`
-- `#giapcaptcha-alerts`
-- `#giapcaptcha-security`
-- `#giapcaptcha-info`
-- `#giapcaptcha-queue`
-- `#giapcaptcha-recovered`
-- `#giapcaptcha-staging`
+- `#giapproxy-ops`
+- `#giapproxy-alerts`
+- `#giapproxy-security`
+- `#giapproxy-info`
+- `#giapproxy-queue`
+- `#giapproxy-recovered`
+- `#giapproxy-staging`
 
 ## Heartbeat theo dõi server
 
@@ -314,7 +313,7 @@ DISCORD_WEBHOOK_ALERTS=https://discord.com/api/webhooks/...
 DISCORD_WEBHOOK_RECOVERED=https://discord.com/api/webhooks/...
 DISCORD_WEBHOOK_STAGING=https://discord.com/api/webhooks/...
 
-DISCORD_BOT_NAME="GiaiCaptcha Monitor"
+DISCORD_BOT_NAME="DailyProxy Monitor"
 DISCORD_BOT_AVATAR_URL=
 DISCORD_SERVER_NAME="prod-app-01"
 DISCORD_SERVER_IP="10.10.1.15"
@@ -332,7 +331,7 @@ DISCORD_WEBHOOK_ALERTS=https://discord.com/api/webhooks/...
 DISCORD_WEBHOOK_SECURITY=https://discord.com/api/webhooks/...
 DISCORD_WEBHOOK_INFO=https://discord.com/api/webhooks/...
 
-DISCORD_BOT_NAME="GiaiCaptcha Monitor"
+DISCORD_BOT_NAME="DailyProxy Monitor"
 DISCORD_SERVER_NAME="prod-app-01"
 DISCORD_SERVER_IP="10.10.1.15"
 DISCORD_SERVER_ROLE="app"

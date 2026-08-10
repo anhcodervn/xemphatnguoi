@@ -15,14 +15,6 @@ Schedule::command(sprintf('monitor:discord-heartbeat --channel=%s', $heartbeatCh
     ->withoutOverlapping()
     ->when(static fn (): bool => filled(config(sprintf('services.discord.channels.%s', $heartbeatChannel))));
 
-Schedule::command('captcha:sync-source-balances')
-    ->everyFiveMinutes()
-    ->withoutOverlapping();
-
-Schedule::command('package:prune-pending-orders')
-    ->hourly()
-    ->withoutOverlapping();
-
 Schedule::command('api:prune-logs')
     ->daily()
     ->withoutOverlapping();

@@ -1,155 +1,276 @@
 <script setup lang="ts">
-import Breadcrumb from '@/components/MasterLayouts/Breadcrumb/index.vue';
-import {
-    clientCaptchaService,
-    type ClientCaptchaServiceItem,
-} from '@/services/client-captcha.service';
+import { clientProxyService, type ProxyCategory, type ProxyProduct, type ProxyProtocol } from '@/services/client-proxy.service';
 import { handleErrorResponse } from '@/utils/response';
-import { Bot, Check, Clock3 } from 'lucide-vue-next';
-import { computed, onMounted, ref } from 'vue';
-import { RouterLink } from 'vue-router';
+import { richTextToPlainText, sanitizeRichText } from '@/utils/rich-text';
+import { Calculator, FolderTree, LoaderCircle, ShoppingCart } from 'lucide-vue-next';
+import Swal from 'sweetalert2';
+import { computed, onMounted, reactive, ref } from 'vue';
 
+const categories = ref<ProxyCategory[]>([]);
+const activeCategoryId = ref<number | null>(null);
 const loading = ref(true);
-const services = ref<ClientCaptchaServiceItem[]>([]);
+const purchasing = ref<number | null>(null);
+const quantities = reactive<Record<number, number>>({});
+const durationDays = reactive<Record<number, number>>({});
+const selectedProtocols = reactive<Record<number, ProxyProtocol>>({});
+const activeCategory = computed(() => categories.value.find((item) => item.id === activeCategoryId.value) || categories.value[0]);
+const money = (value: string | number) => new Intl.NumberFormat('vi-VN').format(Number(value || 0)) + ' đ';
 
-const sortedServices = computed(() =>
-    [...services.value].sort((left, right) => {
-        const orderDiff = Number(left.sort_order ?? 0) - Number(right.sort_order ?? 0);
-
-        if (orderDiff !== 0) {
-            return orderDiff;
-        }
-
-        return Number(left.id) - Number(right.id);
-    }),
-);
-
-const loadServices = async (): Promise<void> => {
+const load = async () => {
+    loading.value = true;
     try {
-        loading.value = true;
-        const response = await clientCaptchaService.services();
-        services.value = response.services ?? [];
-    } catch (error) {
-        handleErrorResponse(error);
+        const data = await clientProxyService.products();
+        categories.value = data.categories;
+        activeCategoryId.value = data.categories[0]?.id ?? null;
+        data.categories.forEach((category) =>
+            category.products.forEach((product) => {
+                quantities[product.id] = 1;
+                durationDays[product.id] = 1;
+                selectedProtocols[product.id] = product.supported_protocols[0] ?? product.protocol;
+            }),
+        );
     } finally {
         loading.value = false;
     }
 };
 
-const formatDescription = (service: ClientCaptchaServiceItem): string => {
-    if (service.description && service.description.trim().length > 0) {
-        return service.description.trim();
+const totalPrice = (product: ProxyProduct) =>
+    Number(product.selling_price || 0) * Number(quantities[product.id] || 1) * Number(durationDays[product.id] || 1);
+
+const purchase = async (product: ProxyProduct) => {
+    const quantity = Number(quantities[product.id] || 0);
+    const days = Number(durationDays[product.id] || 0);
+    const protocol = selectedProtocols[product.id] ?? product.supported_protocols[0] ?? product.protocol;
+
+    if (!Number.isInteger(quantity) || quantity < 1 || quantity > product.max_quantity) {
+        await Swal.fire('Số lượng chưa hợp lệ', `Số lượng phải từ 1 đến ${product.max_quantity} proxy.`, 'warning');
+        return;
     }
 
-    return `Dịch vụ ${service.name} tốc độ ${service.stats.processing_time_label}, tỉ lệ thành công ${service.stats.success_rate}%.`;
+    if (!Number.isInteger(days) || days < 1 || days > 3650) {
+        await Swal.fire('Số ngày chưa hợp lệ', 'Số ngày sử dụng phải từ 1 đến 3650.', 'warning');
+        return;
+    }
+
+    if (!product.supported_protocols.includes(protocol)) {
+        await Swal.fire('Giao thức chưa hợp lệ', 'Sản phẩm không hỗ trợ giao thức đã chọn.', 'warning');
+        return;
+    }
+
+    const confirmation = await Swal.fire({
+        title: 'Xác nhận mua proxy?',
+        html: `
+            <div class="text-sm">
+                <b>${product.name}</b><br>
+                ${quantity} proxy × ${days} ngày × ${money(product.selling_price)}<br>
+                Giao thức: <b>${protocol.toUpperCase()}</b><br>
+                Tổng tiền: <b>${money(totalPrice(product))}</b>
+            </div>
+        `,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Mua ngay',
+        cancelButtonText: 'Hủy',
+    });
+    if (!confirmation.isConfirmed) return;
+
+    purchasing.value = product.id;
+    try {
+        const data = await clientProxyService.createOrder({
+            product_code: product.code,
+            quantity,
+            duration_days: days,
+            protocol,
+        });
+
+        if (!data?.order) {
+            throw new Error('Phản hồi mua proxy không hợp lệ.');
+        }
+
+        await Swal.fire({
+            title: 'Mua proxy thành công',
+            text: `Đơn ${data.order.order_code} đã thanh toán ${money(data.order.total_amount)} và cấp ${data.proxies.length} proxy.`,
+            icon: 'success',
+            confirmButtonText: 'Hoàn tất',
+        });
+    } catch (error) {
+        handleErrorResponse(error as never);
+    } finally {
+        purchasing.value = null;
+    }
 };
 
-onMounted(async () => {
-    await loadServices();
-});
+onMounted(load);
 </script>
 
 <template>
-    <div class="space-y-5">
-        <Breadcrumb
-            title="Dịch vụ captcha"
-            description="Danh sách đầy đủ các loại captcha đang mở bán với giá, tốc độ xử lý và tỉ lệ thành công thực tế."
-        >
-            <template #actions>
-                <div class="flex flex-wrap items-center gap-3">
-                    <RouterLink
-                        to="/api-docs"
-                        class="inline-flex items-center rounded-xl bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-teal-500"
-                    >
-                        Tài liệu API
-                    </RouterLink>
-                    <RouterLink
-                        to="/wallet"
-                        class="inline-flex items-center rounded-xl border border-teal-100 bg-white px-4 py-2.5 text-sm font-semibold text-teal-700 transition hover:bg-teal-50"
-                    >
-                        Nạp tiền ví
-                    </RouterLink>
-                </div>
-            </template>
-        </Breadcrumb>
+    <div class="space-y-6">
+        <div v-if="loading" class="flex items-center justify-center rounded-3xl border border-slate-200 bg-white py-20 text-slate-500">
+            <LoaderCircle class="mr-2 h-5 w-5 animate-spin" /> Đang tải kho proxy...
+        </div>
+        <div v-else-if="categories.length === 0" class="rounded-3xl border border-dashed border-slate-300 bg-white py-20 text-center text-slate-500">
+            Chưa có danh mục và sản phẩm proxy đang mở bán.
+        </div>
 
-        <section
-            class="overflow-hidden rounded-[16px] border border-teal-100 bg-white shadow-[0_22px_60px_-32px_rgba(8,145,178,0.32)]"
-        >
-            <div
-                class="grid min-w-[760px] grid-cols-[minmax(320px,1.9fr)_minmax(140px,0.8fr)_minmax(120px,0.7fr)_minmax(150px,0.8fr)] bg-[linear-gradient(135deg,_#0f766e_0%,_#0891b2_100%)] text-sm font-bold text-white"
-            >
-                <div class="px-6 py-4">Loại captcha</div>
-                <div class="px-5 py-4">Giá /1 lần giải</div>
-                <div class="px-5 py-4">Tốc độ</div>
-                <div class="px-5 py-4">Tỷ lệ thành công</div>
-            </div>
-
-            <div v-if="loading" class="min-w-[760px] px-6 py-12 text-center text-sm text-slate-500">
-                Đang tải danh sách dịch vụ...
-            </div>
-
-            <div v-else-if="sortedServices.length === 0" class="min-w-[760px] px-6 py-12 text-center text-sm text-slate-500">
-                Chưa có dịch vụ captcha nào đang được mở bán.
-            </div>
-
-            <div v-else class="min-w-[760px] divide-y divide-slate-100">
-                <div
-                    v-for="service in sortedServices"
-                    :key="service.id"
-                    class="grid grid-cols-[minmax(320px,1.9fr)_minmax(140px,0.8fr)_minmax(120px,0.7fr)_minmax(150px,0.8fr)] items-center bg-white transition hover:bg-teal-50/50"
+        <template v-else>
+            <nav class="proxy-panel flex gap-3 overflow-x-auto p-3">
+                <button
+                    v-for="category in categories"
+                    :key="category.id"
+                    type="button"
+                    class="proxy-focus inline-flex shrink-0 items-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold transition"
+                    :class="
+                        activeCategory?.id === category.id
+                            ? 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-md shadow-blue-200'
+                            : 'text-slate-600 hover:bg-blue-50 hover:text-blue-700'
+                    "
+                    @click="activeCategoryId = category.id"
                 >
-                    <div class="px-6 py-5">
-                        <div class="flex items-start gap-4">
-                            <div
-                                class="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-teal-100 bg-teal-50 text-teal-700"
-                            >
-                                <img
-                                    v-if="service.settings?.icon_url"
-                                    :src="service.settings.icon_url"
-                                    :alt="`${service.name} icon`"
-                                    class="h-full w-full object-cover"
-                                />
-                                <Bot v-else class="h-5 w-5" />
-                            </div>
+                    <FolderTree class="h-4 w-4" />{{ category.name }}
+                </button>
+            </nav>
 
-                            <div class="min-w-0">
-                                <span class="inline-flex rounded-full bg-teal-50 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-teal-700">
-                                    {{ service.code }}
+            <section v-if="activeCategory" class="space-y-6">
+                <div class="rounded-2xl border border-blue-100 bg-blue-50/60 p-5">
+                    <h2 class="text-2xl font-black text-slate-950">{{ activeCategory.name }}</h2>
+                    <p class="mt-2 text-sm leading-6 text-slate-600">
+                        {{ richTextToPlainText(activeCategory.description, 'Các sản phẩm proxy thuộc chuyên mục này.') }}
+                    </p>
+                </div>
+
+                <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                    <div
+                        v-for="product in activeCategory.products"
+                        :key="product.id"
+                        class="flex flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-[0_18px_45px_-32px_rgba(37,99,235,0.5)]"
+                    >
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="flex flex-wrap items-center gap-1.5">
+                                <span class="rounded-full bg-blue-50 px-2.5 py-0.5 text-[11px] font-bold uppercase text-blue-700">
+                                    {{ product.country_code || 'Global' }}
                                 </span>
-                                <p class="text-[15px] font-bold leading-6 text-slate-900">
-                                    {{ service.name }}
-                                </p>
-                                <p class="mt-1 max-w-[280px] whitespace-pre-line text-sm leading-6 text-slate-600">
-                                    {{ formatDescription(service) }}
-                                </p>
+                                <span class="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold uppercase text-emerald-700">
+                                    {{ product.supported_protocols.join(' / ') }}
+                                </span>
                             </div>
+                            <span class="text-[11px] font-semibold text-slate-400">{{ product.code }}</span>
                         </div>
-                    </div>
+                        <h4 class="mt-3 text-lg font-bold text-slate-950">{{ product.name }}</h4>
+                        <!-- eslint-disable-next-line vue/no-v-html -- sanitized with DOMPurify -->
+                        <div
+                            v-if="product.description?.trim()"
+                            class="product-description mt-1 min-h-10 text-xs leading-5 text-slate-500"
+                            v-html="sanitizeRichText(product.description)"
+                        ></div>
+                        <p v-else class="mt-1 min-h-10 text-xs leading-5 text-slate-500">
+                            Chọn số ngày sử dụng và số lượng proxy phù hợp với nhu cầu.
+                        </p>
+                        <div class="mt-4 grid gap-3 sm:grid-cols-2">
+                            <label class="space-y-1">
+                                <span class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Ngày sử dụng</span>
+                                <input
+                                    v-model.number="durationDays[product.id]"
+                                    type="number"
+                                    min="1"
+                                    max="3650"
+                                    class="proxy-focus h-10 w-full rounded-[5px] border-2 border-slate-300 bg-white px-3 py-1.5 text-sm transition hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                                />
+                            </label>
+                            <label class="space-y-1">
+                                <span class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Số lượng proxy</span>
+                                <input
+                                    v-model.number="quantities[product.id]"
+                                    type="number"
+                                    min="1"
+                                    :max="product.max_quantity"
+                                    class="proxy-focus h-10 w-full rounded-[5px] border-2 border-slate-300 bg-white px-3 py-1.5 text-sm transition hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                                />
+                            </label>
+                        </div>
 
-                    <div class="px-5 py-5 text-[15px] font-bold text-slate-700">
-                        {{ service.selling_price }} đ
-                    </div>
+                        <label class="mt-3 space-y-1">
+                            <span class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Giao thức</span>
+                            <select
+                                v-model="selectedProtocols[product.id]"
+                                class="proxy-focus h-10 w-full rounded-[5px] border-2 border-slate-300 bg-white px-3 py-1.5 text-sm uppercase transition hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                            >
+                                <option v-for="protocol in product.supported_protocols" :key="protocol" :value="protocol">
+                                    {{ protocol.toUpperCase() }}
+                                </option>
+                            </select>
+                        </label>
 
-                    <div class="px-5 py-5">
-                        <span class="inline-flex items-center gap-2 text-[15px] font-bold text-slate-700">
-                            <span class="flex h-5 w-5 items-center justify-center rounded-full bg-teal-500 text-white">
-                                <Clock3 class="h-3.5 w-3.5" />
-                            </span>
-                            {{ service.stats.processing_time_label }}
-                        </span>
-                    </div>
-
-                    <div class="px-5 py-5">
-                        <span class="inline-flex items-center gap-2 text-[15px] font-bold text-slate-700">
-                            <span class="flex h-5 w-5 items-center justify-center rounded-full bg-teal-500 text-white">
-                                <Check class="h-3.5 w-3.5 stroke-[3]" />
-                            </span>
-                            {{ service.stats.success_rate }}%
-                        </span>
+                        <div class="mt-4 flex items-end justify-between gap-3 rounded-lg border border-blue-100 bg-blue-50/50 p-3">
+                            <div>
+                                <p class="text-[11px] text-slate-500">Giá / proxy / ngày</p>
+                                <p class="text-lg font-black text-blue-700">{{ money(product.selling_price) }}</p>
+                            </div>
+                            <p class="text-right text-[11px] text-slate-500">
+                                Tổng tiền<br /><b class="text-sm text-slate-900">{{ money(totalPrice(product)) }}</b>
+                            </p>
+                        </div>
+                        <div class="mt-2 flex items-center gap-1.5 text-[11px] text-slate-500">
+                            <Calculator class="h-3.5 w-3.5 text-blue-600" /> Số lượng × số ngày × giá/ngày
+                        </div>
+                        <button
+                            type="button"
+                            class="proxy-focus mt-3 inline-flex h-10 w-full items-center justify-center gap-2 rounded-[5px] bg-gradient-to-r from-blue-600 to-cyan-500 px-4 text-sm font-semibold text-white shadow-sm transition hover:from-blue-700 hover:to-cyan-600 disabled:cursor-not-allowed disabled:opacity-60"
+                            :disabled="purchasing !== null"
+                            @click="purchase(product)"
+                        >
+                            <LoaderCircle v-if="purchasing === product.id" class="h-4 w-4 animate-spin" />
+                            <ShoppingCart v-else class="h-4 w-4" />
+                            {{ purchasing === product.id ? 'Đang tạo đơn...' : 'Mua ngay' }}
+                        </button>
                     </div>
                 </div>
-            </div>
-        </section>
+            </section>
+        </template>
     </div>
 </template>
+
+<style scoped>
+.product-description :deep(p),
+.product-description :deep(ul),
+.product-description :deep(ol),
+.product-description :deep(blockquote) {
+    margin-bottom: 0.375rem;
+}
+
+.product-description :deep(ul),
+.product-description :deep(ol) {
+    padding-left: 1.25rem;
+}
+
+.product-description :deep(ul) {
+    list-style: disc;
+}
+
+.product-description :deep(ol) {
+    list-style: decimal;
+}
+
+.product-description :deep(a) {
+    color: #2563eb;
+    text-decoration: underline;
+}
+
+.product-description :deep(h1),
+.product-description :deep(h2),
+.product-description :deep(h3),
+.product-description :deep(h4),
+.product-description :deep(strong) {
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.product-description :deep(img) {
+    max-width: 100%;
+    height: auto;
+    border-radius: 5px;
+}
+
+.product-description :deep(:last-child) {
+    margin-bottom: 0;
+}
+</style>

@@ -28,7 +28,7 @@ const typeOptions = [
 ];
 
 const statusClasses: Record<string, string> = {
-    success: 'bg-teal-50 text-teal-700 ring-1 ring-teal-200',
+    success: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200',
     processing: 'bg-amber-50 text-amber-700 ring-1 ring-amber-200',
     failed: 'bg-rose-50 text-rose-700 ring-1 ring-rose-200',
 };
@@ -81,30 +81,30 @@ const formatCurrency = (amount: number): string => `${amount >= 0 ? '+' : '-'}${
 
 <template>
     <div class="space-y-3">
-        <div class="flex flex-col gap-2 rounded-[10px] bg-teal-50/70 p-3 md:flex-row md:items-center">
+        <div class="flex flex-col gap-2 rounded-[10px] border border-blue-100 bg-blue-50/60 p-3 md:flex-row md:items-center">
             <input
                 :value="props.filters.search"
                 type="text"
-                class="w-full rounded-[8px] border border-teal-100 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-teal-300 focus:ring-2 focus:ring-teal-100"
+                class="w-full rounded-[8px] border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
                 placeholder="Tìm theo mã giao dịch hoặc nội dung..."
                 @input="emit('update:search', ($event.target as HTMLInputElement).value)"
             />
 
             <select
                 :value="props.filters.type"
-                class="rounded-[8px] border border-teal-100 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-teal-300 focus:ring-2 focus:ring-teal-100 md:w-[220px]"
+                class="rounded-[8px] border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100 md:w-[220px]"
                 @change="emit('update:type', ($event.target as HTMLSelectElement).value)"
             >
                 <option v-for="option in typeOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
             </select>
         </div>
 
-        <div class="overflow-hidden rounded-[10px] border border-teal-100">
-            <div v-if="props.loading" class="bg-teal-50/70 px-4 py-10 text-center text-sm text-slate-500">Đang tải lịch sử dòng tiền...</div>
+        <div class="overflow-hidden rounded-[10px] border border-slate-200">
+            <div v-if="props.loading" class="bg-slate-50 px-4 py-10 text-center text-sm text-slate-500">Đang tải lịch sử dòng tiền...</div>
 
             <div v-else class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-slate-200 text-sm">
-                    <thead class="bg-teal-50 text-left text-xs font-semibold uppercase tracking-[0.16em] text-teal-700">
+                    <thead class="bg-blue-50/70 text-left text-xs font-semibold uppercase tracking-[0.16em] text-blue-800">
                         <tr>
                             <th class="px-4 py-3">Mã giao dịch</th>
                             <th class="px-4 py-3">Thời gian</th>
@@ -116,11 +116,19 @@ const formatCurrency = (amount: number): string => `${amount >= 0 ? '+' : '-'}${
                     </thead>
 
                     <tbody class="divide-y divide-slate-100 bg-white">
-                        <tr v-for="item in props.transactions" :key="item.id" class="align-top transition-colors" :class="getTransactionTheme(item.type).row">
+                        <tr
+                            v-for="item in props.transactions"
+                            :key="item.id"
+                            class="align-top transition-colors"
+                            :class="getTransactionTheme(item.type).row"
+                        >
                             <td class="px-4 py-3">
                                 <div class="space-y-1">
                                     <p class="font-semibold text-slate-900">{{ item.code }}</p>
-                                    <span class="inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold" :class="getTransactionTheme(item.type).badge">
+                                    <span
+                                        class="inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold"
+                                        :class="getTransactionTheme(item.type).badge"
+                                    >
                                         {{ getTransactionTheme(item.type).label }}
                                     </span>
                                 </div>
@@ -156,7 +164,9 @@ const formatCurrency = (amount: number): string => `${amount >= 0 ? '+' : '-'}${
                 >
                     <ChevronLeft class="h-4 w-4" />
                 </button>
-                <span class="rounded-[10px] bg-teal-600 px-3 py-1.5 font-semibold text-white">{{ props.meta.current_page }} / {{ props.meta.last_page }}</span>
+                <span class="rounded-[10px] bg-blue-600 px-3 py-1.5 font-semibold text-white"
+                    >{{ props.meta.current_page }} / {{ props.meta.last_page }}</span
+                >
                 <button
                     type="button"
                     class="rounded-[10px] border border-slate-200 bg-white px-2.5 py-1.5"

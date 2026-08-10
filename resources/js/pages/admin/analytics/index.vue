@@ -24,7 +24,7 @@ const summaryCards = computed(() => {
     return [
         { label: "Người dùng mới", value: numberValue(summary.users_new), note: `Hoạt động: ${numberValue(summary.users_active)}` },
         { label: "Nạp tiền", value: currency(summary.deposit_success_amount), note: `Tổng ví: ${currency(summary.wallet_recharge_total)}` },
-        { label: "Doanh thu", value: currency(summary.captcha_revenue), note: `Chi phí nguồn: ${currency(summary.provider_cost)}` },
+        { label: "Doanh thu", value: currency(summary.proxy_revenue), note: `Chi phí nguồn: ${currency(summary.provider_cost)}` },
         { label: "Lợi nhuận", value: currency(summary.gross_profit), note: `Biên lợi nhuận: ${summary.gross_margin}%` },
         { label: "Tỷ lệ thành công", value: `${summary.task_success_rate}%`, note: `Tốc độ TB: ${secondsValue(summary.avg_processing_seconds)}` },
         { label: "Webhook", value: `${summary.active_webhooks}/${summary.configured_webhooks}`, note: `API log: ${numberValue(summary.api_requests)}` },
@@ -85,7 +85,7 @@ onMounted(async () => {
             <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <div class="max-w-3xl space-y-2">
                     <p class="text-[11px] font-semibold uppercase tracking-[0.26em] text-sky-600">Admin analytics</p>
-                    <h1 class="text-2xl font-black tracking-[-0.03em] text-slate-950">Thống kê vận hành hệ thống captcha</h1>
+                    <h1 class="text-2xl font-black tracking-[-0.03em] text-slate-950">Thống kê vận hành hệ thống proxy</h1>
                     <p class="text-sm leading-6 text-slate-600">Theo dõi tăng trưởng, doanh thu, hiệu suất xử lý và cảnh báo vận hành theo thời gian thực.</p>
                 </div>
 
@@ -209,12 +209,12 @@ onMounted(async () => {
                     <div class="mt-4 space-y-3">
                         <div
                             v-for="service in analytics.top_services"
-                            :key="service.service_code"
+                            :key="service.product_code"
                             class="rounded-[8px] border border-slate-100 bg-slate-50/80 p-3"
                         >
                             <div class="flex items-start justify-between gap-3">
                                 <div class="min-w-0">
-                                    <p class="truncate text-[11px] font-semibold uppercase tracking-[0.16em] text-sky-600">{{ service.service_code }}</p>
+                                    <p class="truncate text-[11px] font-semibold uppercase tracking-[0.16em] text-sky-600">{{ service.product_code }}</p>
                                     <p class="mt-1 text-xs text-slate-500">{{ numberValue(service.total_tasks) }} task</p>
                                 </div>
                                 <div class="text-right">
@@ -247,11 +247,11 @@ onMounted(async () => {
                     <p class="mt-1 text-xs text-slate-500">Các lỗi mới nhất để theo dõi nhanh.</p>
 
                     <div class="mt-4 space-y-2.5">
-                        <div v-for="item in analytics.recent_failed_tasks" :key="item.task_code" class="rounded-[8px] border border-rose-100 bg-rose-50/70 p-3">
+                        <div v-for="item in analytics.recent_failed_tasks" :key="item.order_code" class="rounded-[8px] border border-rose-100 bg-rose-50/70 p-3">
                             <div class="flex items-start justify-between gap-3">
                                 <div class="min-w-0">
-                                    <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-rose-600">{{ item.service_code }}</p>
-                                    <p class="mt-1 truncate text-sm font-semibold text-slate-900">{{ item.task_code }}</p>
+                                    <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-rose-600">{{ item.product_code }}</p>
+                                    <p class="mt-1 truncate text-sm font-semibold text-slate-900">{{ item.order_code }}</p>
                                 </div>
                                 <p class="shrink-0 text-[11px] text-slate-500">{{ item.created_at ? new Date(item.created_at).toLocaleString("vi-VN") : "--" }}</p>
                             </div>

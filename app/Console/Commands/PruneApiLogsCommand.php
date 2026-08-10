@@ -13,7 +13,7 @@ class PruneApiLogsCommand extends Command
 
     public function handle(): int
     {
-        $retentionDays = max(1, (int) config('services.captcha.api_log_retention_days', 30));
+        $retentionDays = max(1, (int) config('services.proxy.api_log_retention_days', 30));
         $cutoff = now()->subDays($retentionDays);
 
         $deleted = ApiLog::query()

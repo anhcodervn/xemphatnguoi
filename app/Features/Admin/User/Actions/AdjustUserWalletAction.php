@@ -2,7 +2,9 @@
 
 namespace App\Features\Admin\User\Actions;
 
+use App\Events\WalletBalanceChanged;
 use App\Exceptions\ApiException;
+use App\Models\Notification;
 use App\Models\User;
 use App\Models\Wallet;
 use App\Models\WalletTransaction;
@@ -58,6 +60,47 @@ class AdjustUserWalletAction
                 'description' => $payload['note'] ?? 'Admin wallet adjustment',
                 'status' => 'success',
             ]);
+
+            $isCredit = $signedAmount > 0;
+            $notification = Notification::query()->create([
+                'user_id' => $user->id,
+                'scope' => Notification::SCOPE_USER,
+                'title' => $isCredit ? 'Tài khoản được cộng tiền' : 'Số dư tài khoản được điều chỉnh',
+                'content' => sprintf(
+                    'Admin đã %s %sđ. Số dư hiện tại: %sđ.%s',
+                    $isCredit ? 'cộng' : 'trừ',
+                    number_format(abs($signedAmount), 0, ',', '.'),
+                    number_format($balanceAfter, 0, ',', '.'),
+                    filled($payload['note'] ?? null) ? ' Nội dung: '.trim((string) $payload['note']) : '',
+                ),
+                'redirect_url' => '/wallet',
+                'type' => $isCredit ? 'success' : 'warning',
+                'is_read' => false,
+            ]);
+
+            WalletBalanceChanged::dispatch(
+                userId: $user->id,
+                walletType: $wallet->type,
+                balance: (string) $wallet->balance,
+                holdBalance: (string) $wallet->hold_balance,
+                totalRecharge: (string) $wallet->total_recharge,
+                totalSpent: (string) $wallet->total_spent,
+                changeType: 'adjustment',
+                amount: number_format($signedAmount, 2, '.', ''),
+                transactionId: $transaction->id,
+                description: (string) $transaction->description,
+                changedAt: $transaction->created_at?->toISOString() ?? now()->toISOString(),
+                notification: [
+                    'id' => $notification->id,
+                    'scope' => $notification->scope,
+                    'title' => $notification->title,
+                    'content' => $notification->content,
+                    'redirect_url' => $notification->redirect_url,
+                    'type' => $notification->type,
+                    'is_read' => false,
+                    'created_at' => $notification->created_at?->toDateTimeString(),
+                ],
+            );
 
             return [
                 'wallet' => [

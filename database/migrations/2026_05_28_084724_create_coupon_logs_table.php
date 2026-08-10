@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('coupon_id')->constrained()->cascadeOnDelete();
             $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
             $table->foreignId('admin_id')->nullable()->constrained('users')->nullOnDelete();
-            $table->foreignId('package_order_id')->nullable()->constrained()->nullOnDelete();
+            $table->unsignedBigInteger('package_order_id')->nullable();
             $table->string('action', 50);
             $table->enum('status', ['success', 'failed', 'info'])->default('info');
             $table->decimal('order_amount', 20, 2)->nullable();

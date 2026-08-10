@@ -3,7 +3,6 @@
 namespace App\Service;
 
 use App\Exceptions\ApiException;
-use App\Models\CaptchaTask;
 use App\Models\PaymentTransaction;
 use App\Models\User;
 use App\Support\SettingStore;
@@ -25,7 +24,6 @@ class DiscordWebhookNotifier
             ['label' => 'Ping kiểm tra', 'value' => 'test_ping'],
             ['label' => 'Đăng ký mới', 'value' => 'user_registered'],
             ['label' => 'Nạp tiền thành công', 'value' => 'recharge_success'],
-            ['label' => 'Task captcha lỗi', 'value' => 'captcha_task_failed'],
         ];
     }
 
@@ -86,20 +84,6 @@ class DiscordWebhookNotifier
         ]);
     }
 
-    public function sendCaptchaTaskFailed(CaptchaTask $task): void
-    {
-        $this->notify('captcha_task_failed', [
-            'title' => 'Task captcha xử lý lỗi',
-            'description' => 'Một yêu cầu captcha vừa chuyển sang trạng thái thất bại.',
-            'fields' => [
-                ['name' => 'Task code', 'value' => $task->task_code, 'inline' => true],
-                ['name' => 'Service', 'value' => $task->service_code, 'inline' => true],
-                ['name' => 'Lỗi', 'value' => (string) ($task->error_message ?: 'Không rõ nguyên nhân'), 'inline' => false],
-            ],
-            'color' => 0xDC2626,
-        ]);
-    }
-
     public function sendTestWebhook(int $webhookIndex, string $eventKey): void
     {
         $webhooks = $this->configuredWebhooks();
@@ -157,7 +141,7 @@ class DiscordWebhookNotifier
             ->acceptJson()
             ->retry(1, 300, throw: false)
             ->post($url, [
-                'username' => (string) config('services.discord.bot_name', 'GiaiCaptcha Monitor'),
+                'username' => (string) config('services.discord.bot_name', 'DailyProxy Monitor'),
                 'avatar_url' => (string) config('services.discord.bot_avatar_url', ''),
                 'embeds' => [[
                     'title' => Arr::get($payload, 'title', 'Thông báo hệ thống'),

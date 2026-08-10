@@ -23,7 +23,7 @@ const emit = defineEmits<{
 
 <template>
     <div class="grid gap-3 xl:grid-cols-[minmax(0,1.1fr)_320px]">
-        <form class="space-y-4 rounded-[10px] border border-teal-100 bg-white p-4" @submit.prevent="emit('submit')">
+        <form class="space-y-4 rounded-[10px] border border-slate-200 bg-white p-4" @submit.prevent="emit('submit')">
             <div class="flex items-start gap-3 rounded-[10px] border border-amber-200 bg-amber-50 px-4 py-3 text-amber-900">
                 <ShieldAlert class="mt-0.5 h-4 w-4 shrink-0" />
                 <div>
@@ -39,7 +39,7 @@ const emit = defineEmits<{
                 <input
                     :value="props.form.current_password"
                     type="password"
-                    class="w-full rounded-[8px] border border-teal-100 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-teal-300 focus:ring-2 focus:ring-teal-100"
+                    class="w-full rounded-[8px] border border-slate-200 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
                     placeholder="Nhập mật khẩu hiện tại"
                     @input="emit('update:current-password', ($event.target as HTMLInputElement).value)"
                 />
@@ -51,7 +51,7 @@ const emit = defineEmits<{
                 <input
                     :value="props.form.new_password"
                     type="password"
-                    class="w-full rounded-[8px] border border-teal-100 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-teal-300 focus:ring-2 focus:ring-teal-100"
+                    class="w-full rounded-[8px] border border-slate-200 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
                     placeholder="Nhập mật khẩu mới"
                     @input="emit('update:new-password', ($event.target as HTMLInputElement).value)"
                 />
@@ -63,7 +63,7 @@ const emit = defineEmits<{
                 <input
                     :value="props.form.new_password_confirmation"
                     type="password"
-                    class="w-full rounded-[8px] border border-teal-100 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-teal-300 focus:ring-2 focus:ring-teal-100"
+                    class="w-full rounded-[8px] border border-slate-200 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
                     placeholder="Nhập lại mật khẩu mới"
                     @input="emit('update:new-password-confirmation', ($event.target as HTMLInputElement).value)"
                 />
@@ -73,7 +73,7 @@ const emit = defineEmits<{
             <div class="flex justify-end">
                 <button
                     type="submit"
-                    class="inline-flex items-center justify-center gap-2 rounded-[10px] bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-teal-500 disabled:cursor-not-allowed disabled:opacity-60"
+                    class="inline-flex items-center justify-center gap-2 rounded-[10px] bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-blue-200 transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
                     :disabled="props.saving"
                 >
                     <KeyRound class="h-4 w-4" />
@@ -83,19 +83,19 @@ const emit = defineEmits<{
         </form>
 
         <section class="space-y-3">
-            <div class="rounded-[10px] border border-teal-100 bg-white p-4">
+            <div class="rounded-[10px] border border-slate-200 bg-white p-4">
                 <h3 class="text-sm font-bold text-slate-900">Phiên và thiết bị</h3>
                 <p class="mt-1 text-sm leading-6 text-slate-500">
                     Nếu nghi ngờ tài khoản đang mở ở thiết bị khác, dùng thao tác dưới đây để yêu cầu đăng xuất tất cả phiên còn lại.
                 </p>
 
-                <div class="mt-4 rounded-[10px] bg-teal-50/70 p-3">
+                <div class="mt-4 rounded-[10px] border border-blue-100 bg-blue-50/60 p-3">
                     <p class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Logout all devices</p>
                     <p class="mt-1 text-sm text-slate-600">Thao tác này phù hợp sau khi đổi mật khẩu hoặc phát hiện đăng nhập bất thường.</p>
 
                     <button
                         type="button"
-                        class="mt-3 inline-flex items-center justify-center gap-2 rounded-[10px] border border-teal-200 bg-white px-4 py-2.5 text-sm font-semibold text-teal-700 transition hover:border-teal-300 hover:bg-teal-50 disabled:cursor-not-allowed disabled:opacity-60"
+                        class="mt-3 inline-flex items-center justify-center gap-2 rounded-[10px] border border-blue-200 bg-white px-4 py-2.5 text-sm font-semibold text-blue-700 transition hover:border-blue-300 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-60"
                         :disabled="props.loggingOutDevices"
                         @click="emit('logout-all-devices')"
                     >
@@ -107,4 +107,3 @@ const emit = defineEmits<{
         </section>
     </div>
 </template>
-

@@ -17,9 +17,7 @@ return new class extends Migration
             if (! Schema::hasColumn('api_keys', 'user_subscription_id')) {
                 $table->foreignId('user_subscription_id')
                     ->nullable()
-                    ->after('key_type')
-                    ->constrained('user_subscriptions')
-                    ->nullOnDelete();
+                    ->after('key_type');
             }
         });
     }
@@ -28,7 +26,7 @@ return new class extends Migration
     {
         Schema::table('api_keys', function (Blueprint $table): void {
             if (Schema::hasColumn('api_keys', 'user_subscription_id')) {
-                $table->dropConstrainedForeignId('user_subscription_id');
+                $table->dropColumn('user_subscription_id');
             }
 
             if (Schema::hasColumn('api_keys', 'key_type')) {

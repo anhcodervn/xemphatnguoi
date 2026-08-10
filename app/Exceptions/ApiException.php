@@ -5,15 +5,17 @@ namespace App\Exceptions;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Throwable;
 
 class ApiException extends Exception
 {
     public function __construct(
         string $message,
         int $status = 400,
-        protected array $data = []
+        protected array $data = [],
+        ?Throwable $previous = null,
     ) {
-        parent::__construct($message, $status);
+        parent::__construct($message, $status, $previous);
     }
 
     public function render(Request $request): ?JsonResponse

@@ -2,20 +2,20 @@
 
 namespace App\Models;
 
+use Database\Factories\CouponLogFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class CouponLog extends Model
 {
-    /** @use HasFactory<\Database\Factories\CouponLogFactory> */
+    /** @use HasFactory<CouponLogFactory> */
     use HasFactory;
 
     protected $fillable = [
         'coupon_id',
         'user_id',
         'admin_id',
-        'package_order_id',
         'action',
         'status',
         'order_amount',
@@ -46,10 +46,5 @@ class CouponLog extends Model
     public function admin(): BelongsTo
     {
         return $this->belongsTo(User::class, 'admin_id');
-    }
-
-    public function packageOrder(): BelongsTo
-    {
-        return $this->belongsTo(PackageOrder::class);
     }
 }

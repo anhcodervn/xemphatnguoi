@@ -2,15 +2,17 @@
 
 namespace App\Features\Client\Wallet\Services;
 
+use App\Events\WalletDepositCredited;
 use App\Exceptions\ApiException;
 use App\Features\Recharge\Services\ApiBankVnPartnerService;
 use App\Features\Recharge\Services\RechargeConfigService;
 use App\Models\ConfigRecharge;
+use App\Models\Notification;
 use App\Models\PaymentTransaction;
 use App\Models\User;
 use App\Models\Wallet;
 use App\Models\WalletTransaction;
-use App\Service\DiscordWebhookNotifier;
+use App\Utils\SendMessage;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
@@ -22,7 +24,6 @@ class WalletDepositService
     public function __construct(
         private readonly RechargeConfigService $rechargeConfigService,
         private readonly ApiBankVnPartnerService $apiBankVnPartnerService,
-        private readonly DiscordWebhookNotifier $discordWebhookNotifier,
     ) {}
 
     /**
@@ -266,7 +267,8 @@ class WalletDepositService
      */
     private function creditSuccessfulTransaction(PaymentTransaction $paymentTransaction, array $partnerOrder, bool $markConfirmed): PaymentTransaction
     {
-        return DB::transaction(function () use ($paymentTransaction, $partnerOrder, $markConfirmed): PaymentTransaction {
+        $eventPayload = null;
+        $creditedTransaction = DB::transaction(function () use ($paymentTransaction, $partnerOrder, $markConfirmed, &$eventPayload): PaymentTransaction {
             $lockedTransaction = PaymentTransaction::query()
                 ->whereKey($paymentTransaction->id)
                 ->lockForUpdate()
@@ -337,14 +339,62 @@ class WalletDepositService
                 'raw_data' => $raw,
             ])->save();
 
-            try {
-                $this->discordWebhookNotifier->sendRechargeSuccess($lockedTransaction, $user);
-            } catch (\Throwable $exception) {
-                report($exception);
-            }
+            $notification = Notification::query()->create([
+                'user_id' => $user->id,
+                'scope' => Notification::SCOPE_USER,
+                'title' => 'Nạp tiền thành công',
+                'content' => number_format($creditAmount, 0, ',', '.').'đ đã được cộng vào ví của bạn.',
+                'redirect_url' => "/wallet?view=payment&request={$lockedTransaction->id}&from=deposit",
+                'type' => 'success',
+                'is_read' => false,
+            ]);
+
+            $eventPayload = [
+                'user_id' => $user->id,
+                'payment_transaction_id' => $lockedTransaction->id,
+                'transaction_code' => $lockedTransaction->transaction_code,
+                'amount' => number_format($creditAmount, 2, '.', ''),
+                'balance_before' => number_format($balanceBefore, 2, '.', ''),
+                'balance' => (string) $wallet->balance,
+                'total_recharge' => (string) $wallet->total_recharge,
+                'credited_at' => now()->toISOString(),
+                'notification' => [
+                    'id' => $notification->id,
+                    'scope' => $notification->scope,
+                    'title' => $notification->title,
+                    'content' => $notification->content,
+                    'redirect_url' => $notification->redirect_url,
+                    'type' => $notification->type,
+                    'is_read' => false,
+                    'created_at' => $notification->created_at?->toDateTimeString(),
+                ],
+            ];
 
             return $lockedTransaction->refresh();
         });
+
+        if (is_array($eventPayload)) {
+            WalletDepositCredited::dispatch(
+                userId: $eventPayload['user_id'],
+                paymentTransactionId: $eventPayload['payment_transaction_id'],
+                transactionCode: $eventPayload['transaction_code'],
+                amount: $eventPayload['amount'],
+                balance: $eventPayload['balance'],
+                totalRecharge: $eventPayload['total_recharge'],
+                creditedAt: $eventPayload['credited_at'],
+                notification: $eventPayload['notification'],
+            );
+
+            SendMessage::sendActivityReport('Người dùng nạp tiền thành công', [
+                'Mã giao dịch' => $eventPayload['transaction_code'],
+                'User ID' => $eventPayload['user_id'],
+                'Số tiền' => number_format((float) $eventPayload['amount'], 0, ',', '.').' đ',
+                'Số dư trước' => number_format((float) $eventPayload['balance_before'], 0, ',', '.').' đ',
+                'Số dư sau' => number_format((float) $eventPayload['balance'], 0, ',', '.').' đ',
+            ]);
+        }
+
+        return $creditedTransaction;
     }
 
     private function usesApiBankVn(PaymentTransaction $paymentTransaction): bool

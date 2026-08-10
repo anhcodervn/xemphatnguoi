@@ -20,7 +20,7 @@ const tabs: Array<{ key: TabKey; label: string; description: string; icon: unkno
 </script>
 
 <template>
-    <div class="border-b border-teal-100 bg-white px-3 py-3">
+    <div class="border-b border-slate-200/80 bg-slate-50/70 px-3 py-3">
         <div class="grid gap-2 md:grid-cols-2 xl:grid-cols-4">
             <button
                 v-for="tab in tabs"
@@ -29,14 +29,14 @@ const tabs: Array<{ key: TabKey; label: string; description: string; icon: unkno
                 class="flex items-center gap-3 rounded-[10px] border px-3 py-2.5 text-left transition"
                 :class="
                     modelValue === tab.key
-                        ? 'border-teal-200 bg-teal-600 text-white shadow-[0_10px_24px_-20px_rgba(8,145,178,0.35)]'
-                        : 'border-teal-100 bg-teal-50/70 text-slate-600 hover:border-teal-200 hover:bg-white hover:text-teal-900'
+                        ? 'border-blue-600 bg-gradient-to-r from-blue-700 to-blue-600 text-white shadow-[0_12px_28px_-18px_rgba(37,99,235,0.65)]'
+                        : 'border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:bg-blue-50/60 hover:text-blue-800'
                 "
                 @click="emit('update:modelValue', tab.key)"
             >
                 <span
                     class="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px]"
-                    :class="modelValue === tab.key ? 'bg-white/15 text-white' : 'bg-teal-100 text-teal-700'"
+                    :class="modelValue === tab.key ? 'bg-white/15 text-white' : 'bg-blue-100 text-blue-700'"
                 >
                     <component :is="tab.icon" class="h-4.5 w-4.5" />
                 </span>
@@ -51,4 +51,3 @@ const tabs: Array<{ key: TabKey; label: string; description: string; icon: unkno
         </div>
     </div>
 </template>
-

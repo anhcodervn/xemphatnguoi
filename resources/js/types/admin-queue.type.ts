@@ -34,6 +34,7 @@ export interface AdminQueueLogItem {
     failed_at: string | null;
     created_at: string | null;
     updated_at: string | null;
+    can_replay: boolean;
 }
 
 export interface AdminQueueFailedJobItem {

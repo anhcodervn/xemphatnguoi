@@ -1,19 +1,16 @@
 <script setup lang="ts">
+import Editor from '@/components/shared/Editor/index.vue';
 import { adminCouponService } from '@/services/admin-coupon.service';
-import { adminPackageService } from '@/services/admin-package.service';
 import type { CouponPayload } from '@/types/coupon.type';
 import { handleErrorResponse, handleSuccessResponse } from '@/utils/response';
 import { ArrowLeft, Save, Ticket } from 'lucide-vue-next';
 import { computed, onMounted, reactive, ref } from 'vue';
 import { RouterLink, useRoute, useRouter } from 'vue-router';
 
-type PackageOption = { id: number; name: string };
-
 const route = useRoute();
 const router = useRouter();
 const loading = ref(false);
 const saving = ref(false);
-const packages = ref<PackageOption[]>([]);
 
 const couponId = computed(() => route.params.coupont_id as string | undefined);
 const isEditMode = computed(() => Boolean(couponId.value));
@@ -32,7 +29,6 @@ const form = reactive<CouponPayload>({
     expired_at: null,
     first_order_only: false,
     is_active: true,
-    applicable_package_ids: [],
     requirements: {
         note: '',
     },
@@ -45,14 +41,6 @@ const discountPreview = computed(() => {
 
     return `${new Intl.NumberFormat('vi-VN').format(form.value)}đ`;
 });
-
-const loadPackages = async (): Promise<void> => {
-    const response = await adminPackageService.list({ per_page: 100 });
-    packages.value = (response.packages?.data ?? []).map((item: { id: number; name: string }) => ({
-        id: item.id,
-        name: item.name,
-    }));
-};
 
 const loadCoupon = async (): Promise<void> => {
     if (!couponId.value) {
@@ -74,7 +62,6 @@ const loadCoupon = async (): Promise<void> => {
     form.expired_at = coupon.expired_at ? coupon.expired_at.slice(0, 16) : null;
     form.first_order_only = coupon.first_order_only;
     form.is_active = coupon.is_active;
-    form.applicable_package_ids = coupon.applicable_package_ids ?? [];
     form.requirements = {
         note: coupon.requirements?.note ?? '',
     };
@@ -116,7 +103,7 @@ const submit = async (): Promise<void> => {
 onMounted(async () => {
     try {
         loading.value = true;
-        await Promise.all([loadPackages(), loadCoupon()]);
+        await loadCoupon();
     } catch (error) {
         handleErrorResponse(error);
     } finally {
@@ -178,14 +165,10 @@ onMounted(async () => {
                                 class="w-full rounded-[10px] border border-slate-200 px-3 py-2 text-sm outline-none focus:border-indigo-400"
                             />
                         </label>
-                        <label class="space-y-2 md:col-span-2">
+                        <div class="space-y-2 md:col-span-2">
                             <span class="text-sm font-medium text-slate-700">Mô tả</span>
-                            <textarea
-                                v-model="form.description"
-                                rows="3"
-                                class="w-full rounded-[10px] border border-slate-200 px-3 py-2 text-sm outline-none focus:border-indigo-400"
-                            />
-                        </label>
+                            <Editor v-model:value="form.description" format="html" :height="280" :debounce="0" />
+                        </div>
                     </div>
                 </article>
 
@@ -293,21 +276,6 @@ onMounted(async () => {
                         </label>
                     </div>
                 </article>
-
-                <article class="rounded-[10px] border border-slate-200 bg-white p-4 shadow-sm">
-                    <h2 class="text-base font-semibold text-slate-950">Phạm vi áp dụng</h2>
-                    <p class="mt-1 text-sm text-slate-500">Để trống để áp dụng cho tất cả gói.</p>
-                    <div class="mt-4 grid gap-3 md:grid-cols-2">
-                        <label
-                            v-for="item in packages"
-                            :key="item.id"
-                            class="flex items-center gap-3 rounded-[10px] border border-slate-200 px-3 py-3 text-sm text-slate-700"
-                        >
-                            <input v-model="form.applicable_package_ids" :value="item.id" type="checkbox" class="h-4 w-4 rounded border-slate-300" />
-                            <span>{{ item.name }}</span>
-                        </label>
-                    </div>
-                </article>
             </section>
 
             <aside class="space-y-4">
@@ -328,12 +296,6 @@ onMounted(async () => {
                         <div class="flex items-center justify-between gap-3">
                             <span class="text-slate-500">Đơn tối thiểu</span>
                             <span class="font-semibold text-slate-950">{{ new Intl.NumberFormat('vi-VN').format(form.min_order_amount) }}đ</span>
-                        </div>
-                        <div class="flex items-center justify-between gap-3">
-                            <span class="text-slate-500">Phạm vi</span>
-                            <span class="font-semibold text-slate-950">{{
-                                form.applicable_package_ids.length > 0 ? `${form.applicable_package_ids.length} gói` : 'Tất cả'
-                            }}</span>
                         </div>
                         <div class="flex items-center justify-between gap-3">
                             <span class="text-slate-500">Trạng thái</span>

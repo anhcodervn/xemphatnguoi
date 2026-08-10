@@ -1,7 +1,6 @@
 <?php
 
 use App\Models\Coupon;
-use App\Models\Package;
 use App\Models\User;
 
 function adminUser(): User
@@ -25,8 +24,6 @@ test('admin can list coupons with summary data', function () {
 
 test('admin can create a coupon with usage requirements and log entry', function () {
     $admin = adminUser();
-    $package = Package::factory()->create();
-
     $response = $this->actingAs($admin)->postJson('/admin-api/coupons', [
         'code' => 'summer-2026',
         'name' => 'Khuyến mãi mùa hè',
@@ -41,7 +38,6 @@ test('admin can create a coupon with usage requirements and log entry', function
         'expired_at' => now()->addDays(10)->toDateTimeString(),
         'first_order_only' => true,
         'is_active' => true,
-        'applicable_package_ids' => [$package->id],
         'requirements' => [
             'note' => 'Áp dụng cho user đủ điều kiện',
         ],
@@ -51,8 +47,7 @@ test('admin can create a coupon with usage requirements and log entry', function
         ->assertCreated()
         ->assertJsonPath('status', true)
         ->assertJsonPath('data.code', 'SUMMER-2026')
-        ->assertJsonPath('data.first_order_only', true)
-        ->assertJsonPath('data.applicable_package_ids.0', $package->id);
+        ->assertJsonPath('data.first_order_only', true);
 
     $coupon = Coupon::query()->where('code', 'SUMMER-2026')->firstOrFail();
 
@@ -115,7 +110,6 @@ test('admin can update a coupon and keep code normalized', function () {
             'expired_at' => now()->addDays(5)->toDateTimeString(),
             'first_order_only' => false,
             'is_active' => false,
-            'applicable_package_ids' => [],
             'requirements' => [
                 'note' => 'Cập nhật điều kiện',
             ],

@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import { adminApiLogService } from '@/services/admin-api-log.service';
-import type { AdminApiLogItem } from '@/types/admin-api-log.type';
+import type { AdminApiLogItem, AdminProxyResponseItem } from '@/types/admin-api-log.type';
 import { handleErrorResponse } from '@/utils/response';
 import { CheckCircle2, Clock3, FileClock, Search, ShieldAlert, ShieldX } from 'lucide-vue-next';
 import { computed, onMounted, reactive, ref } from 'vue';
 
 const loading = ref(false);
 const rows = ref<AdminApiLogItem[]>([]);
+const activeSource = ref<'client' | 'provider'>('client');
+const providerLoading = ref(false);
+const providerRows = ref<AdminProxyResponseItem[]>([]);
 
 const filters = reactive({
     search: '',
@@ -26,6 +29,26 @@ const summary = reactive({
     success: 0,
     client_error: 0,
     server_error: 0,
+});
+
+const providerFilters = reactive({
+    search: '',
+    operation: '',
+    status: '',
+    page: 1,
+});
+
+const providerMeta = reactive({
+    current_page: 1,
+    last_page: 1,
+    total: 0,
+});
+
+const providerSummary = reactive({
+    total: 0,
+    completed: 0,
+    failed: 0,
+    pending: 0,
 });
 
 const tableRange = computed(() => {
@@ -74,12 +97,18 @@ const formatDateTime = (value: string | null): string => {
     return new Date(value).toLocaleString('vi-VN');
 };
 
-const formatJsonPreview = (payload: Record<string, unknown> | null): string => {
+const formatJsonPreview = (payload: unknown): string => {
     if (!payload) {
         return '-';
     }
 
     return JSON.stringify(payload, null, 2);
+};
+
+const providerStatusClass = (status: AdminProxyResponseItem['status']): string => {
+    if (status === 'failed') return 'border-rose-200 bg-rose-50 text-rose-700';
+    if (status === 'completed') return 'border-emerald-200 bg-emerald-50 text-emerald-700';
+    return 'border-amber-200 bg-amber-50 text-amber-700';
 };
 
 const statusClass = (statusCode: number | null): string => {
@@ -131,6 +160,48 @@ const goToPage = async (page: number): Promise<void> => {
     await fetchApiLogs(page);
 };
 
+const fetchProxyResponses = async (page = 1): Promise<void> => {
+    try {
+        providerLoading.value = true;
+        const response = await adminApiLogService.proxyResponses({
+            page,
+            search: providerFilters.search || undefined,
+            operation: providerFilters.operation || undefined,
+            status: providerFilters.status || undefined,
+        });
+
+        providerRows.value = response.proxy_responses.data;
+        providerMeta.current_page = response.proxy_responses.current_page;
+        providerMeta.last_page = response.proxy_responses.last_page;
+        providerMeta.total = response.proxy_responses.total;
+        Object.assign(providerSummary, response.summary);
+    } catch (error) {
+        handleErrorResponse(error);
+    } finally {
+        providerLoading.value = false;
+    }
+};
+
+const switchSource = async (source: 'client' | 'provider'): Promise<void> => {
+    activeSource.value = source;
+
+    if (source === 'provider' && providerRows.value.length === 0) {
+        await fetchProxyResponses();
+    }
+};
+
+const applyProviderFilters = async (): Promise<void> => {
+    providerFilters.page = 1;
+    await fetchProxyResponses(1);
+};
+
+const goToProviderPage = async (page: number): Promise<void> => {
+    if (page < 1 || page > providerMeta.last_page || page === providerMeta.current_page) return;
+
+    providerFilters.page = page;
+    await fetchProxyResponses(page);
+};
+
 onMounted(async () => {
     await fetchApiLogs();
 });
@@ -143,7 +214,26 @@ onMounted(async () => {
             <p class="mt-1 text-sm text-slate-500">Theo dõi request user, response từ service và response trả về client theo từng lượt gọi API.</p>
         </section>
 
-        <section class="grid gap-3 md:grid-cols-4">
+        <section class="flex gap-1 rounded-[5px] border border-slate-200 bg-white p-1 shadow-sm">
+            <button
+                type="button"
+                class="h-9 rounded-[5px] px-4 text-sm font-semibold"
+                :class="activeSource === 'client' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100'"
+                @click="switchSource('client')"
+            >
+                API client
+            </button>
+            <button
+                type="button"
+                class="h-9 rounded-[5px] px-4 text-sm font-semibold"
+                :class="activeSource === 'provider' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100'"
+                @click="switchSource('provider')"
+            >
+                API nguồn proxy
+            </button>
+        </section>
+
+        <section v-if="activeSource === 'client'" class="grid gap-3 md:grid-cols-4">
             <article v-for="card in summaryCards" :key="card.label" class="rounded-[10px] border border-slate-200 bg-white p-3 shadow-sm">
                 <div class="flex items-start justify-between gap-3">
                     <div>
@@ -157,7 +247,7 @@ onMounted(async () => {
             </article>
         </section>
 
-        <section class="rounded-[10px] border border-slate-200 bg-white p-3.5 shadow-sm">
+        <section v-if="activeSource === 'client'" class="rounded-[10px] border border-slate-200 bg-white p-3.5 shadow-sm">
             <div class="grid gap-2.5 lg:grid-cols-[1.6fr_150px_170px_auto]">
                 <label class="flex items-center gap-2.5 rounded-[8px] border border-slate-200 bg-slate-50 px-3 py-2">
                     <Search class="h-4 w-4 text-slate-400" />
@@ -200,7 +290,7 @@ onMounted(async () => {
             </div>
         </section>
 
-        <section class="overflow-hidden rounded-[10px] border border-slate-200 bg-white shadow-sm">
+        <section v-if="activeSource === 'client'" class="overflow-hidden rounded-[10px] border border-slate-200 bg-white shadow-sm">
             <div v-if="loading" class="flex items-center justify-center gap-2 px-6 py-16 text-sm text-slate-500">
                 <Clock3 class="h-5 w-5 animate-spin" />
                 Đang tải API log...
@@ -275,5 +365,116 @@ onMounted(async () => {
                 </div>
             </div>
         </section>
+
+        <template v-else>
+            <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                <article class="rounded-[5px] border border-slate-200 bg-white p-3 shadow-sm">
+                    <p class="text-xs font-semibold uppercase text-slate-500">Tổng request</p>
+                    <p class="text-2xl font-bold text-slate-950">{{ providerSummary.total }}</p>
+                </article>
+                <article class="rounded-[5px] border border-emerald-200 bg-emerald-50 p-3">
+                    <p class="text-xs font-semibold uppercase text-emerald-700">Đã nhận response</p>
+                    <p class="text-2xl font-bold text-emerald-700">{{ providerSummary.completed }}</p>
+                </article>
+                <article class="rounded-[5px] border border-rose-200 bg-rose-50 p-3">
+                    <p class="text-xs font-semibold uppercase text-rose-700">Lỗi kết nối/HTTP</p>
+                    <p class="text-2xl font-bold text-rose-700">{{ providerSummary.failed }}</p>
+                </article>
+                <article class="rounded-[5px] border border-amber-200 bg-amber-50 p-3">
+                    <p class="text-xs font-semibold uppercase text-amber-700">Đang gửi</p>
+                    <p class="text-2xl font-bold text-amber-700">{{ providerSummary.pending }}</p>
+                </article>
+            </section>
+
+            <section class="grid gap-2 rounded-[5px] border border-slate-200 bg-white p-3 shadow-sm lg:grid-cols-[1fr_180px_180px_auto]">
+                <label class="flex h-9 items-center gap-2 rounded-[5px] border border-slate-300 px-3">
+                    <Search class="h-4 w-4 text-slate-400" />
+                    <input
+                        v-model.trim="providerFilters.search"
+                        class="w-full border-0 p-0 text-sm focus:ring-0"
+                        placeholder="Mã đơn, endpoint, thao tác..."
+                        @keyup.enter="applyProviderFilters"
+                    />
+                </label>
+                <select v-model="providerFilters.operation" class="h-9 rounded-[5px] border border-slate-300 px-2 text-sm">
+                    <option value="">Tất cả thao tác</option>
+                    <option value="purchase">Mua mới</option>
+                    <option value="lookup">Kiểm tra kết quả</option>
+                    <option value="change">Đổi proxy</option>
+                    <option value="renew">Gia hạn</option>
+                </select>
+                <select v-model="providerFilters.status" class="h-9 rounded-[5px] border border-slate-300 px-2 text-sm">
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="completed">Đã nhận response</option>
+                    <option value="failed">Thất bại</option>
+                    <option value="pending">Đang gửi</option>
+                </select>
+                <button type="button" class="h-9 rounded-[5px] bg-indigo-600 px-4 text-sm font-semibold text-white" @click="applyProviderFilters">
+                    Lọc
+                </button>
+            </section>
+
+            <section class="overflow-hidden rounded-[5px] border border-slate-200 bg-white shadow-sm">
+                <div v-if="providerLoading" class="flex h-40 items-center justify-center gap-2 text-sm text-slate-500">
+                    <Clock3 class="h-5 w-5 animate-spin" /> Đang giải mã request/response...
+                </div>
+                <div v-else-if="providerRows.length === 0" class="p-12 text-center text-sm text-slate-500">Chưa có request tới nguồn proxy.</div>
+                <div v-else class="space-y-3 p-3">
+                    <article v-for="row in providerRows" :key="row.id" class="rounded-[5px] border border-slate-200 bg-slate-50/60 p-4">
+                        <div class="flex flex-wrap items-start justify-between gap-3">
+                            <div>
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <span class="rounded-[5px] bg-slate-900 px-2 py-1 text-xs font-bold text-white">{{ row.http_method }}</span>
+                                    <span class="rounded-[5px] border px-2 py-1 text-xs font-semibold" :class="providerStatusClass(row.status)">
+                                        {{ row.status }}
+                                    </span>
+                                    <span class="text-xs text-slate-500">HTTP {{ row.http_status ?? '--' }} · {{ row.duration_ms ?? '--' }} ms</span>
+                                </div>
+                                <p class="mt-2 font-mono text-sm font-semibold text-slate-900">{{ row.endpoint }}</p>
+                                <p class="mt-1 text-xs text-slate-500">
+                                    Đơn {{ row.order?.order_code || `#${row.proxy_order_id}` }} · {{ row.operation }} ·
+                                    {{ row.order?.provider?.name || 'Nguồn không xác định' }} · {{ formatDateTime(row.created_at) }}
+                                </p>
+                                <p v-if="row.error_message" class="mt-1 text-xs text-rose-600">{{ row.exception_class }}: {{ row.error_message }}</p>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 grid gap-3 xl:grid-cols-2">
+                            <div class="min-w-0 rounded-[5px] bg-slate-950 p-3">
+                                <p class="mb-2 text-[11px] font-bold uppercase tracking-[0.16em] text-slate-300">Request đã giải mã</p>
+                                <pre class="max-h-[360px] overflow-auto whitespace-pre-wrap break-all text-xs text-slate-100">{{ formatJsonPreview(row.request_data) }}</pre>
+                            </div>
+                            <div class="min-w-0 rounded-[5px] bg-sky-950 p-3">
+                                <p class="mb-2 text-[11px] font-bold uppercase tracking-[0.16em] text-sky-200">Response đã giải mã</p>
+                                <pre class="max-h-[360px] overflow-auto whitespace-pre-wrap break-all text-xs text-sky-100">{{ formatJsonPreview(row.response_data) }}</pre>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+
+                <footer class="flex items-center justify-between gap-3 border-t border-slate-200 px-3 py-2 text-xs text-slate-500">
+                    <span>Tổng {{ providerMeta.total }} request</span>
+                    <div class="flex items-center gap-2">
+                        <button
+                            type="button"
+                            class="rounded-[5px] border border-slate-300 px-3 py-1.5 disabled:opacity-40"
+                            :disabled="providerMeta.current_page <= 1"
+                            @click="goToProviderPage(providerMeta.current_page - 1)"
+                        >
+                            Trước
+                        </button>
+                        <span>{{ providerMeta.current_page }}/{{ providerMeta.last_page }}</span>
+                        <button
+                            type="button"
+                            class="rounded-[5px] border border-slate-300 px-3 py-1.5 disabled:opacity-40"
+                            :disabled="providerMeta.current_page >= providerMeta.last_page"
+                            @click="goToProviderPage(providerMeta.current_page + 1)"
+                        >
+                            Sau
+                        </button>
+                    </div>
+                </footer>
+            </section>
+        </template>
     </div>
 </template>

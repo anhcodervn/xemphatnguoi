@@ -176,7 +176,6 @@ onMounted(loadLogs);
                             </td>
                             <td class="px-4 py-3 align-top text-sm text-slate-600">
                                 <p>{{ log.note || '-' }}</p>
-                                <p class="mt-1">Order: {{ log.package_order?.order_code || '-' }}</p>
                                 <p class="mt-1">Discount: {{ log.discount_amount || '-' }}</p>
                             </td>
                             <td class="px-4 py-3 align-top text-sm text-slate-500">{{ log.created_at }}</td>

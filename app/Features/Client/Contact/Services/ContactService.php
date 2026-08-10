@@ -4,6 +4,7 @@ namespace App\Features\Client\Contact\Services;
 
 use App\Models\ContactFeedback;
 use App\Models\User;
+use App\Utils\SendMessage;
 
 class ContactService
 {
@@ -22,6 +23,19 @@ class ContactService
             'status' => ContactFeedback::STATUS_NEW,
         ]);
 
-        return $feedback->loadMissing(['user:id,username,full_name,email,phone']);
+        $feedback->loadMissing(['user:id,username,full_name,email,phone']);
+
+        SendMessage::sendFeedbackReport('Có góp ý mới cần xử lý', [
+            'Mã góp ý' => $feedback->id,
+            'User ID' => $feedback->user_id,
+            'Người gửi' => $feedback->name ?: $feedback->user?->name ?: '--',
+            'Email' => $feedback->email ?: '--',
+            'Số điện thoại' => $feedback->phone ?: '--',
+            'Tiêu đề' => $feedback->subject,
+            'Nội dung' => $feedback->content,
+            'Admin kiểm tra' => url('/admin/feedbacks'),
+        ]);
+
+        return $feedback;
     }
 }

@@ -3,7 +3,7 @@
         <div class="flex items-center justify-between gap-3">
             <div>
                 <h2 class="text-lg font-bold tracking-[-0.03em] text-slate-950">Thông báo cập nhật</h2>
-                <p class="mt-1 text-sm text-slate-500">Các thay đổi mới nhất về hệ thống, gói dịch vụ và hướng dẫn sử dụng.</p>
+                <p class="mt-1 text-sm text-slate-500">Các thay đổi mới nhất về hệ thống, dịch vụ proxy và hướng dẫn sử dụng.</p>
             </div>
         </div>
 
@@ -11,7 +11,10 @@
             Đang tải thông báo...
         </div>
 
-        <div v-else-if="notifications.length === 0" class="mt-4 rounded-[10px] border border-dashed border-slate-200 px-4 py-10 text-center text-sm text-slate-500">
+        <div
+            v-else-if="notifications.length === 0"
+            class="mt-4 rounded-[10px] border border-dashed border-slate-200 px-4 py-10 text-center text-sm text-slate-500"
+        >
             Chưa có thông báo nào.
         </div>
 
@@ -27,7 +30,13 @@
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div class="min-w-0">
                         <div class="flex flex-wrap items-center gap-2">
-                            <span :class="item.is_read ? 'rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-700' : 'rounded-full bg-blue-100 px-2.5 py-1 text-[11px] font-semibold text-blue-700'">
+                            <span
+                                :class="
+                                    item.is_read
+                                        ? 'rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-700'
+                                        : 'rounded-full bg-blue-100 px-2.5 py-1 text-[11px] font-semibold text-blue-700'
+                                "
+                            >
                                 {{ item.is_read ? 'Đã xem' : 'Mới' }}
                             </span>
                             <span class="text-xs text-slate-400">{{ formatTime(item.created_at) }}</span>

@@ -30,8 +30,13 @@ return Application::configure(basePath: dirname(__DIR__))
             // });
         },
     )
+    ->withBroadcasting(
+        __DIR__.'/../routes/channels.php',
+        ['middleware' => ['web', 'auth:sanctum']],
+    )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->statefulApi();
+        $middleware->trustProxies(at: '*');
         $middleware->alias([
             'admin' => EnsureAdminUser::class,
             'api-key.auth' => AuthenticateApiKey::class,

@@ -2,6 +2,7 @@
 import { adminCouponService } from '@/services/admin-coupon.service';
 import type { CouponAvailability, CouponListResponse, CouponTypeModel } from '@/types/coupon.type';
 import { handleErrorResponse, handleSuccessResponse } from '@/utils/response';
+import { richTextToPlainText } from '@/utils/rich-text';
 import { CalendarClock, Clock3, Plus, Search, Ticket, Trash2 } from 'lucide-vue-next';
 import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { RouterLink, useRouter } from 'vue-router';
@@ -270,7 +271,9 @@ onMounted(loadCoupons);
                             <td class="px-4 py-3 align-top">
                                 <p class="text-sm font-semibold text-slate-950">{{ coupon.code }}</p>
                                 <p class="mt-1 text-sm text-slate-700">{{ coupon.name }}</p>
-                                <p class="mt-1 line-clamp-2 text-xs text-slate-500">{{ coupon.description || 'Không có mô tả' }}</p>
+                                <p class="mt-1 line-clamp-2 text-xs text-slate-500">
+                                    {{ richTextToPlainText(coupon.description, 'Không có mô tả') }}
+                                </p>
                             </td>
                             <td class="px-4 py-3 align-top">
                                 <p class="text-sm font-semibold text-indigo-600">{{ couponValueLabel(coupon) }}</p>
@@ -282,9 +285,7 @@ onMounted(loadCoupons);
                             <td class="px-4 py-3 align-top text-xs text-slate-600">
                                 <p>Dùng tối đa/user: {{ coupon.max_usage_per_user ?? 'Không giới hạn' }}</p>
                                 <p class="mt-1">Chỉ đơn đầu: {{ coupon.first_order_only ? 'Có' : 'Không' }}</p>
-                                <p class="mt-1">
-                                    Gói áp dụng: {{ coupon.applicable_package_count > 0 ? coupon.applicable_package_count : 'Tất cả' }}
-                                </p>
+                                <p class="mt-1"></p>
                             </td>
                             <td class="px-4 py-3 align-top text-xs text-slate-600">
                                 <p>{{ coupon.used_count }} / {{ coupon.max_usage ?? '∞' }}</p>
