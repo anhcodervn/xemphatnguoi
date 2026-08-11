@@ -218,7 +218,7 @@ onBeforeUnmount(leaveWalletChannel);
     <header
         class="fixed left-0 right-0 top-0 z-30 border-b border-slate-200/80 bg-white/85 shadow-[0_12px_35px_-28px_rgba(15,23,42,0.45)] backdrop-blur-xl lg:left-72"
     >
-        <div class="flex items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
+        <div class="relative z-20 flex items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
             <div class="flex items-center">
                 <button
                     type="button"
@@ -247,7 +247,7 @@ onBeforeUnmount(leaveWalletChannel);
                         leave-to-class="translate-y-1 scale-[0.98] opacity-0"
                     >
                         <MenuItems
-                            class="fixed inset-x-4 top-28 z-40 w-auto rounded-2xl border border-slate-200 bg-white p-2 shadow-lg outline-none sm:absolute sm:left-auto sm:right-0 sm:top-auto sm:mt-3 sm:w-[19rem] sm:origin-top-right"
+                            class="fixed inset-x-4 top-28 z-50 w-auto rounded-2xl border border-slate-200 bg-white p-2 shadow-lg outline-none sm:absolute sm:left-auto sm:right-0 sm:top-auto sm:mt-3 sm:w-[19rem] sm:origin-top-right"
                         >
                             <div class="flex items-center justify-between px-3 py-2">
                                 <div>
@@ -310,7 +310,7 @@ onBeforeUnmount(leaveWalletChannel);
                         leave-to-class="translate-y-1 scale-[0.98] opacity-0"
                     >
                         <MenuItems
-                            class="absolute right-0 mt-3 w-56 max-w-[calc(100vw-2rem)] origin-top-right rounded-2xl border border-slate-200 bg-white p-2 shadow-lg outline-none"
+                            class="absolute right-0 z-50 mt-3 w-56 max-w-[calc(100vw-2rem)] origin-top-right rounded-2xl border border-slate-200 bg-white p-2 shadow-lg outline-none"
                         >
                             <div class="px-3 py-2">
                                 <p class="text-sm font-semibold text-slate-950">{{ userStore.user?.full_name ?? userStore.user?.username }}</p>
@@ -348,7 +348,11 @@ onBeforeUnmount(leaveWalletChannel);
             </div>
         </div>
 
-        <div class="flex h-10 overflow-hidden border-t border-amber-300 bg-amber-50 text-amber-950" role="note" aria-label="Cảnh báo sử dụng dịch vụ">
+        <div
+            class="relative z-0 flex h-10 overflow-hidden border-t border-amber-300 bg-amber-50 text-amber-950"
+            role="note"
+            aria-label="Cảnh báo sử dụng dịch vụ"
+        >
             <div class="relative z-10 flex shrink-0 items-center border-r border-amber-300 bg-amber-100 px-3" aria-hidden="true">
                 <ShieldAlert class="h-5 w-5 text-amber-700" />
             </div>
