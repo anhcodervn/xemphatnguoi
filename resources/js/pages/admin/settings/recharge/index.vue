@@ -50,7 +50,17 @@ const isApiProvider = computed(() => form.value.provider === 'apibankvn_api');
 const canVerify = computed(() => form.value.api_key.trim() !== '' && form.value.api_secret.trim() !== '' && !verifying.value);
 const selectedBank = computed(() => bankAccounts.value.find((bank) => String(bank.bank_id) === form.value.api_bank_id) ?? null);
 const selectedLocalBank = computed(() => LOCAL_BANK_OPTIONS.find((bank) => bank.name.toLowerCase() === form.value.bank_name.trim().toLowerCase()) ?? null);
-const previewTransferContent = computed(() => `${form.value.transfer_prefix.trim().toUpperCase() || 'NOIDUNG'}123`);
+const transferDateSuffix = computed(() => {
+    return new Intl.DateTimeFormat('en-GB', {
+        timeZone: 'Asia/Ho_Chi_Minh',
+        day: '2-digit',
+        month: '2-digit',
+        year: '2-digit',
+    })
+        .format(new Date())
+        .replace(/\D/g, '');
+});
+const previewTransferContent = computed(() => `${form.value.transfer_prefix.trim().toUpperCase() || 'NOIDUNG'}123${transferDateSuffix.value}`);
 const previewQrUrl = computed(() => {
     const template = form.value.qr_template.trim();
     if (!template) {

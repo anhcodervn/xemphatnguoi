@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\Wallet;
 use App\Models\WalletTransaction;
 use Illuminate\Http\Client\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Http;
 use Laravel\Sanctum\Sanctum;
@@ -21,6 +22,7 @@ function adminRechargeUser(): User
 }
 
 test('admin can create recharge config with qr template preview', function () {
+    $this->travelTo(Carbon::parse('2026-08-11 12:00:00'));
     $admin = adminRechargeUser();
 
     $this->actingAs($admin)->postJson('/api/admin-api/recharge-config', [
@@ -37,10 +39,10 @@ test('admin can create recharge config with qr template preview', function () {
         ->assertJsonPath('data.config.bank_name', 'Vietcombank')
         ->assertJsonPath('data.config.provider', 'manual')
         ->assertJsonPath('data.config.transfer_prefix', 'NOIDUNG')
-        ->assertJsonPath('data.config.preview_transfer_content', 'NOIDUNGabcd123')
+        ->assertJsonPath('data.config.preview_transfer_content', 'NOIDUNG123110826')
         ->assertJsonPath(
             'data.config.preview_qr_url',
-            'https://img.vietqr.io/image/MB-1029384688-compact2.png?amount=500000&addInfo=NOIDUNGabcd123&accountName=CONG%20TY%20AUTOCRON'
+            'https://img.vietqr.io/image/MB-1029384688-compact2.png?amount=500000&addInfo=NOIDUNG123110826&accountName=CONG%20TY%20AUTOCRON'
         );
 
     $this->assertDatabaseHas('config_recharge', [
@@ -160,6 +162,7 @@ test('admin can verify apibankvn credentials and fetch bank accounts', function 
 });
 
 test('client wallet overview returns selected config and config list', function () {
+    $this->travelTo(Carbon::parse('2026-08-11 12:00:00'));
     $user = User::factory()->create([
         'id' => 123,
     ]);
@@ -197,11 +200,12 @@ test('client wallet overview returns selected config and config list', function 
 
     $overviewTransferContent = (string) $overviewPayload['transfer_content'];
 
-    expect($overviewTransferContent)->toMatch('/^NAP[a-z0-9]{4}123$/')
+    expect($overviewTransferContent)->toBe('NAP123110826')
         ->and($overviewPayload['qr_url'])->toBe("https://img.vietqr.io/image/MB-123123123-compact2.png?amount=500000&addInfo={$overviewTransferContent}&accountName=AUTOCRON%20MB");
 });
 
 test('client can create deposit request using selected recharge config', function () {
+    $this->travelTo(Carbon::parse('2026-08-11 12:00:00'));
     $user = User::factory()->create([
         'id' => 456,
     ]);
@@ -240,7 +244,7 @@ test('client can create deposit request using selected recharge config', functio
     $transactionId = $response->json('data.deposit_request.id');
     $transferContent = (string) $response->json('data.deposit_request.content');
 
-    expect($transferContent)->toMatch('/^NAP[a-z0-9]{4}456$/');
+    expect($transferContent)->toBe('NAP456110826');
 
     $this->assertDatabaseHas('payment_transactions', [
         'id' => $transactionId,
@@ -258,6 +262,7 @@ test('client can create deposit request using selected recharge config', functio
 });
 
 test('client can create and sync apibankvn api deposit request into wallet balance', function () {
+    $this->travelTo(Carbon::parse('2026-08-11 12:00:00'));
     Http::fake([
         'https://apibankvn.com/api/v1/recharge-orders' => Http::response([
             'status' => true,
@@ -338,7 +343,7 @@ test('client can create and sync apibankvn api deposit request into wallet balan
 
     $createdTransferContent = (string) $createdResponse->json('data.deposit_request.content');
 
-    expect($createdTransferContent)->toMatch('/^CRON[a-z0-9]{4}'.$user->id.'$/')
+    expect($createdTransferContent)->toBe('CRON'.$user->id.'110826')
         ->and($createdResponse->json('data.deposit_request.qr_url'))
         ->toBe("https://img.vietqr.io/image/MB-1900123456-compact2.png?amount=150000&addInfo={$createdTransferContent}&accountName=APIBANKVN");
 

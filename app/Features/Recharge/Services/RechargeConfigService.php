@@ -21,7 +21,7 @@ class RechargeConfigService
             '{amount}' => '500000',
             '{user_id}' => '123',
             '{prefix}' => 'NOIDUNG',
-            '{nd}' => 'NOIDUNGabcd123',
+            '{nd}' => 'NOIDUNG123'.now()->format('dmy'),
         ];
     }
 
@@ -166,7 +166,6 @@ class RechargeConfigService
         return $this->buildTransferContent(
             prefix: $prefix,
             userId: $userId,
-            randomSuffix: 'abcd',
         );
     }
 
@@ -175,14 +174,9 @@ class RechargeConfigService
         return Str::upper(trim($prefix));
     }
 
-    public function randomTransferSuffix(int $length = 4): string
+    public function buildTransferContent(string $prefix, int|string $userId): string
     {
-        return Str::lower(Str::random($length));
-    }
-
-    public function buildTransferContent(string $prefix, int|string $userId, ?string $randomSuffix = null): string
-    {
-        return $this->normalizePrefix($prefix).($randomSuffix ?? $this->randomTransferSuffix()).$userId;
+        return $this->normalizePrefix($prefix).$userId.now()->format('dmy');
     }
 
     /**
