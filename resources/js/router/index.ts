@@ -8,6 +8,7 @@ const routes: RouteRecordRaw[] = [adminRouter, clientRouter];
 const routeTitles: Record<string, string> = {
     'admin.dashboard': 'Tổng quan quản trị',
     'admin.analytics.index': 'Báo cáo vận hành',
+    'admin.support.index': 'Tin nhắn hỗ trợ',
     'admin.proxy-taxonomy.index': 'Chuyên mục proxy',
     'admin.proxy-providers.index': 'Nhà cung cấp proxy',
     'admin.proxy-products.index': 'Sản phẩm proxy',
@@ -42,6 +43,7 @@ const routeTitles: Record<string, string> = {
     'client.api-docs': 'Tài liệu API',
     'client.profile': 'Hồ sơ tài khoản',
     'client.contact': 'Liên hệ và góp ý',
+    'client.support': 'Hỗ trợ trực tiếp',
     'client.error.404': 'Trang khách hàng không tồn tại',
 };
 

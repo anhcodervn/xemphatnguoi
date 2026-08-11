@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useSupportStore } from '@/stores/support.store';
 import { ChevronRight, ShieldCheck, X } from 'lucide-vue-next';
 import { reactive, watch } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
@@ -13,6 +14,7 @@ const emit = defineEmits<{
 }>();
 
 const route = useRoute();
+const supportStore = useSupportStore();
 
 const findBestMatchingChildHref = (hrefs: string[], currentPath: string): string | null => {
     return (
@@ -121,7 +123,14 @@ watch(
                             @click="closeSidebarOnMobile"
                         >
                             <component :is="group.icon" class="h-5 w-5" />
-                            <span>{{ group.label }}</span>
+                            <span class="flex-1">{{ group.label }}</span>
+                            <span
+                                v-if="group.badge === 'support' && supportStore.adminUnread > 0"
+                                class="inline-flex min-h-6 min-w-6 items-center justify-center rounded-full bg-red-600 px-1.5 text-[11px] font-black tabular-nums text-white ring-2"
+                                :class="isGroupActive(group) ? 'ring-white/30' : 'ring-red-100'"
+                            >
+                                {{ supportStore.adminUnread > 99 ? '99+' : supportStore.adminUnread }}
+                            </span>
                         </RouterLink>
 
                         <div v-else class="rounded-[1.35rem] border border-slate-200 bg-slate-50/80">

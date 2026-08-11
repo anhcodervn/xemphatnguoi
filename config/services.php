@@ -55,6 +55,7 @@ return [
             'sales' => env('DISCORD_WEBHOOK_SALES') ?: env('DISCORD_WEBHOOK_OPS'),
             'provider' => env('DISCORD_WEBHOOK_PROVIDER') ?: env('DISCORD_WEBHOOK_ALERTS'),
             'feedback' => env('DISCORD_WEBHOOK_FEEDBACK') ?: env('DISCORD_WEBHOOK_INFO'),
+            'support' => env('DISCORD_WEBHOOK_SUPPORT') ?: env('DISCORD_WEBHOOK_INFO'),
             'activity' => env('DISCORD_WEBHOOK_ACTIVITY') ?: env('DISCORD_WEBHOOK_INFO'),
         ],
         'context' => [

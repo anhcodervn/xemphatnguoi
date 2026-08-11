@@ -176,3 +176,7 @@ if (file_exists(base_path('app/Features/Api/Proxy/routes.php'))) {
 if (file_exists(base_path('app/Features/Api/User/routes.php'))) {
     require base_path('app/Features/Api/User/routes.php');
 }
+
+if (file_exists(base_path('app/Features/Support/routes.php'))) {
+    require base_path('app/Features/Support/routes.php');
+}

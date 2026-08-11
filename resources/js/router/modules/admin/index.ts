@@ -13,6 +13,11 @@ export default {
             component: () => import('@/pages/admin/analytics/index.vue'),
         },
         {
+            path: 'support',
+            name: 'admin.support.index',
+            component: () => import('@/pages/admin/support/index.vue'),
+        },
+        {
             path: 'proxy-taxonomy',
             name: 'admin.proxy-taxonomy.index',
             component: () => import('@/pages/admin/proxy-taxonomy/index.vue'),

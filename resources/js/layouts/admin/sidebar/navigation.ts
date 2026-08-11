@@ -6,6 +6,7 @@ import {
     LayoutDashboard,
     ListChecks,
     Mail,
+    MessagesSquare,
     Settings,
     Users,
     WalletCards,
@@ -23,6 +24,7 @@ export type AdminMenuGroup = {
     icon: LucideIcon;
     href?: string;
     children?: AdminMenuChild[];
+    badge?: 'support';
 };
 
 export const adminMenuGroups: AdminMenuGroup[] = [
@@ -37,6 +39,13 @@ export const adminMenuGroups: AdminMenuGroup[] = [
         label: 'Báo cáo vận hành',
         icon: BarChart3,
         href: '/admin/analytics',
+    },
+    {
+        key: 'support',
+        label: 'Tin nhắn hỗ trợ',
+        icon: MessagesSquare,
+        href: '/admin/support',
+        badge: 'support',
     },
     {
         key: 'proxy',

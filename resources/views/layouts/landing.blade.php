@@ -8,11 +8,14 @@
         $settings = $systemSettings ?? [];
         $landingSectionLinks = [
             'features' => url('/#features'),
+            'infrastructure' => url('/#infrastructure'),
             'services' => url('/#services'),
+            'api' => url('/#api'),
             'faq' => url('/#faq'),
         ];
-        $siteName = $settings['site_name'] ?? config('app.name', 'DailyProxy.vn');
-        $siteDescription = $settings['meta_description'] ?? ($settings['site_description'] ?? 'Nền tảng proxy API thương mại với bảng dịch vụ rõ ràng, tài liệu ngắn gọn và hệ thống ví cho khách hàng.');
+        $configuredSiteName = trim((string) ($settings['site_name'] ?? ''));
+        $siteName = $configuredSiteName !== '' ? $configuredSiteName : config('app.name', 'DailyProxy.vn');
+        $siteDescription = $settings['meta_description'] ?? ($settings['site_description'] ?? 'Hạ tầng proxy đa dạng, đa quốc gia được chọn lọc cho nhu cầu tích hợp và vận hành ổn định.');
         $metaTitle = $pageMetaTitle ?? ($settings['meta_title'] ?? $siteName);
         $favicon = $settings['favicon'] ?? null;
         $shareImage = $pageMetaImage ?? ($settings['og_image'] ?? ($settings['dark_logo'] ?? ($settings['light_logo'] ?? null)));
@@ -25,6 +28,7 @@
         $facebook = $settings['facebook'] ?? '';
         $zalo = $settings['zalo'] ?? '';
         $youtube = $settings['youtube'] ?? '';
+        $headerLogo = $settings['dark_logo'] ?: ($settings['light_logo'] ?: null);
     @endphp
 
     <title>{{ $metaTitle }}</title>
@@ -54,133 +58,92 @@
     @vite(['resources/css/app.css'])
 </head>
 
-<body class="bg-slate-50 font-['Be_Vietnam_Pro'] text-slate-900">
+<body class="bg-white font-['Be_Vietnam_Pro'] text-slate-900">
+    <a href="#main-content" class="proxy-focus fixed left-4 top-3 z-50 -translate-y-20 rounded-md bg-[#071a3d] px-4 py-2 text-sm font-bold text-white transition focus:translate-y-0">Bỏ qua điều hướng</a>
     <div class="min-h-screen">
-        <header class="sticky top-0 z-30 border-b border-sky-100/80 bg-white/90 backdrop-blur-xl">
-            <div class="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
-                <a href="/" class="flex shrink-0 items-center gap-3">
-                    @php
-                        $headerLogo = $settings['dark_logo'] ?: ($settings['light_logo'] ?: null);
-                    @endphp
-
+        <header class="sticky top-0 z-40 border-b border-blue-100/80 bg-white/95 backdrop-blur-xl">
+            <div class="mx-auto flex min-h-[72px] w-full max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+                <a href="/" class="proxy-focus flex min-h-[48px] shrink-0 items-center gap-3 rounded-lg">
                     @if (! empty($headerLogo))
-                        <img src="{{ $headerLogo }}" alt="{{ $siteName }}" class="h-11 w-auto object-contain">
+                        <img src="{{ $headerLogo }}" alt="{{ $siteName }}" class="h-10 w-auto object-contain">
                     @else
-                        <div class="flex h-11 w-11 items-center justify-center rounded-[14px] bg-[linear-gradient(135deg,#2563eb,#22d3ee)] text-lg font-bold text-white shadow-lg shadow-sky-200/70">
-                            {{ \Illuminate\Support\Str::substr($siteName, 0, 1) }}
-                        </div>
-                        <div>
-                            <div class="text-lg font-extrabold tracking-tight text-slate-950">{{ $siteName }}</div>
-                            <div class="text-[11px] uppercase tracking-[0.22em] text-blue-600">Proxy Infrastructure</div>
-                        </div>
+                        <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white shadow-md shadow-blue-200"><x-landing-icon name="network" class="h-6 w-6" /></span>
+                        <span class="text-lg font-extrabold tracking-tight text-[#071a3d]">{{ $siteName }}</span>
                     @endif
                 </a>
 
-                <nav class="hidden items-center gap-7 text-[15px] font-semibold text-slate-600 md:flex">
+                <nav aria-label="Điều hướng chính" class="hidden items-center gap-7 text-sm font-bold text-slate-700 lg:flex">
                     @if (Auth::check())
-                        <a href="/" class="transition hover:text-sky-600">Dashboard</a>
-                        <a href="/services" class="transition hover:text-sky-600">Dịch vụ</a>
-                        <a href="/api-docs" class="transition hover:text-sky-600">Tài liệu API</a>
+                        <a href="/" class="proxy-focus rounded transition hover:text-blue-600">Dashboard</a>
+                        <a href="/services" class="proxy-focus rounded transition hover:text-blue-600">Dịch vụ</a>
+                        <a href="/api-docs" class="proxy-focus rounded transition hover:text-blue-600">Tài liệu API</a>
                     @else
-                        <a href="{{ $landingSectionLinks['features'] }}" class="transition hover:text-sky-600">Tính năng</a>
-                        <a href="{{ $landingSectionLinks['services'] }}" class="transition hover:text-sky-600">Bảng giá</a>
-                        <a href="{{ route('seo.index') }}" class="transition hover:text-sky-600">Blog</a>
-                        <a href="{{ $landingSectionLinks['faq'] }}" class="transition hover:text-sky-600">FAQ</a>
-                        <a href="{{ route('content.contact') }}" class="transition hover:text-sky-600">Liên hệ</a>
+                        <a href="{{ $landingSectionLinks['features'] }}" class="proxy-focus rounded transition hover:text-blue-600">Tính năng</a>
+                        <a href="{{ $landingSectionLinks['infrastructure'] }}" class="proxy-focus rounded transition hover:text-blue-600">Hạ tầng</a>
+                        <a href="{{ $landingSectionLinks['services'] }}" class="proxy-focus rounded transition hover:text-blue-600">Bảng giá</a>
+                        <a href="{{ $landingSectionLinks['api'] }}" class="proxy-focus rounded transition hover:text-blue-600">API</a>
+                        <a href="{{ $landingSectionLinks['faq'] }}" class="proxy-focus rounded transition hover:text-blue-600">FAQ</a>
+                        <a href="{{ route('content.contact') }}" class="proxy-focus rounded transition hover:text-blue-600">Liên hệ</a>
                     @endif
                 </nav>
 
-                <div class="hidden items-center gap-3 md:flex">
+                <div class="hidden items-center gap-2 lg:flex">
                     @if (Auth::check())
-                        <a href="/" class="inline-flex items-center justify-center rounded-full bg-[linear-gradient(135deg,#2563eb,#06b6d4)] px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-sky-200/70 transition hover:opacity-95">
-                            Về dashboard
-                        </a>
+                        <a href="/" class="proxy-focus inline-flex min-h-[44px] items-center justify-center rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-blue-700">Về dashboard</a>
                     @else
-                        <a href="{{ route('auth.login') }}" class="inline-flex items-center justify-center rounded-full px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:text-slate-950">
-                            Đăng nhập
-                        </a>
-                        <a href="{{ route('auth.register') }}" class="inline-flex items-center justify-center rounded-full bg-[linear-gradient(135deg,#2563eb,#06b6d4)] px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-sky-200/70 transition hover:opacity-95">
-                            Tạo tài khoản
-                        </a>
+                        <a href="{{ route('auth.login') }}" class="proxy-focus inline-flex min-h-[44px] items-center justify-center rounded-lg px-4 py-2.5 text-sm font-bold text-[#071a3d] transition hover:bg-blue-50">Đăng nhập</a>
+                        <a href="{{ route('auth.register') }}" class="proxy-focus inline-flex min-h-[44px] items-center justify-center rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-blue-200 transition hover:bg-blue-700">Tạo tài khoản</a>
                     @endif
                 </div>
+
+                <details class="group relative lg:hidden">
+                    <summary class="proxy-focus flex h-11 w-11 cursor-pointer list-none items-center justify-center rounded-lg border border-blue-100 text-[#071a3d] [&::-webkit-details-marker]:hidden" aria-label="Mở menu điều hướng"><x-landing-icon name="menu" class="h-6 w-6 group-open:hidden" /><x-landing-icon name="close" class="hidden h-6 w-6 group-open:block" /></summary>
+                    <nav aria-label="Điều hướng di động" class="absolute right-0 top-14 w-72 rounded-xl border border-blue-100 bg-white p-3 text-sm font-bold text-slate-700 shadow-xl">
+                        <div class="grid gap-1">
+                            @if (Auth::check())
+                                <a href="/" class="rounded-lg px-4 py-3 hover:bg-blue-50">Dashboard</a>
+                                <a href="/services" class="rounded-lg px-4 py-3 hover:bg-blue-50">Dịch vụ</a>
+                                <a href="/api-docs" class="rounded-lg px-4 py-3 hover:bg-blue-50">Tài liệu API</a>
+                            @else
+                                <a href="{{ $landingSectionLinks['features'] }}" class="rounded-lg px-4 py-3 hover:bg-blue-50">Tính năng</a>
+                                <a href="{{ $landingSectionLinks['infrastructure'] }}" class="rounded-lg px-4 py-3 hover:bg-blue-50">Hạ tầng</a>
+                                <a href="{{ $landingSectionLinks['services'] }}" class="rounded-lg px-4 py-3 hover:bg-blue-50">Bảng giá</a>
+                                <a href="{{ $landingSectionLinks['api'] }}" class="rounded-lg px-4 py-3 hover:bg-blue-50">API</a>
+                                <a href="{{ $landingSectionLinks['faq'] }}" class="rounded-lg px-4 py-3 hover:bg-blue-50">FAQ</a>
+                                <div class="mt-2 grid grid-cols-2 gap-2 border-t border-blue-100 pt-3"><a href="{{ route('auth.login') }}" class="flex min-h-[44px] items-center justify-center rounded-lg border border-blue-100">Đăng nhập</a><a href="{{ route('auth.register') }}" class="flex min-h-[44px] items-center justify-center rounded-lg bg-blue-600 text-white">Đăng ký</a></div>
+                            @endif
+                        </div>
+                    </nav>
+                </details>
             </div>
         </header>
 
-        <main>
+        <main id="main-content">
             @yield('main')
         </main>
 
-        <footer class="border-t border-sky-100 bg-white">
-            <div class="mx-auto grid w-full max-w-7xl gap-8 px-4 py-12 sm:px-6 lg:grid-cols-[minmax(0,1.1fr)_repeat(3,minmax(0,0.7fr))] lg:px-8">
-                <div class="space-y-4">
-                    <div>
-                        <p class="text-sm font-extrabold uppercase tracking-[0.18em] text-sky-600">{{ $siteName }}</p>
-                        <h2 class="mt-2 max-w-md text-2xl font-extrabold tracking-tight text-slate-950">
-                            Hạ tầng API mua proxy sẵn sàng để tích hợp và mở rộng.
-                        </h2>
-                    </div>
-                    <p class="max-w-xl text-sm leading-7 text-slate-600">
-                        Dùng một chuẩn API thống nhất để mua proxy, theo dõi bàn giao, quản lý ví và kiểm tra lịch sử đơn hàng trong cùng một hệ thống.
-                    </p>
-
-                    <div class="flex flex-wrap gap-3 text-sm text-slate-600">
-                        @if ($supportEmail)
-                            <span class="rounded-full bg-sky-50 px-3 py-2">{{ $supportEmail }}</span>
-                        @endif
-                        @if ($hotline)
-                            <span class="rounded-full bg-sky-50 px-3 py-2">{{ $hotline }}</span>
+        <footer class="bg-[#061735] text-blue-100">
+            <div class="mx-auto grid w-full max-w-7xl gap-10 px-4 py-12 sm:px-6 md:grid-cols-2 lg:grid-cols-[minmax(0,1.3fr)_repeat(3,minmax(0,0.7fr))] lg:px-8">
+                <div>
+                    <div class="flex items-center gap-3">
+                        @if (! empty($headerLogo))
+                            <span class="rounded-lg bg-white p-2"><img src="{{ $headerLogo }}" alt="{{ $siteName }}" class="h-7 w-auto object-contain"></span>
+                        @else
+                            <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white"><x-landing-icon name="network" class="h-6 w-6" /></span>
+                            <span class="text-lg font-extrabold text-white">{{ $siteName }}</span>
                         @endif
                     </div>
-
-                    @if ($address)
-                        <p class="text-sm text-slate-500">{{ $address }}</p>
+                    <p class="mt-5 max-w-sm text-sm leading-7 text-blue-100/75">Hạ tầng proxy đa dạng, đa quốc gia được chọn lọc để bạn tích hợp nhanh và vận hành thuận tiện.</p>
+                    @if ($supportEmail || $hotline)
+                        <div class="mt-5 grid gap-2 text-sm text-blue-100/80">@if ($supportEmail)<span>{{ $supportEmail }}</span>@endif @if ($hotline)<span>{{ $hotline }}</span>@endif</div>
                     @endif
                 </div>
 
-                <div>
-                    <h3 class="text-sm font-bold uppercase tracking-[0.16em] text-slate-900">Khám phá</h3>
-                    <div class="mt-4 flex flex-col gap-3 text-sm text-slate-600">
-                        <a href="{{ url('/#features') }}" class="transition hover:text-sky-600">Tính năng</a>
-                        <a href="{{ url('/#services') }}" class="transition hover:text-sky-600">Dịch vụ proxy</a>
-                        <a href="{{ route('seo.index') }}" class="transition hover:text-sky-600">Blog</a>
-                        <a href="{{ route('content.faq') }}" class="transition hover:text-sky-600">Câu hỏi thường gặp</a>
-                    </div>
-                </div>
-
-                <div>
-                    <h3 class="text-sm font-bold uppercase tracking-[0.16em] text-slate-900">Pháp lý</h3>
-                    <div class="mt-4 flex flex-col gap-3 text-sm text-slate-600">
-                        <a href="{{ route('content.terms') }}" class="transition hover:text-sky-600">Điều khoản sử dụng</a>
-                        <a href="{{ route('content.privacy') }}" class="transition hover:text-sky-600">Chính sách bảo mật</a>
-                        <a href="{{ route('content.api-usage') }}" class="transition hover:text-sky-600">Chính sách dịch vụ</a>
-                        <a href="{{ route('content.payment') }}" class="transition hover:text-sky-600">Chính sách thanh toán</a>
-                    </div>
-                </div>
-
-                <div>
-                    <h3 class="text-sm font-bold uppercase tracking-[0.16em] text-slate-900">Kết nối</h3>
-                    <div class="mt-4 flex flex-col gap-3 text-sm text-slate-600">
-                        <a href="{{ route('content.contact') }}" class="transition hover:text-sky-600">Liên hệ hỗ trợ</a>
-                        @if ($facebook)
-                            <a href="{{ $facebook }}" class="transition hover:text-sky-600">Facebook</a>
-                        @endif
-                        @if ($zalo)
-                            <a href="{{ $zalo }}" class="transition hover:text-sky-600">Zalo</a>
-                        @endif
-                        @if ($youtube)
-                            <a href="{{ $youtube }}" class="transition hover:text-sky-600">YouTube</a>
-                        @endif
-                    </div>
-                </div>
+                <div><h3 class="text-sm font-extrabold text-white">Sản phẩm</h3><div class="mt-4 flex flex-col gap-3 text-sm text-blue-100/70"><a href="{{ url('/#services') }}" class="transition hover:text-white">Danh mục proxy</a><a href="{{ url('/#infrastructure') }}" class="transition hover:text-white">Hạ tầng</a><a href="{{ url('/#api') }}" class="transition hover:text-white">API</a></div></div>
+                <div><h3 class="text-sm font-extrabold text-white">Tài nguyên</h3><div class="mt-4 flex flex-col gap-3 text-sm text-blue-100/70"><a href="{{ route('seo.index') }}" class="transition hover:text-white">Blog</a><a href="{{ route('content.faq') }}" class="transition hover:text-white">FAQ</a><a href="{{ route('content.about') }}" class="transition hover:text-white">Giới thiệu</a></div></div>
+                <div><h3 class="text-sm font-extrabold text-white">Hỗ trợ</h3><div class="mt-4 flex flex-col gap-3 text-sm text-blue-100/70"><a href="{{ route('content.contact') }}" class="transition hover:text-white">Liên hệ</a><a href="{{ route('content.terms') }}" class="transition hover:text-white">Điều khoản</a><a href="{{ route('content.privacy') }}" class="transition hover:text-white">Chính sách bảo mật</a></div></div>
             </div>
-
-            <div class="border-t border-sky-100">
-                <div class="mx-auto flex w-full max-w-7xl flex-col gap-2 px-4 py-5 text-sm text-slate-500 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
-                    <p>© {{ now()->year }} {{ $siteName }}. All rights reserved.</p>
-                    <p>API proxy thương mại cho tích hợp nhanh, gọn và ổn định.</p>
-                </div>
-            </div>
+            <div class="border-t border-white/10"><div class="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-5 text-xs text-blue-100/60 sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8"><p>© {{ now()->year }} {{ $siteName }}. All rights reserved.</p><p>Proxy infrastructure for modern teams.</p></div></div>
         </footer>
     </div>
 

@@ -1,6 +1,19 @@
 <script setup lang="ts">
 import { useSystemSetting } from '@/composables/useSystemSetting';
-import { CircleUserRound, Code2, History, Layers3, LayoutDashboard, MessageSquareMore, ShieldCheck, Wallet, X, type LucideIcon } from 'lucide-vue-next';
+import { useSupportStore } from '@/stores/support.store';
+import {
+    CircleUserRound,
+    Code2,
+    History,
+    Layers3,
+    LayoutDashboard,
+    MessageCircleMore,
+    MessageSquareMore,
+    ShieldCheck,
+    Wallet,
+    X,
+    type LucideIcon,
+} from 'lucide-vue-next';
 import { computed, onMounted } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 
@@ -16,10 +29,12 @@ type NavItem = {
     label: string;
     icon: LucideIcon;
     href: string;
+    badge?: 'support';
 };
 
 const route = useRoute();
 const { settings, fetchSettings } = useSystemSetting();
+const supportStore = useSupportStore();
 
 const items: NavItem[] = [
     { label: 'Tổng quan', icon: LayoutDashboard, href: '/' },
@@ -29,6 +44,7 @@ const items: NavItem[] = [
     { label: 'Quản lý proxy', icon: History, href: '/proxy-orders' },
     { label: 'Check Proxy', icon: ShieldCheck, href: '/proxy-check' },
     { label: 'Tài liệu API', icon: Code2, href: '/api-docs' },
+    { label: 'Hỗ trợ trực tiếp', icon: MessageCircleMore, href: '/support', badge: 'support' },
     { label: 'Liên hệ và góp ý', icon: MessageSquareMore, href: '/contact' },
 ];
 
@@ -111,6 +127,12 @@ onMounted(async () => {
                                 <component :is="item.icon" class="h-4.5 w-4.5" />
                             </div>
                             <span class="flex-1">{{ item.label }}</span>
+                            <span
+                                v-if="item.badge === 'support' && supportStore.userUnread > 0"
+                                class="inline-flex min-h-6 min-w-6 items-center justify-center rounded-full bg-red-600 px-1.5 text-[11px] font-black tabular-nums text-white"
+                            >
+                                {{ supportStore.userUnread > 99 ? '99+' : supportStore.userUnread }}
+                            </span>
                         </RouterLink>
                     </li>
                 </ul>

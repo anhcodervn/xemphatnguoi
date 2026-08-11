@@ -43,6 +43,11 @@ export default {
             component: () => import('@/pages/client/contact/index.vue'),
         },
         {
+            path: 'support',
+            name: 'client.support',
+            component: () => import('@/pages/client/support/index.vue'),
+        },
+        {
             path: ':pathMatch(.*)*',
             name: 'client.error.404',
             component: () => import('@/pages/errors/client/NotFoundPage.vue'),
