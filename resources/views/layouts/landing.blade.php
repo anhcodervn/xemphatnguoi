@@ -28,7 +28,11 @@
         $facebook = $settings['facebook'] ?? '';
         $zalo = $settings['zalo'] ?? '';
         $youtube = $settings['youtube'] ?? '';
-        $headerLogo = $settings['dark_logo'] ?: ($settings['light_logo'] ?: null);
+        $headerLogo = ($settings['dark_logo'] ?? '') ?: (($settings['light_logo'] ?? '') ?: null);
+        $configuredGtmId = trim((string) ($settings['gtm_id'] ?? ''));
+        $gtmId = preg_match('/^GTM-[A-Z0-9]+$/i', $configuredGtmId) === 1 ? strtoupper($configuredGtmId) : '';
+        $configuredMetaPixelId = trim((string) ($settings['meta_pixel_id'] ?? ''));
+        $metaPixelId = preg_match('/^[0-9]+$/', $configuredMetaPixelId) === 1 ? $configuredMetaPixelId : '';
     @endphp
 
     <title>{{ $metaTitle }}</title>
@@ -46,6 +50,47 @@
     <meta name="twitter:title" content="{{ $metaTitle }}">
     <meta name="twitter:description" content="{{ $pageDescription }}">
 
+    @if ($gtmId !== '')
+        <script>
+            (function(w, d, s, l, i) {
+                w[l] = w[l] || [];
+                w[l].push({
+                    'gtm.start': new Date().getTime(),
+                    event: 'gtm.js'
+                });
+                var firstScript = d.getElementsByTagName(s)[0];
+                var tagManagerScript = d.createElement(s);
+                var dataLayerQuery = l !== 'dataLayer' ? '&l=' + l : '';
+                tagManagerScript.async = true;
+                tagManagerScript.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dataLayerQuery;
+                firstScript.parentNode.insertBefore(tagManagerScript, firstScript);
+            })(window, document, 'script', 'dataLayer', {{ Illuminate\Support\Js::from($gtmId) }});
+        </script>
+    @endif
+
+    @if ($metaPixelId !== '')
+        <script>
+            !function(f, b, e, v, n, t, s) {
+                if (f.fbq) return;
+                n = f.fbq = function() {
+                    n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments);
+                };
+                if (!f._fbq) f._fbq = n;
+                n.push = n;
+                n.loaded = true;
+                n.version = '2.0';
+                n.queue = [];
+                t = b.createElement(e);
+                t.async = true;
+                t.src = v;
+                s = b.getElementsByTagName(e)[0];
+                s.parentNode.insertBefore(t, s);
+            }(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
+            fbq('init', {{ Illuminate\Support\Js::from($metaPixelId) }});
+            fbq('track', 'PageView');
+        </script>
+    @endif
+
     @yield('head')
 
     @if (! empty($favicon))
@@ -59,6 +104,20 @@
 </head>
 
 <body class="bg-white font-['Be_Vietnam_Pro'] text-slate-900">
+    @if ($gtmId !== '')
+        <noscript>
+            <iframe src="https://www.googletagmanager.com/ns.html?id={{ $gtmId }}" height="0" width="0"
+                class="hidden" title="Google Tag Manager"></iframe>
+        </noscript>
+    @endif
+
+    @if ($metaPixelId !== '')
+        <noscript>
+            <img src="https://www.facebook.com/tr?id={{ $metaPixelId }}&ev=PageView&noscript=1" height="1"
+                width="1" class="hidden" alt="">
+        </noscript>
+    @endif
+
     <a href="#main-content" class="proxy-focus fixed left-4 top-3 z-50 -translate-y-20 rounded-md bg-[#071a3d] px-4 py-2 text-sm font-bold text-white transition focus:translate-y-0">Bỏ qua điều hướng</a>
     <div class="min-h-screen">
         <header class="sticky top-0 z-40 border-b border-blue-100/80 bg-white/95 backdrop-blur-xl">

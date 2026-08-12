@@ -167,6 +167,8 @@ class PublicSeoPageController extends Controller
             'dark_logo' => '',
             'favicon' => '',
             'og_image' => '',
+            'gtm_id' => '',
+            'meta_pixel_id' => '',
         ]);
     }
 

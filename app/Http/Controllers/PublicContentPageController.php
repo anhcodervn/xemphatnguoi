@@ -151,6 +151,8 @@ class PublicContentPageController extends Controller
             'dark_logo' => '',
             'favicon' => '',
             'og_image' => '',
+            'gtm_id' => '',
+            'meta_pixel_id' => '',
             $page['title_key'] => $page['fallback_title'],
             $page['excerpt_key'] => $page['fallback_description'],
             $page['content_key'] => [],
