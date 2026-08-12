@@ -84,6 +84,7 @@ return [
         'source_low_balance_threshold' => (float) env('PROXY_SOURCE_LOW_BALANCE_THRESHOLD', 50000),
         'source_low_balance_channel' => env('PROXY_SOURCE_LOW_BALANCE_CHANNEL', 'alerts'),
         'check_url' => env('PROXY_CHECK_URL', 'https://api.ipify.org?format=json'),
+        'country_check_url' => env('PROXY_COUNTRY_CHECK_URL', 'https://ipwho.is/'),
         'check_connect_timeout' => (int) env('PROXY_CHECK_CONNECT_TIMEOUT', 4),
         'check_timeout' => (int) env('PROXY_CHECK_TIMEOUT', 8),
     ],

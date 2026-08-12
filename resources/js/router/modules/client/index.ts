@@ -28,6 +28,11 @@ export default {
             component: () => import('@/pages/client/proxy-check/index.vue'),
         },
         {
+            path: 'proxy-country-check',
+            name: 'client.proxy-country-check',
+            component: () => import('@/pages/client/proxy-country-check/index.vue'),
+        },
+        {
             path: 'api-docs',
             name: 'client.api-docs',
             component: () => import('@/pages/client/api-docs/index.vue'),

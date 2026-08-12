@@ -21,11 +21,16 @@ class ProxyCheckerService
      * @param  list<string>  $proxies
      * @return array<string, mixed>
      */
-    public function start(User $user, array $proxies): array
+    public function start(User $user, array $proxies, string $checkType = ProxyCheckBatch::TYPE_LIVE): array
     {
-        $batch = DB::transaction(function () use ($user, $proxies): ProxyCheckBatch {
+        if (! in_array($checkType, [ProxyCheckBatch::TYPE_LIVE, ProxyCheckBatch::TYPE_COUNTRY], true)) {
+            throw new RuntimeException('Loại kiểm tra proxy không hợp lệ.');
+        }
+
+        $batch = DB::transaction(function () use ($user, $proxies, $checkType): ProxyCheckBatch {
             $batch = ProxyCheckBatch::query()->create([
                 'user_id' => $user->id,
+                'check_type' => $checkType,
                 'total' => count($proxies),
             ]);
 
@@ -47,10 +52,11 @@ class ProxyCheckerService
     }
 
     /** @return array<string, mixed> */
-    public function status(User $user, string $batchId): array
+    public function status(User $user, string $batchId, ?string $checkType = null): array
     {
         $batch = ProxyCheckBatch::query()
             ->whereBelongsTo($user)
+            ->when($checkType !== null, fn ($query) => $query->where('check_type', $checkType))
             ->with('items')
             ->findOrFail($batchId);
 
@@ -68,7 +74,9 @@ class ProxyCheckerService
         $this->broadcast($item);
 
         try {
-            $result = $this->checkProxy((string) $item->proxy);
+            $result = $item->batch?->check_type === ProxyCheckBatch::TYPE_COUNTRY
+                ? $this->checkProxyCountry((string) $item->proxy)
+                : $this->checkProxy((string) $item->proxy);
             $completedItem = $this->complete($item->id, $result);
 
             if ($completedItem instanceof ProxyCheckItem) {
@@ -85,6 +93,12 @@ class ProxyCheckerService
         $item = $this->complete($itemId, [
             'status' => ProxyCheckItem::STATUS_DIE,
             'exit_ip' => null,
+            'country_code' => null,
+            'country_name' => null,
+            'region_name' => null,
+            'city_name' => null,
+            'timezone' => null,
+            'isp' => null,
             'latency_ms' => null,
             'message' => 'Không thể hoàn tất kiểm tra proxy.',
         ]);
@@ -117,7 +131,7 @@ class ProxyCheckerService
     }
 
     /**
-     * @param  array{status: string, exit_ip: ?string, latency_ms: ?int, message: string}  $result
+     * @param  array{status: string, exit_ip: ?string, country_code?: ?string, country_name?: ?string, region_name?: ?string, city_name?: ?string, timezone?: ?string, isp?: ?string, latency_ms: ?int, message: string}  $result
      */
     private function complete(int $itemId, array $result): ?ProxyCheckItem
     {
@@ -145,6 +159,12 @@ class ProxyCheckerService
                 'proxy' => null,
                 'status' => $status,
                 'exit_ip' => $result['exit_ip'],
+                'country_code' => $result['country_code'] ?? null,
+                'country_name' => $result['country_name'] ?? null,
+                'region_name' => $result['region_name'] ?? null,
+                'city_name' => $result['city_name'] ?? null,
+                'timezone' => $result['timezone'] ?? null,
+                'isp' => $result['isp'] ?? null,
                 'latency_ms' => $result['latency_ms'],
                 'message' => $result['message'],
                 'completed_at' => now(),
@@ -196,6 +216,89 @@ class ProxyCheckerService
     }
 
     /**
+     * @return array{status: string, exit_ip: ?string, country_code: ?string, country_name: ?string, region_name: ?string, city_name: ?string, timezone: ?string, isp: ?string, latency_ms: ?int, message: string}
+     */
+    private function checkProxyCountry(string $proxy): array
+    {
+        $parsed = $this->parseProxy($proxy);
+
+        try {
+            $response = Http::acceptJson()
+                ->withUserAgent('DailyProxy Country Checker/1.0')
+                ->withOptions([
+                    'allow_redirects' => false,
+                    'proxy' => $this->proxyUrl($parsed),
+                    'verify' => true,
+                ])
+                ->connectTimeout((int) config('services.proxy.check_connect_timeout', 4))
+                ->timeout((int) config('services.proxy.check_timeout', 8))
+                ->get($this->countryTargetUrl());
+        } catch (Throwable) {
+            return $this->countryFailure('Không thể kết nối và xác định quốc gia của proxy.');
+        }
+
+        if (! $response->successful()) {
+            return $this->countryFailure('Dịch vụ xác định quốc gia không phản hồi.', $this->latency($response));
+        }
+
+        $exitIp = $response->json('ip');
+        $countryCode = $response->json('country_code');
+        $countryName = $this->limitedString($response->json('country'), 100);
+
+        if (
+            $response->json('success') !== true
+            || ! is_string($exitIp)
+            || filter_var($exitIp, FILTER_VALIDATE_IP) === false
+            || ! is_string($countryCode)
+            || mb_strlen($countryCode) !== 2
+            || $countryName === null
+        ) {
+            return $this->countryFailure('Không nhận được dữ liệu quốc gia hợp lệ.', $this->latency($response));
+        }
+
+        return [
+            'status' => ProxyCheckItem::STATUS_LIVE,
+            'exit_ip' => $exitIp,
+            'country_code' => mb_strtoupper($countryCode),
+            'country_name' => $countryName,
+            'region_name' => $this->limitedString($response->json('region'), 150),
+            'city_name' => $this->limitedString($response->json('city'), 150),
+            'timezone' => $this->limitedString($response->json('timezone.id'), 100),
+            'isp' => $this->limitedString($response->json('connection.isp'), 180),
+            'latency_ms' => $this->latency($response),
+            'message' => "Proxy được xác định tại {$countryName} ({$countryCode}).",
+        ];
+    }
+
+    /**
+     * @return array{status: string, exit_ip: null, country_code: null, country_name: null, region_name: null, city_name: null, timezone: null, isp: null, latency_ms: ?int, message: string}
+     */
+    private function countryFailure(string $message, ?int $latencyMs = null): array
+    {
+        return [
+            'status' => ProxyCheckItem::STATUS_DIE,
+            'exit_ip' => null,
+            'country_code' => null,
+            'country_name' => null,
+            'region_name' => null,
+            'city_name' => null,
+            'timezone' => null,
+            'isp' => null,
+            'latency_ms' => $latencyMs,
+            'message' => $message,
+        ];
+    }
+
+    private function limitedString(mixed $value, int $maxLength): ?string
+    {
+        if (! is_string($value) || trim($value) === '') {
+            return null;
+        }
+
+        return mb_substr(trim($value), 0, $maxLength);
+    }
+
+    /**
      * @return array{status: string, exit_ip: ?string, latency_ms: ?int, message: string}
      */
     private function responseResult(Response $response): array
@@ -240,6 +343,18 @@ class ProxyCheckerService
         return $url;
     }
 
+    private function countryTargetUrl(): string
+    {
+        $url = (string) config('services.proxy.country_check_url', 'https://ipwho.is/');
+        $scheme = parse_url($url, PHP_URL_SCHEME);
+
+        if (! filter_var($url, FILTER_VALIDATE_URL) || ! in_array($scheme, ['http', 'https'], true)) {
+            throw new RuntimeException('Cấu hình dịch vụ xác định quốc gia không hợp lệ.');
+        }
+
+        return $url;
+    }
+
     /** @return array{ip: string, port: int, username: string, password: string} */
     private function parseProxy(string $proxy): array
     {
@@ -279,6 +394,7 @@ class ProxyCheckerService
 
         return [
             'id' => $batch->id,
+            'check_type' => $batch->check_type,
             'status' => $batch->status,
             'total' => $batch->total,
             'processed' => $batch->processed,
@@ -300,6 +416,12 @@ class ProxyCheckerService
             'endpoint' => $item->endpoint,
             'status' => $item->status,
             'exit_ip' => $item->exit_ip,
+            'country_code' => $item->country_code,
+            'country_name' => $item->country_name,
+            'region_name' => $item->region_name,
+            'city_name' => $item->city_name,
+            'timezone' => $item->timezone,
+            'isp' => $item->isp,
             'latency_ms' => $item->latency_ms,
             'message' => $item->message,
             'started_at' => $item->started_at?->toISOString(),
@@ -311,7 +433,7 @@ class ProxyCheckerService
     {
         $batch = $item->batch;
 
-        if (! $batch instanceof ProxyCheckBatch) {
+        if (! $batch instanceof ProxyCheckBatch || $batch->user_id === null) {
             return;
         }
 

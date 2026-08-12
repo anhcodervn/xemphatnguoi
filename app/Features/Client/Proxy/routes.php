@@ -10,6 +10,11 @@ Route::middleware('auth:sanctum')->prefix('client/proxy')->group(function (): vo
     Route::get('/check/{batch}', [ProxyController::class, 'checkStatus'])
         ->whereUlid('batch')
         ->middleware('throttle:30,1');
+    Route::post('/country-check', [ProxyController::class, 'checkCountry'])
+        ->middleware('throttle:10,1');
+    Route::get('/country-check/{batch}', [ProxyController::class, 'checkCountryStatus'])
+        ->whereUlid('batch')
+        ->middleware('throttle:30,1');
     Route::get('/products', [ProxyController::class, 'products']);
     Route::get('/orders', [ProxyController::class, 'orders']);
     Route::get('/orders/{order}', [ProxyController::class, 'showOrder'])

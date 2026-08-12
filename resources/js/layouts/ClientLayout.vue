@@ -36,7 +36,7 @@ onBeforeUnmount(() => {
         <div class="flex min-h-screen overflow-x-hidden">
             <Sidebar :is-open="isSidebarOpen" @close="isSidebarOpen = false" />
 
-            <div class="flex min-h-screen min-w-0 flex-1 flex-col overflow-x-hidden">
+            <div class="flex min-h-screen min-w-0 flex-1 flex-col overflow-x-hidden lg:ml-72">
                 <Header @toggle-sidebar="isSidebarOpen = !isSidebarOpen" />
 
                 <main

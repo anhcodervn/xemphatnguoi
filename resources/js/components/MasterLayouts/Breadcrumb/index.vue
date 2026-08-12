@@ -88,6 +88,7 @@ const routeLabelMap: Record<string, string> = {
     'client.proxy-orders': 'Quản lý proxy',
     'client.wallet': 'Ví và nạp tiền',
     'client.proxy-check': 'Check Proxy',
+    'client.proxy-country-check': 'Check quốc gia proxy',
     'client.api-docs': 'Tài liệu API',
     'client.profile': 'Hồ sơ tài khoản',
     'client.contact': 'Liên hệ và góp ý',

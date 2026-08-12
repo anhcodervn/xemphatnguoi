@@ -4,6 +4,7 @@ namespace App\Features\Client\Proxy\Controllers;
 
 use App\Features\Client\Proxy\Actions\ChangeProxyAction;
 use App\Features\Client\Proxy\Actions\CheckProxyAction;
+use App\Features\Client\Proxy\Actions\CheckProxyCountryAction;
 use App\Features\Client\Proxy\Actions\FetchRotatingProxyAction;
 use App\Features\Client\Proxy\Actions\OrderAction;
 use App\Features\Client\Proxy\Actions\RenewProxyAction;
@@ -19,6 +20,7 @@ use App\Features\Client\Proxy\Services\ProxyCatalogService;
 use App\Features\Client\Proxy\Services\ProxyCheckerService;
 use App\Features\Client\Proxy\Services\ProxyService;
 use App\Http\Controllers\Controller;
+use App\Models\ProxyCheckBatch;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -60,7 +62,28 @@ class ProxyController extends Controller
     {
         return response()->json([
             'status' => true,
-            'data' => ['batch' => $proxyCheckerService->status($this->user($request), $batch)],
+            'data' => [
+                'batch' => $proxyCheckerService->status($this->user($request), $batch, ProxyCheckBatch::TYPE_LIVE),
+            ],
+        ]);
+    }
+
+    public function checkCountry(CheckProxyRequest $request, CheckProxyCountryAction $action): JsonResponse
+    {
+        return response()->json([
+            'status' => true,
+            'message' => 'Danh sách proxy đã được đưa vào hàng đợi xác định quốc gia.',
+            'data' => ['batch' => $action->handle($this->user($request), $request->validated())],
+        ], 202);
+    }
+
+    public function checkCountryStatus(Request $request, ProxyCheckerService $proxyCheckerService, string $batch): JsonResponse
+    {
+        return response()->json([
+            'status' => true,
+            'data' => [
+                'batch' => $proxyCheckerService->status($this->user($request), $batch, ProxyCheckBatch::TYPE_COUNTRY),
+            ],
         ]);
     }
 

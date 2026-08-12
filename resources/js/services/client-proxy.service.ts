@@ -99,6 +99,12 @@ export interface ProxyCheckResult {
     endpoint: string;
     status: 'pending' | 'processing' | 'live' | 'die';
     exit_ip: string | null;
+    country_code: string | null;
+    country_name: string | null;
+    region_name: string | null;
+    city_name: string | null;
+    timezone: string | null;
+    isp: string | null;
     latency_ms: number | null;
     message: string | null;
     started_at: string | null;
@@ -107,6 +113,7 @@ export interface ProxyCheckResult {
 
 export interface ProxyCheckBatch {
     id: string;
+    check_type: 'live' | 'country';
     status: 'pending' | 'processing' | 'completed';
     total: number;
     processed: number;
@@ -204,6 +211,16 @@ export const clientProxyService = {
 
     async proxyCheckStatus(batchId: string) {
         const response = await api.get(`/api/client/proxy/check/${batchId}`);
+        return responseData<{ batch: ProxyCheckBatch }>(response.data, ['batch']);
+    },
+
+    async checkProxyCountries(proxies: string[]) {
+        const response = await api.post('/api/client/proxy/country-check', { proxies });
+        return responseData<{ batch: ProxyCheckBatch }>(response.data, ['batch']);
+    },
+
+    async proxyCountryCheckStatus(batchId: string) {
+        const response = await api.get(`/api/client/proxy/country-check/${batchId}`);
         return responseData<{ batch: ProxyCheckBatch }>(response.data, ['batch']);
     },
 

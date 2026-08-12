@@ -14,6 +14,10 @@ class ProxyCheckBatch extends Model
     /** @use HasFactory<ProxyCheckBatchFactory> */
     use HasFactory, HasUlids;
 
+    public const TYPE_LIVE = 'live';
+
+    public const TYPE_COUNTRY = 'country';
+
     public const STATUS_PENDING = 'pending';
 
     public const STATUS_PROCESSING = 'processing';
@@ -22,6 +26,7 @@ class ProxyCheckBatch extends Model
 
     protected $fillable = [
         'user_id',
+        'check_type',
         'status',
         'total',
         'processed',
@@ -31,6 +36,7 @@ class ProxyCheckBatch extends Model
     ];
 
     protected $attributes = [
+        'check_type' => self::TYPE_LIVE,
         'status' => self::STATUS_PENDING,
         'processed' => 0,
         'live' => 0,

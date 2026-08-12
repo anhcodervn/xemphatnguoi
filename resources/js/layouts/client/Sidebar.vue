@@ -2,8 +2,10 @@
 import { useSystemSetting } from '@/composables/useSystemSetting';
 import { useSupportStore } from '@/stores/support.store';
 import {
+    ChevronDown,
     CircleUserRound,
     Code2,
+    Globe2,
     History,
     Layers3,
     LayoutDashboard,
@@ -14,7 +16,7 @@ import {
     X,
     type LucideIcon,
 } from 'lucide-vue-next';
-import { computed, onMounted } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 
 defineProps<{
@@ -28,8 +30,15 @@ defineEmits<{
 type NavItem = {
     label: string;
     icon: LucideIcon;
-    href: string;
+    href?: string;
+    children?: NavChild[];
     badge?: 'support';
+};
+
+type NavChild = {
+    label: string;
+    icon: LucideIcon;
+    href: string;
 };
 
 const route = useRoute();
@@ -42,19 +51,50 @@ const items: NavItem[] = [
     { label: 'Ví và nạp tiền', icon: Wallet, href: '/wallet' },
     { label: 'Mua proxy', icon: Layers3, href: '/services' },
     { label: 'Quản lý proxy', icon: History, href: '/proxy-orders' },
-    { label: 'Check Proxy', icon: ShieldCheck, href: '/proxy-check' },
+    {
+        label: 'Công cụ',
+        icon: ShieldCheck,
+        children: [
+            { label: 'Check Live Proxy', icon: ShieldCheck, href: '/proxy-check' },
+            { label: 'Check quốc gia', icon: Globe2, href: '/proxy-country-check' },
+        ],
+    },
     { label: 'Tài liệu API', icon: Code2, href: '/api-docs' },
     { label: 'Hỗ trợ trực tiếp', icon: MessageCircleMore, href: '/support', badge: 'support' },
     { label: 'Liên hệ và góp ý', icon: MessageSquareMore, href: '/contact' },
 ];
 
 const isActive = (href: string): boolean => {
-    if (href === '/') {
-        return route.path === href;
+    if (href.includes('?')) {
+        return route.fullPath === href;
     }
 
-    return route.path === href || route.path.startsWith(`${href}/`);
+    if (href === '/') {
+        return route.path === href && !route.fullPath.includes('?');
+    }
+
+    return (route.path === href || route.path.startsWith(`${href}/`)) && !route.fullPath.includes('?');
 };
+
+const hasActiveChild = (item: NavItem): boolean => item.children?.some((child) => isActive(child.href)) ?? false;
+const openMenus = ref<Record<string, boolean>>({
+    'Công cụ': hasActiveChild(items.find((item) => item.label === 'Công cụ')!),
+});
+
+const toggleMenu = (label: string): void => {
+    openMenus.value[label] = !openMenus.value[label];
+};
+
+watch(
+    () => route.fullPath,
+    () => {
+        items.forEach((item) => {
+            if (hasActiveChild(item)) {
+                openMenus.value[item.label] = true;
+            }
+        });
+    },
+);
 
 const siteLogo = computed(() => settings.value.light_logo || false);
 const siteName = computed(() => settings.value.site_name || 'DailyProxy.vn');
@@ -73,7 +113,7 @@ onMounted(async () => {
     </Teleport>
 
     <aside
-        class="fixed inset-y-0 left-0 z-50 w-72 border-r border-slate-800 bg-[linear-gradient(180deg,_#0b1220_0%,_#111c32_56%,_#0b1220_100%)] text-slate-100 shadow-2xl shadow-slate-950/20 transition duration-200 lg:relative lg:translate-x-0 lg:shadow-none"
+        class="fixed inset-y-0 left-0 z-50 w-72 border-r border-slate-800 bg-[linear-gradient(180deg,_#0b1220_0%,_#111c32_56%,_#0b1220_100%)] text-slate-100 shadow-2xl shadow-slate-950/20 transition duration-200 lg:translate-x-0 lg:shadow-none"
         :class="isOpen ? 'translate-x-0' : '-translate-x-full'"
     >
         <div class="flex h-full flex-col">
@@ -103,10 +143,11 @@ onMounted(async () => {
                 </button>
             </div>
 
-            <nav class="flex-1 px-3 py-5">
+            <nav class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-5">
                 <ul class="space-y-1.5">
                     <li v-for="item in items" :key="item.label">
                         <RouterLink
+                            v-if="item.href"
                             :to="item.href"
                             class="group flex items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-medium transition"
                             :class="
@@ -134,6 +175,54 @@ onMounted(async () => {
                                 {{ supportStore.userUnread > 99 ? '99+' : supportStore.userUnread }}
                             </span>
                         </RouterLink>
+
+                        <template v-else>
+                            <button
+                                type="button"
+                                class="group flex w-full items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-medium transition"
+                                :class="hasActiveChild(item) ? 'bg-white/[0.09] text-white' : 'text-slate-400 hover:bg-white/[0.07] hover:text-white'"
+                                :aria-expanded="openMenus[item.label] ?? false"
+                                @click="toggleMenu(item.label)"
+                            >
+                                <div
+                                    class="flex h-9 w-9 items-center justify-center rounded-lg transition"
+                                    :class="
+                                        hasActiveChild(item)
+                                            ? 'bg-cyan-400/15 text-cyan-300 ring-1 ring-cyan-300/20'
+                                            : 'bg-white/[0.06] text-slate-400 group-hover:bg-white/10 group-hover:text-cyan-300'
+                                    "
+                                >
+                                    <component :is="item.icon" class="h-4.5 w-4.5" />
+                                </div>
+                                <span class="flex-1 text-left">{{ item.label }}</span>
+                                <ChevronDown
+                                    class="h-4 w-4 transition-transform duration-200"
+                                    :class="openMenus[item.label] ? 'rotate-180 text-cyan-300' : ''"
+                                />
+                            </button>
+
+                            <ul v-show="openMenus[item.label]" class="mt-1 grid gap-1 pl-5">
+                                <li v-for="child in item.children" :key="child.label">
+                                    <RouterLink
+                                        :to="child.href"
+                                        class="group flex items-center gap-3 rounded-xl py-2.5 pl-5 pr-3 text-sm font-medium transition"
+                                        :class="
+                                            isActive(child.href)
+                                                ? 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-lg shadow-blue-950/30'
+                                                : 'text-slate-400 hover:bg-white/[0.07] hover:text-white'
+                                        "
+                                        @click="$emit('close')"
+                                    >
+                                        <component
+                                            :is="child.icon"
+                                            class="h-4 w-4 shrink-0"
+                                            :class="isActive(child.href) ? 'text-white' : 'text-slate-500 group-hover:text-cyan-300'"
+                                        />
+                                        <span>{{ child.label }}</span>
+                                    </RouterLink>
+                                </li>
+                            </ul>
+                        </template>
                     </li>
                 </ul>
             </nav>

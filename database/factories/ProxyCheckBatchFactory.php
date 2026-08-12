@@ -20,6 +20,7 @@ class ProxyCheckBatchFactory extends Factory
     {
         return [
             'user_id' => User::factory(),
+            'check_type' => ProxyCheckBatch::TYPE_LIVE,
             'status' => ProxyCheckBatch::STATUS_PENDING,
             'total' => 1,
             'processed' => 0,
