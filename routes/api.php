@@ -109,6 +109,10 @@ if (file_exists(base_path('app/Features/Admin/Setting/routes.php'))) {
     require base_path('app/Features/Admin/Setting/routes.php');
 }
 
+if (file_exists(base_path('app/Features/Admin/Upload/routes.php'))) {
+    require base_path('app/Features/Admin/Upload/routes.php');
+}
+
 if (file_exists(base_path('app/Features/Admin/RechargeConfig/routes.php'))) {
     require base_path('app/Features/Admin/RechargeConfig/routes.php');
 }
