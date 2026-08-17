@@ -225,6 +225,7 @@ class PublicSeoPageController extends Controller
             'og_image' => '',
             'gtm_id' => '',
             'meta_pixel_id' => '',
+            'custom_script' => '',
         ]);
     }
 

@@ -32,6 +32,30 @@ it('renders the public lookup website with Blade and no Vue application bundle',
         ->and(substr_count($response->getContent(), 'data-home-accent-icon'))->toBeGreaterThanOrEqual(20);
 });
 
+it('renders the administrator custom script exactly once in public and spa layouts', function (): void {
+    $customScript = '<script data-custom-script>window.__xpnCustomLoaded=true;</script>';
+    $admin = User::factory()->create(['role' => 'admin']);
+
+    Sanctum::actingAs($admin);
+    $this->patchJson('/api/admin-api/settings/seo', [
+        'custom_script' => $customScript,
+    ])
+        ->assertOk()
+        ->assertJsonPath('data.settings.custom_script', $customScript);
+
+    foreach (['/', '/gioi-thieu', '/blog'] as $path) {
+        $response = $this->get($path)->assertOk();
+
+        expect(substr_count($response->getContent(), $customScript))->toBe(1);
+    }
+
+    $dashboard = $this->actingAs($admin)
+        ->get('/dashboard')
+        ->assertOk();
+
+    expect(substr_count($dashboard->getContent(), $customScript))->toBe(1);
+});
+
 it('introduces the partner api publicly before requiring login for documentation', function (): void {
     app(SettingStore::class)->putString('traffic_fine_api_request_price', '35');
 

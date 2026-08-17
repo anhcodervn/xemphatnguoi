@@ -1,24 +1,30 @@
 <?php
 
-test('dailyproxy uses one supervisor file for all long running processes', function () {
+test('xemphatnguoi uses one supervisor file for all long running processes', function () {
     $supervisorDirectory = dirname(__DIR__, 2).'/deploy/supervisor';
     $configFiles = glob($supervisorDirectory.'/*.conf');
-    $config = file_get_contents($supervisorDirectory.'/dailyproxy.conf');
+    $config = file_get_contents($supervisorDirectory.'/xemphatnguoi.conf');
 
     expect($configFiles)
         ->toHaveCount(1)
-        ->and(basename($configFiles[0]))->toBe('dailyproxy.conf')
+        ->and(basename($configFiles[0]))->toBe('xemphatnguoi.conf')
         ->and($config)
-        ->toContain('[program:dailyproxy-worker]')
-        ->toContain('[program:dailyproxy-scheduler]')
-        ->toContain('[program:dailyproxy-reverb]')
-        ->toContain('[group:dailyproxy]')
-        ->toContain('programs=dailyproxy-worker,dailyproxy-scheduler,dailyproxy-reverb');
+        ->toContain('[program:xemphatnguoi-worker]')
+        ->toContain('[program:xemphatnguoi-scheduler]')
+        ->toContain('[program:xemphatnguoi-reverb]')
+        ->toContain('[group:xemphatnguoi]')
+        ->toContain('programs=xemphatnguoi-worker,xemphatnguoi-scheduler,xemphatnguoi-reverb')
+        ->toContain('/usr/bin/php8.2')
+        ->toContain('queue:work --queue=default,mails,user-logs')
+        ->toContain('schedule:work --no-interaction')
+        ->toContain('reverb:start --host=127.0.0.1 --port=8080 --no-interaction')
+        ->toContain('stdout_logfile=/home/xemphatnguoivn/xemphatnguoi.vn/storage/logs/queue-worker-%(process_num)02d.log')
+        ->not->toContain('dailyproxy');
 });
 
 test('supervisor worker timeout stays below every configured queue retry window', function () {
     $projectRoot = dirname(__DIR__, 2);
-    $config = file_get_contents($projectRoot.'/deploy/supervisor/dailyproxy.conf');
+    $config = file_get_contents($projectRoot.'/deploy/supervisor/xemphatnguoi.conf');
     $queueConfig = require $projectRoot.'/config/queue.php';
 
     preg_match('/queue:work[^\r\n]*--timeout=(\d+)/', $config, $matches);
@@ -30,4 +36,15 @@ test('supervisor worker timeout stays below every configured queue retry window'
 
     expect($matches)->toHaveKey(1)
         ->and((int) $matches[1])->toBeLessThan($retryAfterValues->min());
+});
+
+test('supervisor allows workers to stop gracefully and keeps rotating logs isolated', function () {
+    $config = file_get_contents(dirname(__DIR__, 2).'/deploy/supervisor/xemphatnguoi.conf');
+
+    preg_match('/\[program:xemphatnguoi-worker\][\s\S]*?--timeout=(\d+)[\s\S]*?stopwaitsecs=(\d+)[\s\S]*?numprocs=(\d+)[\s\S]*?stdout_logfile=([^\r\n]+)/', $config, $matches);
+
+    expect($matches)->toHaveKeys([1, 2, 3, 4])
+        ->and((int) $matches[2])->toBeGreaterThan((int) $matches[1])
+        ->and((int) $matches[3])->toBe(2)
+        ->and($matches[4])->toContain('%(process_num)02d');
 });

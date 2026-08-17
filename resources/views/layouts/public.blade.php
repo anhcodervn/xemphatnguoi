@@ -118,5 +118,8 @@
 
     <x-footer :settings="$settings" />
     @stack('scripts')
+    @if (filled($settings['custom_script'] ?? null))
+        {!! $settings['custom_script'] !!}
+    @endif
 </body>
 </html>
