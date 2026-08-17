@@ -18,7 +18,7 @@
     <div class="site-container flex h-[58px] items-center justify-between gap-3">
         <a href="{{ route('traffic-fines.home') }}" class="site-focus flex min-h-11 shrink-0 items-center gap-2 rounded-lg text-sm font-extrabold tracking-tight text-navy" aria-label="{{ $siteName }} - Trang chủ">
             @if ($logo)
-                <img src="{{ $logo }}" alt="{{ $siteName }}" width="144" height="32" class="h-8 w-auto object-contain">
+                <img src="{{ $logo }}" alt="{{ $siteName }}" width="100" height="64" class="h-[4rem] w-[100px] object-contain">
             @else
                 <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-brand text-white" aria-hidden="true">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" class="h-[18px] w-[18px]"><path d="M4 7.5h16v10H4zM8 7.5l1.3-3h5.4l1.3 3M8 20h.01M16 20h.01"/><circle cx="12" cy="12.5" r="2.5"/></svg>

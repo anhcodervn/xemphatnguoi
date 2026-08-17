@@ -14,6 +14,12 @@ export default {
             fontFamily: {
                 sans: ['Instrument Sans', ...defaultTheme.fontFamily.sans],
             },
+            maxHeight: {
+                15: '3.75rem',
+            },
+            maxWidth: {
+                100: '25rem',
+            },
             borderRadius: {
                 lg: 'var(--radius)',
                 md: 'calc(var(--radius) - 2px)',

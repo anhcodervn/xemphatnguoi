@@ -9,7 +9,7 @@
         $favicon = $settings['favicon'] ?? null;
         $metaTitle = $pageMetaTitle ?? ('Bảo trì hệ thống | '.$siteName);
         $metaDescription = $pageMetaDescription ?? ($settings['site_description'] ?? 'Hệ thống đang bảo trì để nâng cấp dịch vụ.');
-        $logo = $settings['dark_logo'] ?: ($settings['light_logo'] ?: null);
+        $logo = $settings['light_logo'] ?? null;
         $statusTitle = $settings['system_status_title'] ?: 'Bảo trì hệ thống';
         $statusExcerpt = $settings['system_status_excerpt'] ?: 'Hệ thống đang được đội ngũ kỹ thuật kiểm tra và nâng cấp để đảm bảo hiệu năng, độ ổn định và an toàn dữ liệu.';
         $updatesTitle = $settings['system_updates_title'] ?: 'Cập nhật vận hành';
@@ -48,7 +48,7 @@
                 <section class="rounded-[28px] border border-white/10 bg-white/5 p-6 shadow-[0_30px_120px_rgba(2,6,23,0.45)] backdrop-blur-xl sm:p-8 lg:p-10">
                     <div class="flex flex-wrap items-center gap-4">
                         @if (! empty($logo))
-                            <img src="{{ $logo }}" alt="{{ $siteName }}" class="h-12 w-auto rounded-xl bg-white/95 p-2">
+                            <img src="{{ $logo }}" alt="{{ $siteName }}" class="h-[4rem] w-[100px] rounded-xl bg-white/95 p-2 object-contain">
                         @else
                             <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-sm font-bold text-slate-950">
                                 {{ \Illuminate\Support\Str::substr($siteName, 0, 2) }}

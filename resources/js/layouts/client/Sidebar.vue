@@ -56,7 +56,7 @@ onMounted(fetchSettings);
         <div class="flex h-full flex-col">
             <div class="flex items-center justify-between border-b border-white/10 px-5 py-5">
                 <RouterLink to="/dashboard" class="app-focus flex min-h-11 min-w-0 items-center gap-3 rounded-lg">
-                    <img v-if="siteLogo" :src="siteLogo" :alt="siteName" class="max-h-10 max-w-44 object-contain" />
+                    <img v-if="siteLogo" :src="siteLogo" :alt="siteName" class="max-h-15 max-w-100 object-contain" />
                     <template v-else
                         ><span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-sky-600 font-black text-white">{{
                             siteInitial

@@ -46,3 +46,20 @@ it('keeps lookup actions on Blade while dashboard retains management services', 
         ->toContain('Tra cứu trên website')
         ->not->toContain('trafficFineService.lookupVehicle');
 });
+
+it('uses the light logo with the client specific dimensions', function () {
+    $projectRoot = dirname(__DIR__, 2);
+    $sidebar = file_get_contents($projectRoot.'/resources/js/layouts/client/Sidebar.vue');
+    $publicHeader = file_get_contents($projectRoot.'/resources/views/components/header.blade.php');
+    $maintenancePage = file_get_contents($projectRoot.'/resources/views/pages/maintenance/index.blade.php');
+
+    expect($sidebar)
+        ->toContain("settings.value.light_logo || ''")
+        ->toContain('class="max-h-15 max-w-100 object-contain"')
+        ->and($publicHeader)
+        ->toContain("\$logo = \$settings['light_logo'] ?? null;")
+        ->toContain('width="100" height="64" class="h-[4rem] w-[100px] object-contain"')
+        ->and($maintenancePage)
+        ->toContain("\$logo = \$settings['light_logo'] ?? null;")
+        ->toContain('class="h-[4rem] w-[100px] rounded-xl bg-white/95 p-2 object-contain"');
+});
