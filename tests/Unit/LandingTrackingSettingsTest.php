@@ -50,3 +50,13 @@ test('public landing controllers request tracking settings from the setting stor
         ->and($seoController)
         ->toContain("'gtm_id' => ''", "'meta_pixel_id' => ''");
 });
+
+test('active admin seo settings expose robots and ads text editors', function (): void {
+    $source = file_get_contents(base_path('resources/js/pages/admin/settings/index.vue'));
+
+    expect($source)
+        ->toContain('v-model="seoForm.robots_txt"')
+        ->toContain('v-model="seoForm.ads_txt"')
+        ->toContain('href="/robots.txt"')
+        ->toContain('href="/ads.txt"');
+});

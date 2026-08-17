@@ -163,24 +163,6 @@ class PublicTrafficFineController extends Controller
             ->header('Content-Type', 'application/xml; charset=UTF-8');
     }
 
-    public function robots(): Response
-    {
-        $content = implode("\n", [
-            'User-agent: *',
-            'Allow: /',
-            'Disallow: /dashboard',
-            'Disallow: /admin',
-            'Disallow: /auth',
-            'Disallow: /login',
-            'Disallow: /api',
-            'Disallow: /tra-cuu/',
-            'Sitemap: '.url('/sitemap.xml'),
-            '',
-        ]);
-
-        return response($content)->header('Content-Type', 'text/plain; charset=UTF-8');
-    }
-
     /**
      * @return array<string, mixed>
      */
@@ -198,6 +180,7 @@ class PublicTrafficFineController extends Controller
             'youtube' => '',
             'meta_title' => '',
             'meta_description' => '',
+            'robots' => 'index,follow',
             'light_logo' => '',
             'dark_logo' => '',
             'favicon' => '',
@@ -213,7 +196,7 @@ class PublicTrafficFineController extends Controller
             'pageMetaUrl' => $request->url(),
             'pageMetaCanonical' => $request->url(),
             'pageMetaImage' => $systemSettings['og_image'] ?? '',
-            'pageMetaRobots' => 'index,follow',
+            'pageMetaRobots' => ($systemSettings['robots'] ?? '') ?: 'index,follow',
             'vehicleTypes' => collect(VehicleType::cases())
                 ->filter(fn (VehicleType $type): bool => $type->isEnabled())
                 ->mapWithKeys(fn (VehicleType $type): array => [$type->value => $type->label()])

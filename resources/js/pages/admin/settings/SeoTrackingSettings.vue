@@ -38,12 +38,55 @@
                     </div>
 
                     <div class="space-y-2">
-                        <label class="text-sm font-medium text-slate-700">Robots</label>
+                        <label class="text-sm font-medium text-slate-700">Meta robots</label>
                         <input
                             v-model="formData.robots"
                             class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-900"
                             placeholder="index, follow"
                         />
+                    </div>
+
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <h3 class="text-sm font-semibold text-slate-800">Tệp robots.txt & ads.txt</h3>
+                            <div class="flex items-center gap-3 text-xs font-semibold text-slate-700">
+                                <a href="/robots.txt" target="_blank" rel="noopener noreferrer" class="hover:text-slate-950">Xem robots.txt</a>
+                                <a href="/ads.txt" target="_blank" rel="noopener noreferrer" class="hover:text-slate-950">Xem ads.txt</a>
+                            </div>
+                        </div>
+                        <p class="mt-1 text-xs leading-5 text-slate-500">
+                            Nội dung được xuất công khai ở thư mục gốc website. Để trống robots.txt để dùng cấu hình mặc định an toàn; dòng Sitemap do
+                            hệ thống tự thêm.
+                        </p>
+
+                        <div class="mt-3 grid gap-3">
+                            <div class="space-y-2">
+                                <label class="text-sm font-medium text-slate-700">robots.txt</label>
+                                <textarea
+                                    v-model="formData.robots_txt"
+                                    rows="9"
+                                    maxlength="20000"
+                                    spellcheck="false"
+                                    class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 font-mono text-xs leading-5 outline-none focus:border-slate-900"
+                                    placeholder="User-agent: *&#10;Allow: /&#10;Sitemap: https://example.com/sitemap.xml"
+                                />
+                            </div>
+
+                            <div class="space-y-2">
+                                <label class="text-sm font-medium text-slate-700">ads.txt</label>
+                                <textarea
+                                    v-model="formData.ads_txt"
+                                    rows="6"
+                                    maxlength="20000"
+                                    spellcheck="false"
+                                    class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 font-mono text-xs leading-5 outline-none focus:border-slate-900"
+                                    placeholder="google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0"
+                                />
+                                <p class="text-xs leading-5 text-slate-500">
+                                    Mỗi nhà bán quảng cáo một dòng theo định dạng do mạng quảng cáo cung cấp.
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -135,6 +178,8 @@ const formData = ref<SeoSettingType>({
     meta_pixel_id: '',
     custom_header: '',
     custom_script: '',
+    robots_txt: '',
+    ads_txt: '',
 });
 
 const loadData = async (): Promise<void> => {

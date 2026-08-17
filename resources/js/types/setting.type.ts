@@ -124,6 +124,8 @@ export interface SeoSettingType {
     meta_pixel_id?: string;
     custom_header?: string;
     custom_script?: string;
+    robots_txt?: string;
+    ads_txt?: string;
     meta_keywords?: string;
     og_image?: string;
     [key: string]: unknown;

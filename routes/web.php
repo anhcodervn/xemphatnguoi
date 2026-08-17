@@ -5,6 +5,7 @@ use App\Features\TrafficFine\Controllers\PublicTrafficFineController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\PublicContentPageController;
+use App\Http\Controllers\PublicSeoFileController;
 use App\Http\Controllers\PublicSeoPageController;
 use App\Support\SettingStore;
 use Illuminate\Support\Facades\Route;
@@ -31,7 +32,8 @@ Route::middleware('site.active')->controller(PublicTrafficFineController::class)
 });
 
 Route::get('/sitemap.xml', [PublicTrafficFineController::class, 'sitemap'])->name('sitemap');
-Route::get('/robots.txt', [PublicTrafficFineController::class, 'robots'])->name('robots');
+Route::get('/robots.txt', [PublicSeoFileController::class, 'robots'])->name('robots');
+Route::get('/ads.txt', [PublicSeoFileController::class, 'ads'])->name('ads');
 
 Route::middleware(['guest', 'site.active'])->group(function (): void {
     Route::prefix('/auth')->group(function (): void {

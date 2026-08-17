@@ -147,6 +147,7 @@ class PublicContentPageController extends Controller
             'youtube' => '',
             'meta_title' => '',
             'meta_description' => '',
+            'robots' => 'index,follow',
             'light_logo' => '',
             'dark_logo' => '',
             'favicon' => '',

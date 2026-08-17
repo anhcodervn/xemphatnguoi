@@ -3,6 +3,7 @@
 namespace App\Features\Admin\Setting\Requests;
 
 use App\Rules\ValidCustomMetaTags;
+use App\Rules\ValidPublicTextFile;
 use App\Support\CustomMetaTags;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
@@ -53,6 +54,8 @@ class UpdateTabSettingRequest extends FormRequest
                 'meta_pixel_id' => ['nullable', 'string', 'max:100'],
                 'custom_header' => ['nullable', 'string', 'max:10000', new ValidCustomMetaTags($customMetaTags)],
                 'custom_script' => ['nullable', 'string'],
+                'robots_txt' => ['nullable', 'string', 'max:20000', new ValidPublicTextFile],
+                'ads_txt' => ['nullable', 'string', 'max:20000', new ValidPublicTextFile],
             ],
             'content-pages' => $this->contentPageRules(),
             'home-category' => [
@@ -141,6 +144,8 @@ class UpdateTabSettingRequest extends FormRequest
             'meta_pixel_id' => 'Meta Pixel ID',
             'custom_header' => 'header tùy chỉnh',
             'custom_script' => 'script tùy chỉnh',
+            'robots_txt' => 'nội dung robots.txt',
+            'ads_txt' => 'nội dung ads.txt',
             'category_ids' => 'danh mục trang chủ',
             'items' => 'danh sách slider',
         ];

@@ -377,15 +377,106 @@ it('includes only published blog posts and public static pages in the sitemap', 
 });
 
 it('keeps public assets and indexable content crawlable in robots rules', function (): void {
-    $this->get('/robots.txt')
+    $response = $this->get('/robots.txt')
         ->assertOk()
+        ->assertHeader('Content-Type', 'text/plain; charset=UTF-8')
+        ->assertHeader('Cache-Control', 'no-cache, public')
+        ->assertHeader('X-Content-Type-Options', 'nosniff')
         ->assertSee('Allow: /')
         ->assertSee('Disallow: /admin')
         ->assertSee('Disallow: /dashboard')
         ->assertSee('Disallow: /login')
         ->assertSee('Disallow: /api')
+        ->assertSee('Sitemap: '.route('sitemap'))
         ->assertDontSee('Disallow: /build')
         ->assertDontSee('Disallow: /blog');
+
+    expect(substr_count($response->getContent(), 'Sitemap:'))->toBe(1)
+        ->and(public_path('robots.txt'))->not->toBeFile()
+        ->and(public_path('ads.txt'))->not->toBeFile();
+});
+
+it('serves the configured ads file with plain text security headers by default', function (): void {
+    $this->get('/ads.txt')
+        ->assertOk()
+        ->assertHeader('Content-Type', 'text/plain; charset=UTF-8')
+        ->assertHeader('Cache-Control', 'no-cache, public')
+        ->assertHeader('X-Content-Type-Options', 'nosniff')
+        ->assertContent("google.com, pub-4352299256001618, DIRECT, f08c47fec0942fa0\n");
+});
+
+it('uses the default meta robots setting on public pages', function (): void {
+    app(SettingStore::class)->putString('robots', 'noindex,nofollow');
+
+    $this->get('/')
+        ->assertOk()
+        ->assertSee('<meta name="robots" content="noindex,nofollow">', false);
+});
+
+it('publishes administrator robots and ads text settings at the site root', function (): void {
+    $robots = "User-agent: *\r\nDisallow: /private\r\nSitemap: https://wrong.example/sitemap.xml";
+    $ads = "google.com, pub-123456789, DIRECT, f08c47fec0942fa0\r\nexample.com, seller-1, RESELLER";
+    Sanctum::actingAs(User::factory()->create(['role' => 'admin']));
+
+    $this->patchJson('/api/admin-api/settings/seo', [
+        'robots_txt' => $robots,
+        'ads_txt' => $ads,
+    ])
+        ->assertOk()
+        ->assertJsonPath('data.settings.robots_txt', $robots)
+        ->assertJsonPath('data.settings.ads_txt', $ads);
+
+    $robotsResponse = $this->get('/robots.txt')
+        ->assertOk()
+        ->assertContent("User-agent: *\nDisallow: /private\nSitemap: ".route('sitemap')."\n")
+        ->assertDontSee('wrong.example');
+
+    expect(substr_count($robotsResponse->getContent(), 'Sitemap:'))->toBe(1);
+
+    $this->get('/ads.txt')
+        ->assertOk()
+        ->assertContent("google.com, pub-123456789, DIRECT, f08c47fec0942fa0\nexample.com, seller-1, RESELLER\n");
+});
+
+it('preserves crawler file settings when a partial seo update omits them', function (): void {
+    $settingStore = app(SettingStore::class);
+    $settingStore->putString('robots_txt', 'User-agent: *');
+    $settingStore->putString('ads_txt', 'google.com, pub-123, DIRECT');
+    Sanctum::actingAs(User::factory()->create(['role' => 'admin']));
+
+    $this->patchJson('/api/admin-api/settings/seo', [
+        'meta_title' => 'Tiêu đề mới',
+    ])
+        ->assertOk()
+        ->assertJsonPath('data.settings.robots_txt', 'User-agent: *')
+        ->assertJsonPath('data.settings.ads_txt', 'google.com, pub-123, DIRECT');
+
+    expect($settingStore->getString('robots_txt'))->toBe('User-agent: *')
+        ->and($settingStore->getString('ads_txt'))->toBe('google.com, pub-123, DIRECT');
+});
+
+it('rejects invalid crawler file settings', function (string $field, string $content): void {
+    Sanctum::actingAs(User::factory()->create(['role' => 'admin']));
+
+    $this->patchJson('/api/admin-api/settings/seo', [
+        $field => $content,
+    ])
+        ->assertUnprocessable()
+        ->assertJsonStructure(['data' => ['errors' => [$field]]]);
+})->with([
+    'oversized robots' => ['robots_txt', str_repeat('x', 20001)],
+    'oversized ads' => ['ads_txt', str_repeat('x', 20001)],
+    'robots control character' => ['robots_txt', "User-agent: *\0Disallow: /"],
+    'ads control character' => ['ads_txt', "google.com\0, pub-123, DIRECT"],
+]);
+
+it('protects crawler file settings from non-admin updates', function (): void {
+    $payload = ['ads_txt' => 'google.com, pub-123, DIRECT'];
+
+    $this->patchJson('/api/admin-api/settings/seo', $payload)->assertUnauthorized();
+
+    Sanctum::actingAs(User::factory()->create(['role' => 'user']));
+    $this->patchJson('/api/admin-api/settings/seo', $payload)->assertForbidden();
 });
 
 it('reports the actual public sitemap file and url count to admins', function (): void {

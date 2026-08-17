@@ -94,6 +94,8 @@ const seoForm = ref<SeoSettingType>({
     meta_pixel_id: '',
     custom_header: '',
     custom_script: '',
+    robots_txt: '',
+    ads_txt: '',
 });
 
 const monitoringRooms = ref<DiscordRoomStatusType[]>([]);
@@ -622,13 +624,60 @@ onMounted(async () => {
                                     />
                                 </label>
                                 <label class="space-y-1">
-                                    <span class="text-xs font-semibold text-slate-600">Robots</span>
+                                    <span class="text-xs font-semibold text-slate-600">Meta robots</span>
                                     <input
                                         v-model="seoForm.robots"
                                         type="text"
+                                        placeholder="index,follow"
                                         class="w-full rounded-[10px] border border-slate-200 px-3 py-2 text-sm outline-none focus:border-indigo-400"
                                     />
                                 </label>
+                                <div class="rounded-[10px] border border-slate-200 bg-slate-50 p-3">
+                                    <div class="mb-3">
+                                        <div class="flex flex-wrap items-center justify-between gap-2">
+                                            <h4 class="text-xs font-semibold uppercase tracking-[0.12em] text-slate-600">Tệp robots.txt & ads.txt</h4>
+                                            <div class="flex items-center gap-3 text-xs font-semibold text-indigo-600">
+                                                <a href="/robots.txt" target="_blank" rel="noopener noreferrer" class="hover:text-indigo-800"
+                                                    >Xem robots.txt</a
+                                                >
+                                                <a href="/ads.txt" target="_blank" rel="noopener noreferrer" class="hover:text-indigo-800"
+                                                    >Xem ads.txt</a
+                                                >
+                                            </div>
+                                        </div>
+                                        <p class="mt-1 text-xs leading-5 text-slate-500">
+                                            Nội dung được xuất công khai ở thư mục gốc website. Để trống robots.txt để dùng cấu hình mặc định an toàn;
+                                            dòng Sitemap do hệ thống tự thêm.
+                                        </p>
+                                    </div>
+                                    <div class="grid gap-3">
+                                        <label class="space-y-1">
+                                            <span class="text-xs font-semibold text-slate-600">robots.txt</span>
+                                            <textarea
+                                                v-model="seoForm.robots_txt"
+                                                rows="9"
+                                                maxlength="20000"
+                                                spellcheck="false"
+                                                class="w-full rounded-[10px] border border-slate-200 bg-white px-3 py-2 font-mono text-xs leading-5 outline-none focus:border-indigo-400"
+                                                placeholder="User-agent: *&#10;Allow: /&#10;Sitemap: https://example.com/sitemap.xml"
+                                            />
+                                        </label>
+                                        <label class="space-y-1">
+                                            <span class="text-xs font-semibold text-slate-600">ads.txt</span>
+                                            <textarea
+                                                v-model="seoForm.ads_txt"
+                                                rows="6"
+                                                maxlength="20000"
+                                                spellcheck="false"
+                                                class="w-full rounded-[10px] border border-slate-200 bg-white px-3 py-2 font-mono text-xs leading-5 outline-none focus:border-indigo-400"
+                                                placeholder="google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0"
+                                            />
+                                            <span class="block text-[11px] leading-5 text-slate-500">
+                                                Mỗi nhà bán quảng cáo một dòng theo định dạng do mạng quảng cáo cung cấp.
+                                            </span>
+                                        </label>
+                                    </div>
+                                </div>
                             </div>
                         </article>
 

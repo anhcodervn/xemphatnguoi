@@ -3,6 +3,7 @@
 namespace App\Features\Admin\Setting\Requests;
 
 use App\Rules\ValidCustomMetaTags;
+use App\Rules\ValidPublicTextFile;
 use App\Support\CustomMetaTags;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
@@ -46,6 +47,8 @@ class UpdateSystemSettingRequest extends FormRequest
             'meta_pixel_id' => ['nullable', 'string', 'max:100'],
             'custom_header' => ['nullable', 'string', 'max:10000', new ValidCustomMetaTags($customMetaTags)],
             'custom_script' => ['nullable', 'string'],
+            'robots_txt' => ['nullable', 'string', 'max:20000', new ValidPublicTextFile],
+            'ads_txt' => ['nullable', 'string', 'max:20000', new ValidPublicTextFile],
         ];
     }
 

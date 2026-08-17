@@ -5,7 +5,7 @@
     $metaDescription = $pageMetaDescription ?? (($settings['meta_description'] ?? '') ?: 'Tra cứu phạt nguội theo biển số xe.');
     $canonical = $pageMetaCanonical ?? $pageMetaUrl ?? request()->url();
     $metaImage = ($pageMetaImage ?? ($settings['og_image'] ?? '')) ?: asset('images/og-traffic-fine.svg');
-    $robots = $pageMetaRobots ?? 'index,follow';
+    $robots = $pageMetaRobots ?? (($settings['robots'] ?? '') ?: 'index,follow');
     $configuredGtmId = trim((string) ($settings['gtm_id'] ?? ''));
     $gtmId = preg_match('/^GTM-[A-Z0-9]+$/i', $configuredGtmId) === 1 ? strtoupper($configuredGtmId) : '';
     $configuredMetaPixelId = trim((string) ($settings['meta_pixel_id'] ?? ''));

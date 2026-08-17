@@ -77,7 +77,7 @@ class PublicSeoPageController extends Controller
                 ? "Tìm kiếm: {$search} | {$pageTitle}"
                 : $pageTitle.' | '.($systemSettings['site_name'] ?: config('app.name', 'XemPhatNguoi.vn')),
             'pageMetaDescription' => $pageDescription,
-            'pageMetaRobots' => $search !== '' ? 'noindex,follow' : 'index,follow',
+            'pageMetaRobots' => $search !== '' ? 'noindex,follow' : (($systemSettings['robots'] ?? '') ?: 'index,follow'),
             'pageMetaUrl' => $request->url().($request->getQueryString() ? '?'.$request->getQueryString() : ''),
             'featuredPost' => $featuredPost ? $this->transformPost($featuredPost) : null,
             'latestPosts' => $latestPosts->map(fn (SeoPost $post) => $this->transformPost($post)),
@@ -219,6 +219,7 @@ class PublicSeoPageController extends Controller
             'youtube' => '',
             'meta_title' => '',
             'meta_description' => '',
+            'robots' => 'index,follow',
             'light_logo' => '',
             'dark_logo' => '',
             'favicon' => '',

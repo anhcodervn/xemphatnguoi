@@ -54,6 +54,8 @@ class SettingController extends Controller
                 'meta_pixel_id' => '',
                 'custom_header' => config('system_settings.defaults.seo.custom_header', ''),
                 'custom_script' => '',
+                'robots_txt' => config('system_settings.defaults.seo.robots_txt', ''),
+                'ads_txt' => config('system_settings.defaults.seo.ads_txt', ''),
             ],
             'options' => [
                 'terms_of_use' => [],
@@ -188,6 +190,8 @@ class SettingController extends Controller
                 'meta_pixel_id' => 'meta_pixel_id',
                 'custom_header' => 'custom_header',
                 'custom_script' => 'custom_script',
+                'robots_txt' => 'robots_txt',
+                'ads_txt' => 'ads_txt',
             ],
             'options' => [
                 'terms_of_use' => 'terms_of_use',
@@ -360,7 +364,7 @@ class SettingController extends Controller
         abort_if(! $this->tabExists($tab), 404);
 
         $payload = [
-            ...$this->tabDefaults()[$tab],
+            ...$this->readTab($settingStore, $this->tabDefaults()[$tab], $this->tabStorageMap()[$tab]),
             ...$request->validated(),
         ];
 
