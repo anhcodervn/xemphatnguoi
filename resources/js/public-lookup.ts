@@ -43,6 +43,7 @@ type TurnstileApi = {
             theme: 'light';
             size: 'flexible';
             language: 'vi';
+            'response-field': boolean;
             callback: (token: string) => void;
             'error-callback': () => void;
             'expired-callback': () => void;
@@ -143,6 +144,7 @@ const initializeTurnstileWidgets = async (): Promise<void> => {
                 theme: 'light',
                 size: 'flexible',
                 language: 'vi',
+                'response-field': false,
                 callback: (token) => {
                     tokenInput.value = token;
                     setTurnstileError(form);
