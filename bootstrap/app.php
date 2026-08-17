@@ -63,7 +63,7 @@ return Application::configure(basePath: dirname(__DIR__))
             $settingStore = app(SettingStore::class);
 
             $systemSettings = $settingStore->getMany([
-                'site_name' => config('app.name', 'Nạp Tiền Tự Động'),
+                'site_name' => config('app.name', 'XemPhatNguoi.vn'),
                 'site_description' => '',
                 'support_email' => '',
                 'hotline' => '',
@@ -86,8 +86,8 @@ return Application::configure(basePath: dirname(__DIR__))
                     'secondary' => ['label' => 'Liên hệ hỗ trợ', 'href' => '/lien-he'],
                 ],
                 'client' => [
-                    'primary' => ['label' => 'Về tổng quan', 'href' => '/'],
-                    'secondary' => ['label' => 'Liên hệ & góp ý', 'href' => '/contact'],
+                    'primary' => ['label' => 'Về tổng quan', 'href' => '/dashboard'],
+                    'secondary' => ['label' => 'Liên hệ & góp ý', 'href' => '/dashboard/contact'],
                 ],
                 'admin' => [
                     'primary' => ['label' => 'Về dashboard admin', 'href' => '/admin'],

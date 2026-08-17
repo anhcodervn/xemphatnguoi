@@ -12,8 +12,17 @@ uses(TestCase::class);
 beforeEach(function () {
     Queue::fake();
 
+    Schema::dropIfExists('settings');
     Schema::dropIfExists('wallets');
     Schema::dropIfExists('users');
+
+    Schema::create('settings', function ($table): void {
+        $table->id();
+        $table->string('key')->unique();
+        $table->longText('value')->nullable();
+        $table->string('type')->nullable();
+        $table->timestamps();
+    });
 
     Schema::create('users', function ($table): void {
         $table->id();
@@ -83,7 +92,7 @@ test('google callback creates user and logs them in', function () {
         'code' => 'google-auth-code',
     ]));
 
-    $response->assertRedirect('/');
+    $response->assertRedirect('/dashboard');
 
     $user = User::query()->where('email', 'google-user@example.com')->first();
 

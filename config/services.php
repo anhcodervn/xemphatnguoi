@@ -42,7 +42,7 @@ return [
     ],
 
     'discord' => [
-        'bot_name' => env('DISCORD_BOT_NAME', 'DailyProxy Monitor'),
+        'bot_name' => env('DISCORD_BOT_NAME', 'XemPhatNguoi Monitor'),
         'bot_avatar_url' => env('DISCORD_BOT_AVATAR_URL'),
         'channels' => [
             'queue' => env('DISCORD_WEBHOOK_QUEUE'),
@@ -59,7 +59,7 @@ return [
             'activity' => env('DISCORD_WEBHOOK_ACTIVITY') ?: env('DISCORD_WEBHOOK_INFO'),
         ],
         'context' => [
-            'app_name' => env('APP_NAME', 'DailyProxy.vn'),
+            'app_name' => env('APP_NAME', 'XemPhatNguoi.vn'),
             'app_env' => env('APP_ENV', 'production'),
             'app_url' => env('APP_URL'),
             'server_name' => env('DISCORD_SERVER_NAME', gethostname() ?: php_uname('n')),
@@ -78,15 +78,19 @@ return [
         'key' => env('AUTOCRON_INTERNAL_KEY'),
     ],
 
-    'proxy' => [
-        'pending_order_ttl_hours' => (int) env('PROXY_PENDING_ORDER_TTL_HOURS', 24),
-        'api_log_retention_days' => (int) env('PROXY_API_LOG_RETENTION_DAYS', 30),
-        'source_low_balance_threshold' => (float) env('PROXY_SOURCE_LOW_BALANCE_THRESHOLD', 50000),
-        'source_low_balance_channel' => env('PROXY_SOURCE_LOW_BALANCE_CHANNEL', 'alerts'),
-        'check_url' => env('PROXY_CHECK_URL', 'https://api.ipify.org?format=json'),
-        'country_check_url' => env('PROXY_COUNTRY_CHECK_URL', 'https://ipwho.is/'),
-        'check_connect_timeout' => (int) env('PROXY_CHECK_CONNECT_TIMEOUT', 4),
-        'check_timeout' => (int) env('PROXY_CHECK_TIMEOUT', 8),
+    'api' => [
+        'log_retention_days' => (int) env('API_LOG_RETENTION_DAYS', 30),
+    ],
+
+    'turnstile' => [
+        'enabled' => filter_var(env('TURNSTILE_ENABLED', false), FILTER_VALIDATE_BOOL),
+        'site_key' => env('TURNSTILE_SITE_KEY', ''),
+        'secret_key' => env('TURNSTILE_SECRET_KEY', ''),
+        'hostname' => env('TURNSTILE_ALLOWED_HOSTNAME') ?: (parse_url((string) env('APP_URL'), PHP_URL_HOST) ?: ''),
+        'action' => 'traffic_fine_lookup',
+        'connect_timeout' => 2,
+        'timeout' => 5,
+        'grant_ttl' => 300,
     ],
 
 ];

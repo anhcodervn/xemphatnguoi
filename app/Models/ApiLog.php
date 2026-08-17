@@ -15,6 +15,7 @@ class ApiLog extends Model
     protected $fillable = [
         'user_id',
         'api_key_id',
+        'wallet_transaction_id',
         'endpoint',
         'method',
         'ip',
@@ -23,6 +24,9 @@ class ApiLog extends Model
         'response_data',
         'status_code',
         'response_time_ms',
+        'unit_price',
+        'charged_amount',
+        'billing_status',
         'created_at',
     ];
 
@@ -34,6 +38,8 @@ class ApiLog extends Model
             'response_data' => 'array',
             'status_code' => 'integer',
             'response_time_ms' => 'integer',
+            'unit_price' => 'decimal:2',
+            'charged_amount' => 'decimal:2',
             'created_at' => 'datetime',
         ];
     }
@@ -46,5 +52,10 @@ class ApiLog extends Model
     public function apiKey(): BelongsTo
     {
         return $this->belongsTo(ApiKey::class);
+    }
+
+    public function walletTransaction(): BelongsTo
+    {
+        return $this->belongsTo(WalletTransaction::class);
     }
 }

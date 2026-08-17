@@ -46,6 +46,7 @@ class PublicSeoPageController extends Controller
         $posts = (clone $baseQuery)
             ->orderByDesc('published_at')
             ->orderByDesc('id')
+            ->limit(10)
             ->get();
 
         $featuredPost = $posts->first();
@@ -65,8 +66,8 @@ class PublicSeoPageController extends Controller
             ->get();
 
         $systemSettings = $this->systemSettings($settingStore);
-        $pageTitle = 'Blog DailyProxy.vn và kiến thức proxy API';
-        $pageDescription = 'Chia sẻ hướng dẫn cấu hình HTTP Cron Jobs, tối ưu lịch chạy, kiểm soát quota, log, cảnh báo và vận hành queue ổn định.';
+        $pageTitle = 'Blog phạt nguội và kiến thức giao thông';
+        $pageDescription = 'Hướng dẫn tra cứu phạt nguội, đọc kết quả, quản lý phương tiện và cập nhật kiến thức giao thông hữu ích.';
 
         return view('pages.seo.index', [
             'systemSettings' => $systemSettings,
@@ -74,8 +75,9 @@ class PublicSeoPageController extends Controller
             'pageDescription' => $pageDescription,
             'pageMetaTitle' => $search !== ''
                 ? "Tìm kiếm: {$search} | {$pageTitle}"
-                : $pageTitle.' | '.($systemSettings['site_name'] ?: config('app.name', 'DailyProxy.vn')),
+                : $pageTitle.' | '.($systemSettings['site_name'] ?: config('app.name', 'XemPhatNguoi.vn')),
             'pageMetaDescription' => $pageDescription,
+            'pageMetaRobots' => $search !== '' ? 'noindex,follow' : 'index,follow',
             'pageMetaUrl' => $request->url().($request->getQueryString() ? '?'.$request->getQueryString() : ''),
             'featuredPost' => $featuredPost ? $this->transformPost($featuredPost) : null,
             'latestPosts' => $latestPosts->map(fn (SeoPost $post) => $this->transformPost($post)),
@@ -84,7 +86,10 @@ class PublicSeoPageController extends Controller
             'activeCategorySlug' => $categorySlug,
             'search' => $search,
             'popularTags' => $posts
-                ->pluck('focus_keyword')
+                ->flatMap(fn (SeoPost $post): array => [
+                    ...($post->tags ?? []),
+                    $post->focus_keyword,
+                ])
                 ->filter()
                 ->map(fn (string $tag) => trim($tag))
                 ->unique()
@@ -129,8 +134,56 @@ class PublicSeoPageController extends Controller
         $systemSettings = $this->systemSettings($settingStore);
         $content = is_array($post->content) ? $post->content : [];
         $contentHtml = $this->contentRenderer->renderNodes($content);
-        $coverImage = $this->contentRenderer->firstImage($content);
+        $coverImage = $post->thumbnail ?: $this->contentRenderer->firstImage($content);
         $headingIndex = $this->contentRenderer->headingIndex($content);
+        $faq = is_array($post->faq) ? $post->faq : [];
+        $validFaq = collect($faq)
+            ->filter(fn (mixed $item): bool => is_array($item) && filled($item['question'] ?? null) && filled($item['answer'] ?? null))
+            ->values();
+        $structuredData = [];
+
+        if ($post->article_schema) {
+            $structuredData[] = [
+                '@context' => 'https://schema.org',
+                '@type' => 'Article',
+                'headline' => $post->title,
+                'description' => $post->seo_description ?: $post->excerpt,
+                'datePublished' => $post->published_at?->toAtomString(),
+                'dateModified' => $post->updated_at?->toAtomString(),
+                'image' => $post->og_image ?: $coverImage,
+                'author' => [
+                    '@type' => 'Organization',
+                    'name' => $systemSettings['site_name'] ?: config('app.name', 'XemPhatNguoi.vn'),
+                ],
+            ];
+        }
+
+        if ($post->breadcrumb_schema) {
+            $structuredData[] = [
+                '@context' => 'https://schema.org',
+                '@type' => 'BreadcrumbList',
+                'itemListElement' => [
+                    ['@type' => 'ListItem', 'position' => 1, 'name' => 'Trang chủ', 'item' => url('/')],
+                    ['@type' => 'ListItem', 'position' => 2, 'name' => 'Blog', 'item' => url('/blog')],
+                    ['@type' => 'ListItem', 'position' => 3, 'name' => $post->title, 'item' => $request->url()],
+                ],
+            ];
+        }
+
+        if ($validFaq->isNotEmpty()) {
+            $structuredData[] = [
+                '@context' => 'https://schema.org',
+                '@type' => 'FAQPage',
+                'mainEntity' => $validFaq
+                    ->map(fn (array $item): array => [
+                        '@type' => 'Question',
+                        'name' => $item['question'],
+                        'acceptedAnswer' => ['@type' => 'Answer', 'text' => $item['answer']],
+                    ])
+                    ->values()
+                    ->all(),
+            ];
+        }
 
         return view('pages.seo.show', [
             'systemSettings' => $systemSettings,
@@ -139,20 +192,23 @@ class PublicSeoPageController extends Controller
             'coverImage' => $coverImage,
             'readingMinutes' => $this->contentRenderer->estimateReadingMinutes($content),
             'headingIndex' => $headingIndex,
+            'faq' => $faq,
             'relatedPosts' => $relatedPosts->map(fn (SeoPost $item) => $this->transformPost($item)),
             'sidebarCategories' => $sidebarCategories,
-            'pageMetaTitle' => $post->seo_title ?: $post->title.' | '.($systemSettings['site_name'] ?: config('app.name', 'DailyProxy.vn')),
+            'pageMetaTitle' => $post->seo_title ?: $post->title.' | '.($systemSettings['site_name'] ?: config('app.name', 'XemPhatNguoi.vn')),
             'pageMetaDescription' => $post->seo_description ?: ($post->excerpt ?: $this->contentRenderer->extractText($content)),
             'pageMetaCanonical' => $post->canonical_url ?: $request->url(),
             'pageMetaUrl' => $request->url(),
-            'pageMetaImage' => $coverImage,
+            'pageMetaImage' => $post->og_image ?: $coverImage,
+            'pageMetaRobots' => $post->robots,
+            'structuredData' => $structuredData,
         ]);
     }
 
     protected function systemSettings(SettingStore $settingStore): array
     {
         return $settingStore->getMany([
-            'site_name' => config('app.name', 'DailyProxy.vn'),
+            'site_name' => config('app.name', 'XemPhatNguoi.vn'),
             'site_domain' => '',
             'site_description' => '',
             'support_email' => '',
@@ -182,9 +238,9 @@ class PublicSeoPageController extends Controller
             'title' => $post->title,
             'slug' => $post->slug,
             'excerpt' => $post->excerpt ?: $this->contentRenderer->extractText($content),
-            'cover_image' => $this->contentRenderer->firstImage($content),
+            'thumbnail' => $post->thumbnail ?: $this->contentRenderer->firstImage($content),
             'focus_keyword' => $post->focus_keyword,
-            'category_name' => $post->category?->name,
+            'category' => $post->category?->name,
             'category_slug' => $post->category?->slug,
             'published_at' => $publishedAt,
             'published_label' => $publishedAt?->format('d/m/Y'),

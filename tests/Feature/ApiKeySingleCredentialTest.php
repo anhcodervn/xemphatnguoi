@@ -7,11 +7,16 @@ use App\Support\ApiPermissionCatalog;
 function apiKeyPayload(): array
 {
     return [
-        'name' => 'DailyProxy API v1',
+        'name' => 'XemPhatNguoi API v1',
         'permissions' => ApiPermissionCatalog::keys(),
         'ip_whitelist' => ['*'],
     ];
 }
+
+it('publishes only the traffic fine permission', function (): void {
+    expect(ApiPermissionCatalog::keys())->toBe(['traffic-fines.lookup'])
+        ->and(ApiPermissionCatalog::keyed()['traffic-fines.lookup']['endpoints'])->toBe(['GET /api/v1/lookup']);
+});
 
 it('allows each user to create only one API credential pair', function () {
     $user = User::factory()->create();

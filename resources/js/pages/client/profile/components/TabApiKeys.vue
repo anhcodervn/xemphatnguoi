@@ -166,11 +166,11 @@ const saveIpWhitelist = (apiKey: ClientApiKeyType): void => {
                     <button
                         type="button"
                         class="mt-4 inline-flex items-center justify-center gap-2 rounded-[10px] bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-blue-200 transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
-                        :disabled="creating || !formName.trim()"
+                        :disabled="creating || !formName.trim() || permissions.length === 0 || apiKeys.length > 0"
                         @click="$emit('create')"
                     >
                         <Sparkles class="h-4 w-4" />
-                        {{ creating ? 'Đang tạo...' : 'Tạo API key ví' }}
+                        {{ creating ? 'Đang tạo...' : apiKeys.length > 0 ? 'Tài khoản đã có API key' : 'Tạo API key ví' }}
                     </button>
                 </div>
 

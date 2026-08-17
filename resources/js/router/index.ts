@@ -7,11 +7,18 @@ const routes: RouteRecordRaw[] = [adminRouter, clientRouter];
 
 const routeTitles: Record<string, string> = {
     'admin.dashboard': 'Tổng quan quản trị',
-    'admin.analytics.index': 'Báo cáo vận hành',
+    'admin.lookup-logs': 'Lookup Logs',
+    'admin.traffic-fine-results': 'Traffic Fine Results',
+    'admin.providers': 'Providers',
+    'admin.api-billing': 'Cấu hình giá API',
+    'admin.transactions': 'Transactions',
+    'admin.monitoring': 'Monitoring',
+    'admin.api-usage': 'API Usage',
+    'admin.blog': 'Blog',
+    'admin.blog.create': 'Tạo bài viết',
+    'admin.blog.edit': 'Cập nhật bài viết',
+    'admin.ads': 'Ads',
     'admin.support.index': 'Tin nhắn hỗ trợ',
-    'admin.proxy-taxonomy.index': 'Chuyên mục proxy',
-    'admin.proxy-providers.index': 'Nhà cung cấp proxy',
-    'admin.proxy-products.index': 'Sản phẩm proxy',
     'admin.users.index': 'Quản lý người dùng',
     'admin.users.show': 'Chi tiết người dùng',
     'admin.users.wallet-transaction': 'Biến động ví người dùng',
@@ -36,11 +43,12 @@ const routeTitles: Record<string, string> = {
     'admin.recharge.history': 'Lịch sử nạp tiền',
     'admin.error.404': 'Trang quản trị không tồn tại',
     'client.home': 'Tổng quan',
-    'client.services': 'Mua proxy',
-    'client.proxy-orders': 'Quản lý proxy',
+    'client.lookup-history': 'Lịch sử tra cứu',
+    'client.vehicles': 'Xe của tôi',
+    'client.monitoring': 'Theo dõi biển số',
+    'client.api-usage': 'Lượt dùng API',
     'client.wallet': 'Ví và nạp tiền',
-    'client.proxy-check': 'Check Proxy',
-    'client.proxy-country-check': 'Check quốc gia proxy',
+    'client.transactions': 'Giao dịch',
     'client.api-docs': 'Tài liệu API',
     'client.profile': 'Hồ sơ tài khoản',
     'client.contact': 'Liên hệ và góp ý',
@@ -74,7 +82,7 @@ router.beforeEach(async (to) => {
 
     if (user.role !== 'admin') {
         return {
-            path: '/',
+            path: '/dashboard',
         };
     }
 

@@ -16,7 +16,11 @@ class SeoService
             ->where('robots', 'index,follow')
             ->count();
         $postCount = SeoPost::query()->count();
-        $publishedPostCount = SeoPost::query()->where('status', 'published')->count();
+        $publishedPostCount = SeoPost::query()
+            ->where('status', 'published')
+            ->whereNotNull('published_at')
+            ->where('published_at', '<=', now())
+            ->count();
         $canonicalCount = SeoPost::query()
             ->whereNotNull('canonical_url')
             ->where('canonical_url', '!=', '')
@@ -32,10 +36,10 @@ class SeoService
                 'indexed_categories' => $indexedCategoryCount,
                 'total_posts' => $postCount,
                 'published_posts' => $publishedPostCount,
-                'sitemap_files' => 4,
+                'sitemap_files' => 1,
                 'technical_score' => $postCount > 0
                     ? (int) round((($canonicalCount + $schemaReadyCount) / max(1, $postCount * 2)) * 100)
-                    : 100,
+                    : 0,
             ],
             'sitemaps' => $this->sitemapSummary(),
         ];
@@ -106,12 +110,16 @@ class SeoService
             'title' => $payload['title'],
             'slug' => $payload['slug'],
             'excerpt' => $payload['excerpt'] ?? null,
+            'thumbnail' => $payload['thumbnail'] ?? null,
             'content' => $payload['content'] ?? [],
+            'faq' => $payload['faq'] ?? [],
             'seo_title' => $payload['seo_title'] ?? null,
             'seo_description' => $payload['seo_description'] ?? null,
             'canonical_url' => $payload['canonical_url'] ?? null,
+            'og_image' => $payload['og_image'] ?? null,
             'robots' => $payload['robots'],
             'focus_keyword' => $payload['focus_keyword'] ?? null,
+            'tags' => $payload['tags'] ?? [],
             'cover_alt' => $payload['cover_alt'] ?? null,
             'article_schema' => $payload['article_schema'] ?? true,
             'breadcrumb_schema' => $payload['breadcrumb_schema'] ?? true,
@@ -131,36 +139,19 @@ class SeoService
 
     public function sitemapSummary(): array
     {
-        $categoryCount = SeoCategory::query()
-            ->where('is_active', true)
-            ->where('robots', 'index,follow')
+        $publishedPostCount = SeoPost::query()
+            ->where('status', 'published')
+            ->whereNotNull('published_at')
+            ->where('published_at', '<=', now())
             ->count();
-        $publishedPostCount = SeoPost::query()->where('status', 'published')->count();
+        $includedUrlCount = count(config('traffic-fine-content.sitemap_route_names', [])) + $publishedPostCount;
 
         return [
             [
-                'title' => 'Sitemap index',
+                'title' => 'Public sitemap',
                 'path' => '/sitemap.xml',
-                'description' => 'Tệp tổng hợp để submit trong Search Console và khai báo các sitemap con.',
-                'included_count' => '4 file',
-            ],
-            [
-                'title' => 'Sitemap bài viết',
-                'path' => '/sitemap-posts.xml',
-                'description' => 'Chỉ chứa các bài viết public đã publish và có canonical hợp lệ.',
-                'included_count' => "{$publishedPostCount} URL",
-            ],
-            [
-                'title' => 'Sitemap danh mục',
-                'path' => '/sitemap-categories.xml',
-                'description' => 'Tập trung các trang category index/follow để gom chủ đề nội dung.',
-                'included_count' => "{$categoryCount} URL",
-            ],
-            [
-                'title' => 'Sitemap landing & pháp lý',
-                'path' => '/sitemap-pages.xml',
-                'description' => 'Bao gồm landing, docs public, điều khoản và các trang nội dung tĩnh.',
-                'included_count' => '18 URL',
+                'description' => 'Chứa các trang public chính và bài blog đã xuất bản; loại trừ dashboard, admin và kết quả biển số.',
+                'included_count' => "{$includedUrlCount} URL",
             ],
         ];
     }

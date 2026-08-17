@@ -1,17 +1,17 @@
 <script setup lang="ts">
-import Breadcrumb from "@/components/MasterLayouts/Breadcrumb/index.vue";
-import { adminSeoService } from "@/services/admin-seo.service";
-import type { AdminSeoPostItem } from "@/types/admin-seo.type";
-import { handleErrorResponse, handleSuccessResponse } from "@/utils/response";
-import { BookOpenText, Plus, Search, Trash2 } from "lucide-vue-next";
-import { computed, onMounted, reactive, ref } from "vue";
-import { RouterLink } from "vue-router";
+import Breadcrumb from '@/components/MasterLayouts/Breadcrumb/index.vue';
+import { adminSeoService } from '@/services/admin-seo.service';
+import type { AdminSeoPostItem } from '@/types/admin-seo.type';
+import { handleErrorResponse, handleSuccessResponse } from '@/utils/response';
+import { BookOpenText, Plus, Search, Trash2 } from 'lucide-vue-next';
+import { computed, onMounted, reactive, ref } from 'vue';
+import { RouterLink } from 'vue-router';
 
 const loading = ref(false);
 const rows = ref<AdminSeoPostItem[]>([]);
 const filters = reactive({
-    search: "",
-    status: "",
+    search: '',
+    status: '',
 });
 
 const filteredRows = computed(() => rows.value);
@@ -48,13 +48,10 @@ onMounted(async () => {
 
 <template>
     <div class="space-y-4">
-        <Breadcrumb
-            title="Bài viết SEO"
-            description="Quản trị danh sách bài viết, canonical, điểm SEO và trạng thái index/publish."
-        >
+        <Breadcrumb title="Bài viết SEO" description="Quản trị danh sách bài viết, canonical, điểm SEO và trạng thái index/publish.">
             <template #actions>
                 <RouterLink
-                    to="/admin/seo/posts/create"
+                    to="/admin/blog/create"
                     class="inline-flex items-center gap-2 rounded-[10px] bg-violet-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-violet-500"
                 >
                     <Plus class="h-4 w-4" />
@@ -120,7 +117,7 @@ onMounted(async () => {
                                     </div>
                                 </div>
                             </td>
-                            <td class="px-4 py-3 text-sm text-slate-600">{{ row.category?.name || "-" }}</td>
+                            <td class="px-4 py-3 text-sm text-slate-600">{{ row.category?.name || '-' }}</td>
                             <td class="px-4 py-3 text-sm text-slate-600">
                                 <a
                                     v-if="row.canonical_url"
@@ -168,12 +165,12 @@ onMounted(async () => {
                                 </span>
                             </td>
                             <td class="px-4 py-3 text-sm text-slate-600">
-                                {{ new Date(row.updated_at).toLocaleString("vi-VN") }}
+                                {{ new Date(row.updated_at).toLocaleString('vi-VN') }}
                             </td>
                             <td class="px-4 py-3">
                                 <div class="flex items-center gap-2">
                                     <RouterLink
-                                        :to="`/admin/seo/posts/${row.id}/edit`"
+                                        :to="`/admin/blog/${row.id}/edit`"
                                         class="inline-flex items-center rounded-[8px] border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
                                     >
                                         Sửa

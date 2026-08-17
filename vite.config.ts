@@ -1,7 +1,7 @@
-import { defineConfig, loadEnv } from 'vite';
+import vue from '@vitejs/plugin-vue';
 import laravel from 'laravel-vite-plugin';
 import path from 'path';
-import vue from '@vitejs/plugin-vue';
+import { defineConfig, loadEnv } from 'vite';
 
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, process.cwd(), '');
@@ -10,7 +10,7 @@ export default defineConfig(({ mode }) => {
     return {
         plugins: [
             laravel({
-                input: ['resources/css/app.css', 'resources/js/app.ts'],
+                input: ['resources/css/app.css', 'resources/js/app.ts', 'resources/js/public-lookup.ts'],
                 refresh: true,
             }),
             vue(),

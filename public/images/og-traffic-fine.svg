@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title description">
+    <title id="title">XemPhatNguoi.vn</title>
+    <desc id="description">Tra cứu phạt nguội ô tô, xe máy toàn quốc</desc>
+    <rect width="1200" height="630" fill="#F6F9FC"/>
+    <path d="M0 510h1200v120H0z" fill="#071A33"/>
+    <path d="M690 0h510v510H570c124-98 159-273 120-510Z" fill="#E7F4FC"/>
+    <g fill="none" stroke="#0875BE" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="786" y="142" width="238" height="178" rx="28"/>
+        <circle cx="905" cy="231" r="50"/>
+        <path d="m832 320-38 78m182-78 38 78M842 142l22-42h82l22 42"/>
+    </g>
+    <circle cx="905" cy="231" r="18" fill="#16A36A"/>
+    <text x="80" y="160" fill="#0875BE" font-family="Arial, sans-serif" font-size="28" font-weight="700" letter-spacing="2">XEMPHATNGUOI.VN</text>
+    <text x="80" y="246" fill="#071A33" font-family="Arial, sans-serif" font-size="58" font-weight="700">Tra cứu phạt nguội</text>
+    <text x="80" y="318" fill="#071A33" font-family="Arial, sans-serif" font-size="58" font-weight="700">ô tô, xe máy toàn quốc</text>
+    <text x="80" y="388" fill="#64748B" font-family="Arial, sans-serif" font-size="28">Kiểm tra theo biển số • Nhanh • Dễ sử dụng</text>
+    <text x="80" y="582" fill="#FFFFFF" font-family="Arial, sans-serif" font-size="28" font-weight="600">Dữ liệu rõ ràng. Tra cứu có trách nhiệm.</text>
+</svg>

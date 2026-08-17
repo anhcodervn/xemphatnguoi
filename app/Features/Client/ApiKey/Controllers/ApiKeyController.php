@@ -43,7 +43,7 @@ class ApiKeyController extends Controller
     {
         return response()->json(ApiResponse::success(data: [
             'permissions' => ApiPermissionCatalog::all(),
-            'note' => 'API key dùng để gọi proxy API V1 và trừ trực tiếp số dư ví.',
+            'note' => 'API key dùng để gọi API tra cứu phạt nguội V1.',
         ]));
     }
 

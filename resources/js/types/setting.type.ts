@@ -106,6 +106,14 @@ export interface MonitoringSettingType {
     [key: string]: unknown;
 }
 
+export interface TurnstileSettingType {
+    enabled: boolean;
+    site_key: string;
+    secret_key?: string;
+    secret_configured: boolean;
+    [key: string]: unknown;
+}
+
 export interface SeoSettingType {
     meta_title: string;
     meta_description: string;
@@ -126,17 +134,17 @@ export interface OptionSettingType {
 }
 
 export type ContentPageBaseKey =
-    | "contact_page"
-    | "terms_page"
-    | "faq_page"
-    | "privacy_page"
-    | "about_page"
-    | "refund_policy"
-    | "payment_policy"
-    | "api_usage_policy"
-    | "disclaimer"
-    | "system_status"
-    | "system_updates";
+    | 'contact_page'
+    | 'terms_page'
+    | 'faq_page'
+    | 'privacy_page'
+    | 'about_page'
+    | 'refund_policy'
+    | 'payment_policy'
+    | 'api_usage_policy'
+    | 'disclaimer'
+    | 'system_status'
+    | 'system_updates';
 
 export type ContentPageContentKey = `${ContentPageBaseKey}_content`;
 export type ContentPageTitleKey = `${ContentPageBaseKey}_title`;

@@ -40,7 +40,7 @@ onBeforeUnmount(() => {
                 <Header @toggle-sidebar="isSidebarOpen = !isSidebarOpen" />
 
                 <main
-                    class="mx-auto w-full min-w-0 flex-1 px-4 pt-[8.5rem] sm:px-6"
+                    class="mx-auto w-full min-w-0 flex-1 px-4 pt-24 sm:px-6"
                     :class="isSupportRoute ? 'max-w-[1440px] pb-4' : 'max-w-[1200px] pb-8'"
                 >
                     <router-view />

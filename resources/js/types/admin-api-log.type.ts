@@ -8,6 +8,10 @@ export type AdminApiLogItem = {
     response_data: Record<string, unknown> | null;
     status_code: number | null;
     response_time_ms: number | null;
+    unit_price: string;
+    charged_amount: string;
+    billing_status: string;
+    wallet_transaction_id: number | null;
     created_at: string | null;
     user: {
         id: number;
@@ -35,45 +39,7 @@ export type AdminApiLogListResponse = {
         success: number;
         client_error: number;
         server_error: number;
-    };
-};
-
-export type AdminProxyResponseItem = {
-    id: number;
-    proxy_order_id: number;
-    operation: string;
-    http_method: string;
-    endpoint: string;
-    status: 'pending' | 'completed' | 'failed';
-    request_data: Record<string, unknown> | unknown[] | null;
-    response_data: Record<string, unknown> | unknown[] | null;
-    http_status: number | null;
-    duration_ms: string | null;
-    exception_class: string | null;
-    error_message: string | null;
-    created_at: string | null;
-    order: {
-        id: number;
-        order_code: string;
-        status: string;
-        provider: {
-            name: string;
-            code: string;
-        } | null;
-    } | null;
-};
-
-export type AdminProxyResponseListResponse = {
-    proxy_responses: {
-        data: AdminProxyResponseItem[];
-        current_page: number;
-        last_page: number;
-        total: number;
-    };
-    summary: {
-        total: number;
-        completed: number;
-        failed: number;
-        pending: number;
+        charged: number;
+        revenue: string;
     };
 };

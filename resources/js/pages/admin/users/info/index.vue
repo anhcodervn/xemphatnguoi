@@ -106,8 +106,8 @@ const statCards = computed(() => {
             iconClass: 'bg-emerald-50 text-emerald-600',
         },
         {
-            label: 'Đơn proxy',
-            value: formatNumber(detail.value.stats.proxy_task_count),
+            label: 'Lượt tra cứu',
+            value: formatNumber(detail.value.stats.lookup_count),
             icon: ListChecks,
             iconClass: 'bg-sky-50 text-sky-600',
         },
@@ -118,8 +118,8 @@ const statCards = computed(() => {
             iconClass: 'bg-amber-50 text-amber-600',
         },
         {
-            label: 'Task đã giải',
-            value: formatNumber(detail.value.stats.solved_task_count),
+            label: 'Xe đã lưu',
+            value: formatNumber(detail.value.stats.vehicle_count),
             icon: CheckCheck,
             iconClass: 'bg-slate-100 text-slate-700',
         },

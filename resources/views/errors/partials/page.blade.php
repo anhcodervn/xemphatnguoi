@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     @php
         $settings = $systemSettings ?? [];
-        $siteName = $settings['site_name'] ?? config('app.name', 'DailyProxy.vn');
+        $siteName = $settings['site_name'] ?? config('app.name', 'XemPhatNguoi.vn');
         $favicon = $settings['favicon'] ?? null;
     @endphp
     <title>{{ $statusCode }} - {{ $headline }} | {{ $siteName }}</title>

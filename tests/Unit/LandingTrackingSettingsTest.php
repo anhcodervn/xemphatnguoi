@@ -4,12 +4,12 @@ use Tests\TestCase;
 
 uses(TestCase::class);
 
-test('landing layout renders configured tag manager and meta pixel identifiers', function (): void {
+test('public layout renders configured tag manager and meta pixel identifiers', function (): void {
     $this->withoutVite();
 
-    $html = view('layouts.landing', [
+    $html = view('layouts.public', [
         'systemSettings' => [
-            'site_name' => 'DailyProxy.vn',
+            'site_name' => 'XemPhatNguoi.vn',
             'gtm_id' => 'GTM-ABC123',
             'meta_pixel_id' => '123456789012345',
         ],
@@ -23,12 +23,12 @@ test('landing layout renders configured tag manager and meta pixel identifiers',
         ->toContain("fbq('init', '123456789012345')");
 });
 
-test('landing layout ignores malformed tracking identifiers', function (): void {
+test('public layout ignores malformed tracking identifiers', function (): void {
     $this->withoutVite();
 
-    $html = view('layouts.landing', [
+    $html = view('layouts.public', [
         'systemSettings' => [
-            'site_name' => 'DailyProxy.vn',
+            'site_name' => 'XemPhatNguoi.vn',
             'gtm_id' => '</script><script>alert(1)</script>',
             'meta_pixel_id' => 'not-a-pixel',
         ],

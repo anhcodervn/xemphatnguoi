@@ -44,7 +44,7 @@ class AdminUserService
     {
         $user = User::query()
             ->with('wallet')
-            ->withCount('apiKeys')
+            ->withCount(['apiKeys', 'lookupHistories', 'vehicles', 'vehicleMonitorings'])
             ->findOrFail($user->id);
 
         $wallet = $user->wallet;
@@ -54,9 +54,10 @@ class AdminUserService
             'wallet' => $wallet,
             'stats' => [
                 'total_spent' => $wallet instanceof Wallet ? (float) $wallet->total_spent : 0.0,
-                'proxy_task_count' => 0,
+                'lookup_count' => $user->lookup_histories_count,
                 'api_key_count' => $user->api_keys_count,
-                'solved_task_count' => 0,
+                'vehicle_count' => $user->vehicles_count,
+                'monitoring_count' => $user->vehicle_monitorings_count,
             ],
             'latest_login' => [
                 'at' => $user->last_login_at?->toISOString(),

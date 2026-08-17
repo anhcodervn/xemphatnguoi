@@ -237,7 +237,7 @@ onBeforeUnmount(() => {
                     <MessageCircleMore class="h-5 w-5" />
                 </div>
                 <div class="min-w-0">
-                    <h1 class="truncate text-sm font-bold text-slate-950">Hỗ trợ DailyProxy</h1>
+                    <h1 class="truncate text-sm font-bold text-slate-950">Hỗ trợ XemPhatNguoi.vn</h1>
                     <p class="mt-0.5 flex items-center gap-1.5 text-xs" :class="supportStore.connected ? 'text-blue-700' : 'text-slate-500'">
                         <span class="h-2 w-2 rounded-full" :class="supportStore.connected ? 'bg-blue-500' : 'bg-slate-400'" />
                         {{ supportStore.connected ? 'Đã kết nối realtime' : 'Đang kết nối...' }}
@@ -246,7 +246,7 @@ onBeforeUnmount(() => {
             </div>
             <button
                 type="button"
-                class="proxy-focus inline-flex min-h-11 items-center gap-2 rounded-[10px] px-3 text-xs font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-blue-700"
+                class="app-focus inline-flex min-h-11 items-center gap-2 rounded-[10px] px-3 text-xs font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-blue-700"
                 :disabled="loadingInitial"
                 @click="loadInitial"
             >
@@ -263,7 +263,7 @@ onBeforeUnmount(() => {
                 <button
                     v-else-if="hasMore"
                     type="button"
-                    class="proxy-focus mx-auto mb-3 flex min-h-11 items-center rounded-[10px] px-3 text-xs font-semibold text-blue-700 hover:bg-blue-50"
+                    class="app-focus mx-auto mb-3 flex min-h-11 items-center rounded-[10px] px-3 text-xs font-semibold text-blue-700 hover:bg-blue-50"
                     @click="loadOlder"
                 >
                     Xem tin nhắn cũ hơn
@@ -330,7 +330,7 @@ onBeforeUnmount(() => {
             <button
                 v-if="showNewMessageButton"
                 type="button"
-                class="proxy-focus absolute bottom-3 left-1/2 inline-flex min-h-11 -translate-x-1/2 items-center gap-2 rounded-full bg-slate-950 px-4 text-xs font-semibold text-white shadow-lg transition hover:bg-blue-700"
+                class="app-focus absolute bottom-3 left-1/2 inline-flex min-h-11 -translate-x-1/2 items-center gap-2 rounded-full bg-slate-950 px-4 text-xs font-semibold text-white shadow-lg transition hover:bg-blue-700"
                 @click="scrollToBottom()"
             >
                 <ArrowDown class="h-4 w-4" /> Tin nhắn mới
@@ -354,7 +354,7 @@ onBeforeUnmount(() => {
                 />
                 <button
                     type="submit"
-                    class="proxy-focus inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[10px] bg-blue-600 text-white transition duration-200 hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    class="app-focus inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[10px] bg-blue-600 text-white transition duration-200 hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
                     :disabled="sending || messageText.trim() === ''"
                     aria-label="Gửi tin nhắn"
                 >

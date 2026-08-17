@@ -7,6 +7,7 @@ use App\Exceptions\ApiException;
 use App\Models\User;
 use App\Models\Wallet;
 use App\Models\WalletTransaction;
+use Illuminate\Support\Facades\DB;
 
 class WalletService
 {
@@ -63,6 +64,44 @@ class WalletService
         string $description,
         string $type = Wallet::TYPE_MAIN,
     ): Wallet {
+        $transaction = $this->debitWithTransaction(
+            user: $user,
+            amount: $amount,
+            referenceType: $referenceType,
+            referenceId: $referenceId,
+            description: $description,
+            type: $type,
+        );
+
+        return $transaction->wallet->refresh();
+    }
+
+    public function debitWithTransaction(
+        User $user,
+        float $amount,
+        string $referenceType,
+        int $referenceId,
+        string $description,
+        string $type = Wallet::TYPE_MAIN,
+    ): WalletTransaction {
+        return DB::transaction(fn (): WalletTransaction => $this->lockedDebit(
+            user: $user,
+            amount: $amount,
+            referenceType: $referenceType,
+            referenceId: $referenceId,
+            description: $description,
+            type: $type,
+        ));
+    }
+
+    private function lockedDebit(
+        User $user,
+        float $amount,
+        string $referenceType,
+        int $referenceId,
+        string $description,
+        string $type,
+    ): WalletTransaction {
         $wallet = Wallet::query()
             ->where('user_id', $user->id)
             ->where('type', $type)
@@ -78,7 +117,7 @@ class WalletService
         }
 
         if ((float) $wallet->balance < $amount) {
-            throw new ApiException('Số dư ví chính không đủ để thanh toán đơn hàng.', 422);
+            throw new ApiException('Số dư ví chính không đủ để thực hiện giao dịch.', 422);
         }
 
         $balanceBefore = (float) $wallet->balance;
@@ -104,7 +143,7 @@ class WalletService
         $wallet = $wallet->refresh();
         $this->broadcastBalanceChanged($user, $wallet, $transaction, -$amount);
 
-        return $wallet;
+        return $transaction->setRelation('wallet', $wallet);
     }
 
     public function credit(

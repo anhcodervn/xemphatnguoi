@@ -5,6 +5,8 @@ namespace App\Features\Admin\Setting\Controllers;
 use App\Features\Admin\Setting\Requests\UpdateOptionSettingRequest;
 use App\Features\Admin\Setting\Requests\UpdateSystemSettingRequest;
 use App\Features\Admin\Setting\Requests\UpdateTabSettingRequest;
+use App\Features\Admin\Setting\Requests\UpdateTurnstileSettingRequest;
+use App\Features\TrafficFine\Services\TrafficFineTurnstileSettingsService;
 use App\Http\Controllers\Controller;
 use App\Support\SettingStore;
 use Illuminate\Http\JsonResponse;
@@ -287,6 +289,38 @@ class SettingController extends Controller
             'data' => [
                 'tab' => $tab,
                 'settings' => $settings,
+            ],
+        ]);
+    }
+
+    public function showTurnstile(TrafficFineTurnstileSettingsService $turnstileSettings): JsonResponse
+    {
+        return response()->json([
+            'status' => true,
+            'data' => [
+                'tab' => 'turnstile',
+                'settings' => $turnstileSettings->adminConfiguration(),
+            ],
+        ]);
+    }
+
+    public function updateTurnstile(
+        UpdateTurnstileSettingRequest $request,
+        TrafficFineTurnstileSettingsService $turnstileSettings,
+    ): JsonResponse {
+        $payload = $request->validated();
+        $turnstileSettings->update(
+            enabled: (bool) $payload['enabled'],
+            siteKey: (string) ($payload['site_key'] ?? ''),
+            secretKey: isset($payload['secret_key']) ? (string) $payload['secret_key'] : null,
+        );
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Cập nhật Cloudflare Turnstile thành công.',
+            'data' => [
+                'tab' => 'turnstile',
+                'settings' => $turnstileSettings->adminConfiguration(),
             ],
         ]);
     }

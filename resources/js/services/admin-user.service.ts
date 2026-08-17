@@ -52,9 +52,10 @@ export type AdminUserDetailResponse = {
     } | null;
     stats: {
         total_spent: number;
-        proxy_task_count: number;
+        lookup_count: number;
         api_key_count: number;
-        solved_task_count: number;
+        vehicle_count: number;
+        monitoring_count: number;
     };
     latest_login: {
         at: string | null;

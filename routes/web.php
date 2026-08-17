@@ -1,46 +1,37 @@
 <?php
 
 use App\Features\Auth\Controllers\AuthController;
+use App\Features\TrafficFine\Controllers\PublicTrafficFineController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\PublicContentPageController;
 use App\Http\Controllers\PublicSeoPageController;
 use App\Support\SettingStore;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware('site.active')->get('/', function (SettingStore $settingStore) {
-    $defaults = [
-        'site_name' => config('app.name', 'DailyProxy.vn'),
-        'site_domain' => '',
-        'site_description' => '',
-        'support_email' => '',
-        'hotline' => '',
-        'address' => '',
-        'facebook' => '',
-        'zalo' => '',
-        'youtube' => '',
-        'meta_title' => '',
-        'meta_description' => '',
-        'gtm_id' => '',
-        'meta_pixel_id' => '',
-        'custom_script' => '',
-        'light_logo' => '',
-        'dark_logo' => '',
-        'favicon' => '',
-        'og_image' => '',
-    ];
-
-    if (Auth::check()) {
-        return view('app', [
-            'systemSettings' => $settingStore->getMany($defaults),
-        ]);
-    }
-
-    return view('pages.landing.index', [
-        'systemSettings' => $settingStore->getMany($defaults),
-    ]);
+Route::middleware('site.active')->controller(PublicTrafficFineController::class)->group(function (): void {
+    Route::get('/', 'home')->name('traffic-fines.home');
+    Route::get('/tra-cuu-phat-nguoi', 'lookupPage')->name('traffic-fines.lookup-page');
+    Route::get('/tra-cuu-phat-nguoi-o-to', 'topic')->defaults('topic', 'car-lookup')->name('traffic-fines.lookup.car');
+    Route::get('/tra-cuu-phat-nguoi-xe-may', 'topic')->defaults('topic', 'motorbike-lookup')->name('traffic-fines.lookup.motorbike');
+    Route::get('/tra-cuu-phat-nguoi-xe-may-dien', 'topic')->defaults('topic', 'electric-motorbike-lookup')->name('traffic-fines.lookup.electric-motorbike');
+    Route::get('/tra-cuu/{plate}', 'result')->name('traffic-fines.result');
+    Route::get('/bang-gia', 'pricing')->name('traffic-fines.pricing');
+    Route::get('/doi-tac', 'partners')->name('partners.api');
+    Route::permanentRedirect('/huong-dan', '/huong-dan-tra-cuu-phat-nguoi')->name('traffic-fines.guide');
+    Route::get('/huong-dan-tra-cuu-phat-nguoi', 'guide')->name('traffic-fines.knowledge.guide');
+    Route::get('/phat-nguoi-la-gi', 'topic')->defaults('topic', 'what-is')->name('traffic-fines.knowledge.what-is');
+    Route::get('/muc-phat', 'topic')->defaults('topic', 'penalties')->name('traffic-fines.penalties.index');
+    Route::get('/muc-phat/loi-vuot-den-do', 'topic')->defaults('topic', 'red-light')->name('traffic-fines.penalties.red-light');
+    Route::get('/muc-phat/loi-qua-toc-do', 'topic')->defaults('topic', 'speeding')->name('traffic-fines.penalties.speeding');
+    Route::get('/muc-phat/loi-sai-lan', 'topic')->defaults('topic', 'wrong-lane')->name('traffic-fines.penalties.wrong-lane');
+    Route::get('/muc-phat/loi-di-nguoc-chieu', 'topic')->defaults('topic', 'wrong-way')->name('traffic-fines.penalties.wrong-way');
+    Route::get('/muc-phat/loi-dung-do-sai-quy-dinh', 'topic')->defaults('topic', 'parking')->name('traffic-fines.penalties.parking');
+    Route::get('/muc-phat/loi-khong-chap-hanh-bien-bao', 'topic')->defaults('topic', 'signs')->name('traffic-fines.penalties.signs');
 });
+
+Route::get('/sitemap.xml', [PublicTrafficFineController::class, 'sitemap'])->name('sitemap');
+Route::get('/robots.txt', [PublicTrafficFineController::class, 'robots'])->name('robots');
 
 Route::middleware(['guest', 'site.active'])->group(function (): void {
     Route::prefix('/auth')->group(function (): void {
@@ -103,10 +94,14 @@ Route::controller(PublicSeoPageController::class)->group(function (): void {
     Route::get('/blog/{slug}', 'show')->name('seo.show');
 });
 
-Route::middleware(['auth', 'site.active'])->get('/{any}', function (SettingStore $settingStore) {
+Route::middleware('site.active')
+    ->get('/dashboard/lookup', fn () => redirect()->route('traffic-fines.lookup-page'))
+    ->name('dashboard.lookup.redirect');
+
+Route::middleware(['auth', 'site.active'])->get('/dashboard/{any?}', function (SettingStore $settingStore) {
     return view('app', [
         'systemSettings' => $settingStore->getMany([
-            'site_name' => config('app.name', 'DailyProxy.vn'),
+            'site_name' => config('app.name', 'XemPhatNguoi.vn'),
             'meta_title' => '',
             'meta_description' => '',
             'gtm_id' => '',
@@ -117,7 +112,23 @@ Route::middleware(['auth', 'site.active'])->get('/{any}', function (SettingStore
             'favicon' => '',
         ]),
     ]);
-})->where('any', '.*');
+})->where('any', '.*')->name('dashboard');
+
+Route::middleware(['auth', 'admin', 'site.active'])->get('/admin/{any?}', function (SettingStore $settingStore) {
+    return view('app', [
+        'systemSettings' => $settingStore->getMany([
+            'site_name' => config('app.name', 'XemPhatNguoi.vn'),
+            'meta_title' => '',
+            'meta_description' => '',
+            'gtm_id' => '',
+            'meta_pixel_id' => '',
+            'custom_script' => '',
+            'light_logo' => '',
+            'dark_logo' => '',
+            'favicon' => '',
+        ]),
+    ]);
+})->where('any', '.*')->name('admin.dashboard');
 
 if (file_exists(base_path('app/Features/BlogPost/routes.php'))) {
     require base_path('app/Features/BlogPost/routes.php');

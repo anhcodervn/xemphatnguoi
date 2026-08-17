@@ -10,6 +10,8 @@ Route::middleware(['auth:sanctum', 'admin'])
     ->group(function (): void {
         Route::patch('system', 'updateSystem')->name('system.update');
         Route::patch('options', 'updateOptions')->name('options.update');
+        Route::get('turnstile', 'showTurnstile')->name('turnstile.show');
+        Route::patch('turnstile', 'updateTurnstile')->name('turnstile.update');
         Route::patch('{tab}', 'update')->name('update');
         Route::get('{tab}', 'show')->name('show');
     });

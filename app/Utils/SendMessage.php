@@ -81,7 +81,7 @@ class SendMessage
         Http::connectTimeout(5)
             ->timeout(10)
             ->post($url, [
-                'username' => (string) config('services.discord.bot_name', 'DailyProxy Monitor'),
+                'username' => (string) config('services.discord.bot_name', 'XemPhatNguoi Monitor'),
                 'avatar_url' => (string) config('services.discord.bot_avatar_url', ''),
                 'content' => $message,
             ])

@@ -11,7 +11,7 @@ const badgeLabel = computed(() => (supportStore.userUnread > 99 ? '99+' : String
 <template>
     <RouterLink
         to="/support"
-        class="proxy-focus group fixed bottom-5 right-4 z-30 flex min-h-14 min-w-14 items-center justify-center rounded-full bg-blue-600 text-white shadow-[0_16px_40px_rgba(37,99,235,0.38)] transition duration-200 hover:-translate-y-1 hover:bg-blue-700 sm:bottom-6 sm:right-6"
+        class="app-focus group fixed bottom-5 right-4 z-30 flex min-h-14 min-w-14 items-center justify-center rounded-full bg-blue-600 text-white shadow-[0_16px_40px_rgba(37,99,235,0.38)] transition duration-200 hover:-translate-y-1 hover:bg-blue-700 sm:bottom-6 sm:right-6"
         aria-label="Mở tin nhắn hỗ trợ"
     >
         <span class="absolute inset-0 -z-10 rounded-full bg-blue-500/35 motion-safe:animate-ping" aria-hidden="true" />

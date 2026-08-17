@@ -27,13 +27,49 @@ test('users can log in through the auth web submit endpoint', function () {
         ->assertJson([
             'status' => true,
             'message' => 'Đăng nhập thành công.',
-            'redirect' => url('/'),
+            'redirect' => url('/dashboard'),
         ]);
 
     $this->assertAuthenticatedAs($user);
     $this->get('/')->assertOk();
 
     Queue::assertPushed(SaveUserLogJob::class, fn (SaveUserLogJob $job): bool => $job->userId === $user->id && $job->action === 'login');
+});
+
+test('web login honors a safe intended partner destination', function () {
+    Queue::fake();
+
+    $user = User::factory()->create([
+        'email' => 'partner@example.com',
+        'password' => 'password',
+    ]);
+
+    $this->withSession(['url.intended' => url('/dashboard/api')])
+        ->postJson(route('auth.login.submit'), [
+            'login' => 'partner@example.com',
+            'password' => 'password',
+        ])
+        ->assertOk()
+        ->assertJsonPath('redirect', url('/dashboard/api'));
+
+    $this->assertAuthenticatedAs($user);
+});
+
+test('web login rejects an external intended destination', function () {
+    Queue::fake();
+
+    User::factory()->create([
+        'email' => 'safe-redirect@example.com',
+        'password' => 'password',
+    ]);
+
+    $this->withSession(['url.intended' => 'https://attacker.example/capture'])
+        ->postJson(route('auth.login.submit'), [
+            'login' => 'safe-redirect@example.com',
+            'password' => 'password',
+        ])
+        ->assertOk()
+        ->assertJsonPath('redirect', url('/dashboard'));
 });
 
 test('session authenticated users can retrieve the current user through api user', function () {

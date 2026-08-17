@@ -1,5 +1,5 @@
-export type SeoRobotsValue = "index,follow" | "noindex,follow";
-export type SeoPostStatus = "draft" | "published" | "scheduled";
+export type SeoRobotsValue = 'index,follow' | 'noindex,follow';
+export type SeoPostStatus = 'draft' | 'published' | 'scheduled';
 
 export interface AdminSeoOverviewSummary {
     total_categories: number;
@@ -36,12 +36,16 @@ export interface AdminSeoPostItem {
     title: string;
     slug: string;
     excerpt: string | null;
+    thumbnail: string | null;
     content: unknown[];
+    faq: Array<{ question: string; answer: string }>;
     seo_title: string | null;
     seo_description: string | null;
     canonical_url: string | null;
+    og_image: string | null;
     robots: SeoRobotsValue;
     focus_keyword: string | null;
+    tags: string[];
     cover_alt: string | null;
     article_schema: boolean;
     breadcrumb_schema: boolean;
@@ -70,12 +74,16 @@ export interface AdminSeoPostPayload {
     title: string;
     slug: string;
     excerpt?: string;
+    thumbnail?: string;
     content?: unknown[];
+    faq?: Array<{ question: string; answer: string }>;
     seo_title?: string;
     seo_description?: string;
     canonical_url?: string;
+    og_image?: string;
     robots: SeoRobotsValue;
     focus_keyword?: string;
+    tags?: string[];
     cover_alt?: string;
     article_schema?: boolean;
     breadcrumb_schema?: boolean;

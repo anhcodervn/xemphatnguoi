@@ -21,7 +21,7 @@ if (file_exists(base_path('app/Features/Recharge/routes.php'))) {
 Route::prefix('')->group(function (): void {
     Route::get('/system-settings', function (SettingStore $settingStore) {
         $defaults = [
-            'site_name' => config('app.name', 'DailyProxy.vn'),
+            'site_name' => config('app.name', 'XemPhatNguoi.vn'),
             'site_domain' => '',
             'site_description' => '',
             'site_active' => true,
@@ -125,10 +125,6 @@ if (file_exists(base_path('app/Features/Admin/User/routes.php'))) {
     require base_path('app/Features/Admin/User/routes.php');
 }
 
-if (file_exists(base_path('app/Features/Admin/Analytics/routes.php'))) {
-    require base_path('app/Features/Admin/Analytics/routes.php');
-}
-
 if (file_exists(base_path('app/Features/Admin/ApiLog/routes.php'))) {
     require base_path('app/Features/Admin/ApiLog/routes.php');
 }
@@ -165,22 +161,14 @@ if (file_exists(base_path('app/Features/Api/Auth/routes.php'))) {
     require base_path('app/Features/Api/Auth/routes.php');
 }
 
-if (file_exists(base_path('app/Features/Admin/Proxy/routes.php'))) {
-    require base_path('app/Features/Admin/Proxy/routes.php');
-}
-
-if (file_exists(base_path('app/Features/Client/Proxy/routes.php'))) {
-    require base_path('app/Features/Client/Proxy/routes.php');
-}
-
-if (file_exists(base_path('app/Features/Api/Proxy/routes.php'))) {
-    require base_path('app/Features/Api/Proxy/routes.php');
-}
-
 if (file_exists(base_path('app/Features/Api/User/routes.php'))) {
     require base_path('app/Features/Api/User/routes.php');
 }
 
 if (file_exists(base_path('app/Features/Support/routes.php'))) {
     require base_path('app/Features/Support/routes.php');
+}
+
+if (file_exists(base_path('app/Features/TrafficFine/routes.php'))) {
+    require base_path('app/Features/TrafficFine/routes.php');
 }

@@ -90,7 +90,7 @@ watch(
                         <ShieldCheck class="h-5 w-5" />
                     </div>
                     <div>
-                        <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-blue-600">DailyProxy</p>
+                        <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-blue-600">XemPhatNguoi</p>
                         <h1 class="text-lg font-black tracking-tight text-slate-950">Admin Control</h1>
                     </div>
                 </RouterLink>

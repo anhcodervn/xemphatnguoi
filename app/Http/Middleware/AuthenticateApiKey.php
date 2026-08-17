@@ -20,7 +20,7 @@ class AuthenticateApiKey
         $apiSecret = trim((string) $request->header('X-API-SECRET'));
 
         if ($apiKeyValue === '' || $apiSecret === '') {
-            return response()->json(ApiResponse::error('API key authentication is required.'), 401);
+            return $this->privateResponse(response()->json(ApiResponse::error('API key authentication is required.'), 401));
         }
 
         $apiKey = ApiKey::query()
@@ -29,19 +29,26 @@ class AuthenticateApiKey
             ->first();
 
         if (! $apiKey instanceof ApiKey) {
-            return response()->json(ApiResponse::error('API key authentication is required.'), 401);
+            return $this->privateResponse(response()->json(ApiResponse::error('API key authentication is required.'), 401));
         }
 
         $apiKey->markExpiredIfNeeded();
 
         if (! $apiKey->isActive() || ! $apiKey->matchesSecret($apiSecret) || ! $apiKey->allowsIp($request->ip())) {
-            return response()->json(ApiResponse::error('API key authentication is required.'), 401);
+            return $this->privateResponse(response()->json(ApiResponse::error('API key authentication is required.'), 401));
         }
 
         $request->attributes->set('apiKey', $apiKey);
         $request->setUserResolver(static fn () => $apiKey->user);
         Auth::setUser($apiKey->user);
 
-        return $next($request);
+        return $this->privateResponse($next($request));
+    }
+
+    private function privateResponse(Response $response): Response
+    {
+        $response->headers->set('Cache-Control', 'private, no-store');
+
+        return $response;
     }
 }

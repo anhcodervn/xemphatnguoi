@@ -4,16 +4,22 @@
 
 @layer base {
     :root {
-        --proxy-page: #f5f8fc;
-        --proxy-surface: #ffffff;
-        --proxy-surface-soft: #f0f7ff;
-        --proxy-border: #dbe7f5;
-        --proxy-ink: #0b1220;
-        --proxy-muted: #64748b;
-        --proxy-primary: #2563eb;
-        --proxy-primary-strong: #1d4ed8;
-        --proxy-signal: #06b6d4;
-        --proxy-success: #10b981;
+        --app-page: #f5f8fc;
+        --app-surface: #ffffff;
+        --app-surface-soft: #f0f7ff;
+        --app-border: #dbe7f5;
+        --app-ink: #0b1220;
+        --app-muted: #64748b;
+        --app-primary: #2563eb;
+        --app-primary-strong: #1d4ed8;
+        --app-signal: #06b6d4;
+        --app-success: #10b981;
+        --site-primary: #0875be;
+        --site-navy: #071a33;
+        --site-page: #f6f9fc;
+        --site-border: #e2e8f0;
+        --site-text: #334155;
+        --site-muted: #64748b;
 
         --background: 214 45% 98%;
         --foreground: 222 47% 11%;
@@ -38,35 +44,59 @@
     }
 
     html {
-        font-family: "Be Vietnam Pro", ui-sans-serif, system-ui, sans-serif;
+        font-family: 'Be Vietnam Pro', ui-sans-serif, system-ui, sans-serif;
     }
 
     body {
         @apply bg-slate-50 text-slate-900 antialiased selection:bg-cyan-200 selection:text-slate-950;
         background:
             radial-gradient(circle at 85% 0%, rgba(6, 182, 212, 0.1), transparent 26rem),
-            radial-gradient(circle at 15% 10%, rgba(37, 99, 235, 0.08), transparent 28rem),
-            linear-gradient(180deg, var(--proxy-page) 0%, #ffffff 100%);
+            radial-gradient(circle at 15% 10%, rgba(37, 99, 235, 0.08), transparent 28rem), linear-gradient(180deg, var(--app-page) 0%, #ffffff 100%);
+    }
+
+    body.public-site {
+        background: #ffffff;
+        color: var(--site-navy);
     }
 }
 
 @layer components {
-    .proxy-panel {
+    .app-panel {
         @apply rounded-2xl border border-slate-200/80 bg-white shadow-[0_18px_50px_-34px_rgba(15,23,42,0.38)];
     }
 
-    .proxy-focus {
+    .app-focus {
         @apply outline-none transition focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2;
+    }
+
+    .site-focus {
+        @apply outline-none transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2;
+    }
+
+    .site-container {
+        @apply mx-auto w-full max-w-5xl px-4 sm:px-5;
+    }
+
+    .site-section {
+        @apply py-8 sm:py-10;
+    }
+
+    .site-eyebrow {
+        @apply text-[11px] font-extrabold uppercase tracking-[0.14em] text-brand;
+    }
+
+    .site-section-title {
+        @apply mt-1.5 text-xl font-extrabold tracking-tight text-navy sm:text-2xl;
     }
 }
 
 @layer components {
     .article-content {
-        @apply max-w-none text-[15px] leading-8 text-slate-700 sm:text-base;
+        @apply max-w-none text-sm leading-7 text-slate-700 sm:text-[15px];
     }
 
     .article-content > * + * {
-        @apply mt-5;
+        @apply mt-4;
     }
 
     .article-content h1,
@@ -75,24 +105,24 @@
     .article-content h4,
     .article-content h5,
     .article-content h6 {
-        font-family: "Space Grotesk", "Be Vietnam Pro", ui-sans-serif, system-ui, sans-serif;
+        font-family: 'Space Grotesk', 'Be Vietnam Pro', ui-sans-serif, system-ui, sans-serif;
         @apply scroll-mt-28 tracking-tight text-slate-950;
     }
 
     .article-content h1 {
-        @apply mt-10 text-3xl font-black leading-tight sm:text-4xl;
+        @apply mt-8 text-2xl font-black leading-tight sm:text-3xl;
     }
 
     .article-content h2 {
-        @apply mt-10 border-t border-slate-100 pt-8 text-[1.9rem] font-bold leading-tight;
+        @apply mt-8 border-t border-slate-100 pt-6 text-2xl font-bold leading-tight;
     }
 
     .article-content h3 {
-        @apply mt-8 text-[1.45rem] font-bold leading-tight;
+        @apply mt-6 text-xl font-bold leading-tight;
     }
 
     .article-content h4 {
-        @apply mt-7 text-xl font-semibold leading-tight;
+        @apply mt-5 text-lg font-semibold leading-tight;
     }
 
     .article-content p {
@@ -113,7 +143,7 @@
 
     .article-content ul,
     .article-content ol {
-        @apply my-6 space-y-3 pl-6 text-slate-700;
+        @apply my-4 space-y-2 pl-5 text-slate-700;
     }
 
     .article-content ul {
@@ -129,15 +159,15 @@
     }
 
     .article-content blockquote {
-        @apply my-8 rounded-[14px] border-l-4 border-sky-500 bg-sky-50/80 px-5 py-4 text-slate-700 shadow-sm;
+        @apply my-5 rounded-lg border-l-4 border-sky-500 bg-sky-50/80 px-4 py-3 text-slate-700;
     }
 
     .article-content hr {
-        @apply my-10 border-slate-200;
+        @apply my-6 border-slate-200;
     }
 
     .article-content img {
-        @apply my-8 w-full rounded-[10px] border border-slate-200 bg-slate-50 object-cover shadow-sm;
+        @apply my-6 w-full rounded-lg border border-slate-200 bg-slate-50 object-cover;
     }
 
     .article-content code {
@@ -145,7 +175,7 @@
     }
 
     .article-content pre {
-        @apply my-8 overflow-x-auto rounded-[10px] border border-slate-200 bg-slate-950 p-4 text-sm text-slate-100 shadow-sm;
+        @apply my-6 overflow-x-auto rounded-lg border border-slate-200 bg-slate-950 p-3 text-xs text-slate-100;
     }
 
     .article-content pre code {
@@ -153,7 +183,7 @@
     }
 
     .article-content table {
-        @apply my-8 w-full overflow-hidden rounded-[10px] border border-slate-200 text-left text-sm shadow-sm;
+        @apply my-6 w-full overflow-hidden rounded-lg border border-slate-200 text-left text-xs;
     }
 
     .article-content thead {
@@ -162,7 +192,7 @@
 
     .article-content th,
     .article-content td {
-        @apply border-b border-slate-200 px-4 py-3 align-top;
+        @apply border-b border-slate-200 px-3 py-2 align-top;
     }
 
     .article-content tr:last-child td {

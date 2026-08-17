@@ -57,7 +57,7 @@ class AuthController extends Controller
         return response()->json([
             'status' => true,
             'message' => 'Đăng nhập thành công.',
-            'redirect' => url('/'),
+            'redirect' => $this->intendedRedirect($request, $user),
             'user' => $this->userPayload($user),
         ]);
     }
@@ -254,7 +254,7 @@ class AuthController extends Controller
                 ]);
             }
 
-            return redirect('/');
+            return redirect($this->intendedRedirect($request, $user));
         } catch (Throwable $exception) {
             return redirect()
                 ->route('auth.login')
@@ -312,6 +312,22 @@ class AuthController extends Controller
             ]),
             'wallet' => $this->walletService->getWalletInfo($user),
         ];
+    }
+
+    private function intendedRedirect(Request $request, User $user): string
+    {
+        $fallback = url($user->role === 'admin' ? '/admin' : '/dashboard');
+        $intended = $request->session()->pull('url.intended');
+
+        if (! is_string($intended) || $intended === '') {
+            return $fallback;
+        }
+
+        $applicationUrl = rtrim(url('/'), '/');
+
+        return $intended === $applicationUrl || Str::startsWith($intended, $applicationUrl.'/')
+            ? $intended
+            : $fallback;
     }
 
     protected function touchLastLogin(User $user, Request $request): void

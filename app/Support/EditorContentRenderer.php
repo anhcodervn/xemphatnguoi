@@ -51,7 +51,11 @@ class EditorContentRenderer
             }
 
             if (($node['type'] ?? null) === 'image' && filled($node['src'] ?? null)) {
-                return (string) $node['src'];
+                $src = $this->safeImageUrl($node['src']);
+
+                if ($src !== null) {
+                    return $src;
+                }
             }
 
             if (($node['type'] ?? null) === 'container' && is_array($node['children'] ?? null)) {
@@ -155,7 +159,8 @@ class EditorContentRenderer
      */
     protected function renderImage(array $block): string
     {
-        $src = isset($block['src']) ? e((string) $block['src']) : '';
+        $rawSrc = $this->safeImageUrl($block['src'] ?? null);
+        $src = $rawSrc !== null ? e($rawSrc) : '';
         $alt = isset($block['alt']) ? e((string) $block['alt']) : '';
 
         if ($src === '') {
@@ -217,12 +222,12 @@ class EditorContentRenderer
 
                 $styles = [];
 
-                if (! empty($child['color'])) {
-                    $styles[] = 'color:'.e((string) $child['color']);
+                if ($color = $this->safeCssColor($child['color'] ?? null)) {
+                    $styles[] = 'color:'.e($color);
                 }
 
-                if (! empty($child['background'])) {
-                    $styles[] = 'background-color:'.e((string) $child['background']);
+                if ($background = $this->safeCssColor($child['background'] ?? null)) {
+                    $styles[] = 'background-color:'.e($background);
                 }
 
                 if ($styles !== []) {
@@ -232,6 +237,29 @@ class EditorContentRenderer
                 return $text;
             })
             ->implode('');
+    }
+
+    private function safeCssColor(mixed $value): ?string
+    {
+        if (! is_string($value)) {
+            return null;
+        }
+
+        $color = trim($value);
+        $pattern = '/^(?:#[0-9a-f]{3,8}|rgba?\([\d\s.,%]+\)|hsla?\([\d\s.,%]+\)|[a-z]{3,20})$/i';
+
+        return preg_match($pattern, $color) === 1 ? $color : null;
+    }
+
+    private function safeImageUrl(mixed $value): ?string
+    {
+        if (! is_string($value)) {
+            return null;
+        }
+
+        $url = trim($value);
+
+        return Str::startsWith($url, ['https://', 'http://', '/']) ? $url : null;
     }
 
     /**

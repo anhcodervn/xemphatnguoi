@@ -1,5 +1,5 @@
 export default {
-    path: '',
+    path: '/dashboard',
     component: () => import('@/layouts/ClientLayout.vue'),
     children: [
         {
@@ -8,37 +8,43 @@ export default {
             component: () => import('@/pages/client/home/index.vue'),
         },
         {
+            path: 'history',
+            name: 'client.lookup-history',
+            component: () => import('@/pages/client/lookup-history/index.vue'),
+        },
+        {
+            path: 'vehicles',
+            name: 'client.vehicles',
+            component: () => import('@/pages/client/vehicles/index.vue'),
+        },
+        {
+            path: 'monitoring',
+            name: 'client.monitoring',
+            component: () => import('@/pages/client/monitoring/index.vue'),
+        },
+        { path: 'packages', redirect: { name: 'client.api-docs' } },
+        {
+            path: 'api',
+            name: 'client.api-docs',
+            component: () => import('@/pages/client/api-docs/index.vue'),
+        },
+        {
+            path: 'api-usage',
+            name: 'client.api-usage',
+            component: () => import('@/pages/client/api-usage/index.vue'),
+        },
+        {
             path: 'wallet',
             name: 'client.wallet',
             component: () => import('@/pages/client/wallet/index.vue'),
         },
         {
-            path: 'services',
-            name: 'client.services',
-            component: () => import('@/pages/client/services/index.vue'),
+            path: 'transactions',
+            name: 'client.transactions',
+            component: () => import('@/pages/client/transactions/index.vue'),
         },
         {
-            path: 'proxy-orders',
-            name: 'client.proxy-orders',
-            component: () => import('@/pages/client/proxy-orders/index.vue'),
-        },
-        {
-            path: 'proxy-check',
-            name: 'client.proxy-check',
-            component: () => import('@/pages/client/proxy-check/index.vue'),
-        },
-        {
-            path: 'proxy-country-check',
-            name: 'client.proxy-country-check',
-            component: () => import('@/pages/client/proxy-country-check/index.vue'),
-        },
-        {
-            path: 'api-docs',
-            name: 'client.api-docs',
-            component: () => import('@/pages/client/api-docs/index.vue'),
-        },
-        {
-            path: 'profile',
+            path: 'account',
             name: 'client.profile',
             component: () => import('@/pages/client/profile/index.vue'),
         },

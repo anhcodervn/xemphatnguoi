@@ -20,7 +20,7 @@ class PublicContentPageController extends Controller
         return [
             'gioi-thieu' => [
                 'fallback_title' => 'Giới thiệu',
-                'fallback_description' => 'Thông tin tổng quan về DailyProxy.vn, mô hình dịch vụ proxy API và nhóm người dùng phù hợp.',
+                'fallback_description' => 'Thông tin tổng quan về XemPhatNguoi.vn và dịch vụ tra cứu phạt nguội cho cá nhân, doanh nghiệp.',
                 'title_key' => 'about_page_title',
                 'excerpt_key' => 'about_page_excerpt',
                 'content_key' => 'about_page_content',
@@ -30,7 +30,7 @@ class PublicContentPageController extends Controller
             ],
             'lien-he' => [
                 'fallback_title' => 'Liên hệ',
-                'fallback_description' => 'Thông tin hỗ trợ, cách gửi yêu cầu và các kênh kết nối với đội ngũ vận hành DailyProxy.vn.',
+                'fallback_description' => 'Thông tin hỗ trợ, cách gửi yêu cầu và các kênh kết nối với đội ngũ vận hành XemPhatNguoi.vn.',
                 'title_key' => 'contact_page_title',
                 'excerpt_key' => 'contact_page_excerpt',
                 'content_key' => 'contact_page_content',
@@ -40,7 +40,7 @@ class PublicContentPageController extends Controller
             ],
             'dieu-khoan-su-dung' => [
                 'fallback_title' => 'Điều khoản sử dụng',
-                'fallback_description' => 'Các quy định khi sử dụng dịch vụ DailyProxy.vn, trách nhiệm người dùng và giới hạn hệ thống.',
+                'fallback_description' => 'Các quy định khi sử dụng XemPhatNguoi.vn, trách nhiệm người dùng và giới hạn hệ thống.',
                 'title_key' => 'terms_page_title',
                 'excerpt_key' => 'terms_page_excerpt',
                 'content_key' => 'terms_page_content',
@@ -50,7 +50,7 @@ class PublicContentPageController extends Controller
             ],
             'chinh-sach-bao-mat' => [
                 'fallback_title' => 'Chính sách bảo mật',
-                'fallback_description' => 'Cách DailyProxy.vn thu thập, lưu trữ, bảo vệ và xử lý dữ liệu của người dùng.',
+                'fallback_description' => 'Cách XemPhatNguoi.vn thu thập, lưu trữ, bảo vệ và xử lý dữ liệu của người dùng.',
                 'title_key' => 'privacy_page_title',
                 'excerpt_key' => 'privacy_page_excerpt',
                 'content_key' => 'privacy_page_content',
@@ -80,7 +80,7 @@ class PublicContentPageController extends Controller
             ],
             'chinh-sach-su-dung-api' => [
                 'fallback_title' => 'Chính sách sử dụng dịch vụ',
-                'fallback_description' => 'Quy định về quota API, callback và các giới hạn sử dụng trên DailyProxy.vn.',
+                'fallback_description' => 'Quy định về quota API và các giới hạn sử dụng dịch vụ tra cứu trên XemPhatNguoi.vn.',
                 'title_key' => 'api_usage_policy_title',
                 'excerpt_key' => 'api_usage_policy_excerpt',
                 'content_key' => 'api_usage_policy_content',
@@ -90,7 +90,7 @@ class PublicContentPageController extends Controller
             ],
             'mien-tru-trach-nhiem' => [
                 'fallback_title' => 'Miễn trừ trách nhiệm',
-                'fallback_description' => 'Các giới hạn trách nhiệm của DailyProxy.vn khi cung cấp dịch vụ proxy qua API và hạ tầng kỹ thuật của hệ thống.',
+                'fallback_description' => 'Các giới hạn trách nhiệm của XemPhatNguoi.vn khi tổng hợp dữ liệu tra cứu từ nguồn bên thứ ba.',
                 'title_key' => 'disclaimer_title',
                 'excerpt_key' => 'disclaimer_excerpt',
                 'content_key' => 'disclaimer_content',
@@ -100,7 +100,7 @@ class PublicContentPageController extends Controller
             ],
             'cau-hoi-thuong-gap' => [
                 'fallback_title' => 'Câu hỏi thường gặp',
-                'fallback_description' => 'Những câu hỏi phổ biến về dịch vụ proxy, API, logs và vận hành hệ thống.',
+                'fallback_description' => 'Những câu hỏi phổ biến về tra cứu phạt nguội, API, dữ liệu và vận hành hệ thống.',
                 'title_key' => 'faq_page_title',
                 'excerpt_key' => 'faq_page_excerpt',
                 'content_key' => 'faq_page_content',
@@ -136,7 +136,7 @@ class PublicContentPageController extends Controller
         $page = $this->pageMap()[$slug] ?? abort(404);
 
         $systemSettings = $settingStore->getMany([
-            'site_name' => config('app.name', 'DailyProxy.vn'),
+            'site_name' => config('app.name', 'XemPhatNguoi.vn'),
             'site_domain' => '',
             'site_description' => '',
             'support_email' => '',
@@ -165,7 +165,7 @@ class PublicContentPageController extends Controller
 
         $pageTitle = (string) ($systemSettings[$page['title_key']] ?: $page['fallback_title']);
         $pageDescription = (string) ($systemSettings[$page['excerpt_key']] ?: $page['fallback_description']);
-        $pageMetaTitle = (string) ($systemSettings[$page['seo_title_key']] ?: $pageTitle.' | '.($systemSettings['site_name'] ?: config('app.name', 'DailyProxy.vn')));
+        $pageMetaTitle = (string) ($systemSettings[$page['seo_title_key']] ?: $pageTitle.' | '.($systemSettings['site_name'] ?: config('app.name', 'XemPhatNguoi.vn')));
         $pageMetaDescription = (string) ($systemSettings[$page['seo_description_key']] ?: $pageDescription);
         $content = is_array($systemSettings[$page['content_key']] ?? null) ? $systemSettings[$page['content_key']] : [];
 

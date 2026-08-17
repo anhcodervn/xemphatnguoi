@@ -8,7 +8,7 @@ import formatCash from '@/utils/helpers/formatCash';
 import { handleErrorResponse } from '@/utils/response';
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/vue';
 import { echo } from '@laravel/echo-vue';
-import { Bell, CheckCheck, ChevronDown, LogOut, Menu as MenuIcon, Settings, ShieldAlert, UserRound, Wallet } from 'lucide-vue-next';
+import { Bell, CheckCheck, ChevronDown, LogOut, Menu as MenuIcon, Settings, UserRound, Wallet } from 'lucide-vue-next';
 import Swal, { type SweetAlertIcon } from 'sweetalert2';
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { RouterLink } from 'vue-router';
@@ -40,9 +40,9 @@ const userInitial = computed(() => {
 
 const userActions: UserActionItem[] = [
     { label: 'Quản trị website', icon: UserRound, href: '/admin', isAdmin: true },
-    { label: 'Ví và nạp tiền', icon: Wallet, href: '/wallet', isAdmin: false },
-    { label: 'Thông tin tài khoản', icon: UserRound, href: '/profile', isAdmin: false },
-    { label: 'Cài đặt mật khẩu', icon: Settings, href: '/profile?tab=password', isAdmin: false },
+    { label: 'Ví và nạp tiền', icon: Wallet, href: '/dashboard/wallet', isAdmin: false },
+    { label: 'Thông tin tài khoản', icon: UserRound, href: '/dashboard/account', isAdmin: false },
+    { label: 'Cài đặt mật khẩu', icon: Settings, href: '/dashboard/account?tab=password', isAdmin: false },
     { label: 'Đăng xuất', icon: LogOut, isAdmin: false, action: 'logout' },
 ];
 
@@ -222,7 +222,7 @@ onBeforeUnmount(leaveWalletChannel);
             <div class="flex items-center">
                 <button
                     type="button"
-                    class="proxy-focus rounded-xl border border-slate-200 bg-white p-2.5 text-slate-600 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 lg:hidden"
+                    class="app-focus rounded-xl border border-slate-200 bg-white p-2.5 text-slate-600 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 lg:hidden"
                     @click="$emit('toggleSidebar')"
                 >
                     <MenuIcon class="h-5 w-5" />
@@ -232,7 +232,7 @@ onBeforeUnmount(leaveWalletChannel);
             <div class="flex items-center gap-3">
                 <Menu as="div" class="relative">
                     <MenuButton
-                        class="proxy-focus relative rounded-full border border-slate-200 bg-white p-3 text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                        class="app-focus relative rounded-full border border-slate-200 bg-white p-3 text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
                     >
                         <Bell class="h-4 w-4" />
                         <span v-if="unreadCount > 0" class="absolute right-3 top-3 h-2 w-2 rounded-full bg-amber-500" />
@@ -287,7 +287,7 @@ onBeforeUnmount(leaveWalletChannel);
 
                 <Menu as="div" class="relative">
                     <MenuButton
-                        class="proxy-focus flex items-center gap-3 rounded-full border border-slate-200 bg-white px-3.5 py-2 transition hover:border-blue-200 hover:bg-blue-50/60"
+                        class="app-focus flex items-center gap-3 rounded-full border border-slate-200 bg-white px-3.5 py-2 transition hover:border-blue-200 hover:bg-blue-50/60"
                     >
                         <div
                             class="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-cyan-500 text-sm font-semibold text-white shadow-sm"
@@ -347,42 +347,5 @@ onBeforeUnmount(leaveWalletChannel);
                 </Menu>
             </div>
         </div>
-
-        <div
-            class="relative z-0 flex h-10 overflow-hidden border-t border-amber-300 bg-amber-50 text-amber-950"
-            role="note"
-            aria-label="Cảnh báo sử dụng dịch vụ"
-        >
-            <div class="relative z-10 flex shrink-0 items-center border-r border-amber-300 bg-amber-100 px-3" aria-hidden="true">
-                <ShieldAlert class="h-5 w-5 text-amber-700" />
-            </div>
-            <div class="global-warning-marquee relative min-w-0 flex-1 overflow-hidden">
-                <div class="global-warning-marquee-track flex h-full w-max items-center whitespace-nowrap text-sm font-bold">
-                    <p class="pr-12">
-                        Nghiêm cấm sử dụng Proxy với mục đích trái pháp luật. Người dùng phải chịu toàn bộ trách nhiệm trước pháp luật khi sử dụng
-                        dịch vụ của chúng tôi.
-                    </p>
-                </div>
-            </div>
-        </div>
     </header>
 </template>
-
-<style scoped>
-.global-warning-marquee-track {
-    min-width: 100%;
-    padding-left: 100%;
-    will-change: transform;
-    animation: global-warning-marquee 24s linear infinite;
-}
-
-@keyframes global-warning-marquee {
-    from {
-        transform: translate3d(0, 0, 0);
-    }
-
-    to {
-        transform: translate3d(-100%, 0, 0);
-    }
-}
-</style>

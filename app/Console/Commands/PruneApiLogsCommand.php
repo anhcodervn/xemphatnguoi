@@ -9,11 +9,11 @@ class PruneApiLogsCommand extends Command
 {
     protected $signature = 'api:prune-logs';
 
-    protected $description = 'Xoa api logs qua thoi gian luu tru cau hinh.';
+    protected $description = 'Xóa API logs quá thời gian lưu trữ cấu hình.';
 
     public function handle(): int
     {
-        $retentionDays = max(1, (int) config('services.proxy.api_log_retention_days', 30));
+        $retentionDays = max(1, (int) config('services.api.log_retention_days', 30));
         $cutoff = now()->subDays($retentionDays);
 
         $deleted = ApiLog::query()
@@ -21,7 +21,7 @@ class PruneApiLogsCommand extends Command
             ->delete();
 
         $this->info(sprintf(
-            'Da xoa %d api log qua %d ngay.',
+            'Đã xóa %d API log quá %d ngày.',
             $deleted,
             $retentionDays,
         ));

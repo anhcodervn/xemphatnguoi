@@ -51,7 +51,7 @@ class AnalyticsService
                 'wallet_recharge_total' => (float) Wallet::query()->where('type', Wallet::TYPE_MAIN)->sum('total_recharge'),
                 'wallet_spent_total' => (float) Wallet::query()->where('type', Wallet::TYPE_MAIN)->sum('total_spent'),
                 'deposit_success_amount' => (float) (clone $paymentsQuery)->sum('amount'),
-                'proxy_revenue' => 0,
+                'service_revenue' => 0,
                 'provider_cost' => 0,
                 'gross_profit' => 0,
                 'gross_margin' => 0,

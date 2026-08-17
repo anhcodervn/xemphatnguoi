@@ -21,9 +21,9 @@ it('broadcasts the committed wallet balance after a paid client operation', func
     app(WalletService::class)->debit(
         user: $user,
         amount: 5000,
-        referenceType: 'proxy_order',
+        referenceType: 'traffic_fine_package',
         referenceId: 99,
-        description: 'Thanh toán đơn proxy',
+        description: 'Thanh toán gói tra cứu',
     );
 
     expect($wallet->refresh()->balance)->toBe('15000.00')

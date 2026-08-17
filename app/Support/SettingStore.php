@@ -3,6 +3,8 @@
 namespace App\Support;
 
 use App\Models\Setting;
+use Illuminate\Contracts\Encryption\DecryptException;
+use Illuminate\Support\Facades\Crypt;
 
 class SettingStore
 {
@@ -57,6 +59,32 @@ class SettingStore
         );
     }
 
+    public function getEncryptedString(string $key, string $default = ''): string
+    {
+        $setting = Setting::query()->where('key', $key)->first();
+
+        if (! $setting instanceof Setting || $setting->type !== 'encrypted' || blank($setting->value)) {
+            return $default;
+        }
+
+        try {
+            return Crypt::decryptString((string) $setting->value);
+        } catch (DecryptException) {
+            return $default;
+        }
+    }
+
+    public function putEncryptedString(string $key, string $value): Setting
+    {
+        return Setting::query()->updateOrCreate(
+            ['key' => $key],
+            [
+                'value' => Crypt::encryptString($value),
+                'type' => 'encrypted',
+            ],
+        );
+    }
+
     /**
      * @param  array<string, mixed>  $value
      */
@@ -107,6 +135,10 @@ class SettingStore
 
     protected function decodeValue(Setting $setting, mixed $default = null): mixed
     {
+        if ($setting->type === 'encrypted') {
+            return $default;
+        }
+
         if ($setting->type === 'json') {
             $decoded = json_decode((string) $setting->value, true);
 

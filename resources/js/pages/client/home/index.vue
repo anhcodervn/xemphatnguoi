@@ -1,30 +1,21 @@
 <script setup lang="ts">
-import AdminNotificationList from '@/pages/client/home/components/dashboard/AdminNotificationList.vue';
-import ExpiringProxyList from '@/pages/client/home/components/dashboard/ExpiringProxyList.vue';
-import QuickActions from '@/pages/client/home/components/dashboard/QuickActions.vue';
-import RecentActivityList from '@/pages/client/home/components/dashboard/RecentActivityList.vue';
-import SummaryCard from '@/pages/client/home/components/dashboard/SummaryCard.vue';
-import { clientNotificationService } from '@/services/client-notification.service';
-import { clientProxyService, type ProxyDashboard } from '@/services/client-proxy.service';
-import type { ClientNotificationItem } from '@/types/client-notification.type';
-import { Activity, ArrowRight, BellRing, Clock3, Layers3, LoaderCircle, Network, RefreshCcw, Server, WalletCards } from 'lucide-vue-next';
-import { onMounted, ref } from 'vue';
+import { trafficFineService, type TrafficFineDashboard } from '@/services/traffic-fine.service';
+import formatCash from '@/utils/helpers/formatCash';
+import { BarChart3, History, Search, Wallet } from 'lucide-vue-next';
+import { computed, onMounted, ref } from 'vue';
 import { RouterLink } from 'vue-router';
 
-const dashboard = ref<ProxyDashboard | null>(null);
+const dashboard = ref<TrafficFineDashboard | null>(null);
 const loading = ref(true);
 const errorMessage = ref('');
-const allNotificationsLoaded = ref(false);
-
-const money = (value: string | number | null | undefined): string =>
-    `${new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 }).format(Number(value ?? 0))}đ`;
+const chartMaximum = computed(() => Math.max(1, ...(dashboard.value?.api_chart.map((item) => item.requests) ?? [1])));
 
 const loadDashboard = async (): Promise<void> => {
     loading.value = true;
     errorMessage.value = '';
 
     try {
-        dashboard.value = await clientProxyService.dashboard();
+        dashboard.value = await trafficFineService.dashboard();
     } catch {
         errorMessage.value = 'Không thể tải dữ liệu tổng quan. Vui lòng thử lại.';
     } finally {
@@ -32,150 +23,127 @@ const loadDashboard = async (): Promise<void> => {
     }
 };
 
-const openNotification = async (notification: ClientNotificationItem): Promise<void> => {
-    if (!notification.is_read) {
-        try {
-            await clientNotificationService.markRead(notification.id);
-            notification.is_read = true;
-
-            if (dashboard.value) {
-                dashboard.value.summary.unread_notifications = Math.max(0, dashboard.value.summary.unread_notifications - 1);
-            }
-        } catch {
-            errorMessage.value = 'Không thể cập nhật trạng thái thông báo.';
-            return;
-        }
-    }
-
-    if (notification.redirect_url) {
-        window.location.href = notification.redirect_url;
-    }
-};
-
-const viewAllNotifications = async (): Promise<void> => {
-    try {
-        const response = await clientNotificationService.list({ scope: 'system', per_page: 100 });
-
-        if (dashboard.value) {
-            dashboard.value.notifications = response.data;
-        }
-
-        allNotificationsLoaded.value = true;
-    } catch {
-        errorMessage.value = 'Không thể tải toàn bộ thông báo. Vui lòng thử lại.';
-    }
-};
-
 onMounted(loadDashboard);
 </script>
 
 <template>
-    <div class="grid gap-5 sm:gap-6">
-        <section
-            class="relative overflow-hidden rounded-2xl border border-blue-400/20 bg-[linear-gradient(115deg,#0b4bd9_0%,#062b78_55%,#071f4f_100%)] px-6 py-7 text-white shadow-[0_24px_65px_-38px_rgba(3,105,161,0.75)] sm:px-8 sm:py-9"
-        >
-            <div class="relative z-10 max-w-2xl">
-                <p class="text-xs font-bold uppercase tracking-[0.24em] text-cyan-200">DailyProxy Control Center</p>
-                <h1 class="mt-3 text-2xl font-black tracking-tight sm:text-3xl">Tổng quan hệ thống proxy của bạn</h1>
-                <p class="mt-3 max-w-xl text-sm leading-6 text-blue-100">
-                    Theo dõi nhanh tài khoản, proxy sắp hết hạn và thông báo từ quản trị viên.
-                </p>
-                <div class="mt-5 flex flex-wrap gap-3">
-                    <RouterLink
-                        to="/proxy-orders"
-                        class="inline-flex h-10 items-center gap-2 rounded-lg bg-white px-4 text-sm font-bold text-blue-800 shadow-sm transition hover:bg-blue-50"
-                    >
-                        Quản lý proxy <ArrowRight class="h-4 w-4" />
-                    </RouterLink>
-                    <RouterLink
-                        to="/services"
-                        class="inline-flex h-10 items-center gap-2 rounded-lg border border-white/40 bg-white/5 px-4 text-sm font-bold text-white transition hover:bg-white/10"
-                    >
-                        Mua proxy <Layers3 class="h-4 w-4" />
-                    </RouterLink>
-                </div>
+    <div class="grid gap-7">
+        <header class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+                <p class="text-sm font-bold text-sky-700">Dashboard</p>
+                <h1 class="mt-1 text-3xl font-black tracking-tight text-slate-950">Tổng quan tài khoản</h1>
+                <p class="mt-2 text-sm leading-6 text-slate-500">Theo dõi số dư, lượt gọi API và chi phí theo thời gian thực.</p>
             </div>
+            <RouterLink
+                to="/dashboard/api"
+                class="app-focus inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-sky-700 px-5 text-sm font-bold text-white hover:bg-sky-800"
+            >
+                <Search class="h-4 w-4" /> Tích hợp API
+            </RouterLink>
+        </header>
 
-            <div class="pointer-events-none absolute inset-y-0 right-0 hidden w-[38%] items-center justify-center lg:flex" aria-hidden="true">
-                <div class="relative flex h-40 w-52 items-center justify-center">
-                    <Network class="absolute h-44 w-44 text-cyan-300/15" />
-                    <div class="relative grid gap-2">
-                        <div
-                            class="flex h-12 w-32 items-center justify-between rounded-xl border border-cyan-300/30 bg-cyan-300/10 px-4 shadow-lg backdrop-blur-sm"
-                        >
-                            <Server class="h-5 w-5 text-cyan-200" /><span class="h-2 w-2 rounded-full bg-emerald-300 shadow-[0_0_12px_#6ee7b7]" />
+        <div v-if="loading" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div v-for="index in 4" :key="index" class="h-32 animate-pulse rounded-xl bg-slate-200/70" />
+        </div>
+        <div v-else-if="errorMessage" class="rounded-xl border border-red-200 bg-red-50 p-5 text-sm text-red-800">
+            <p>{{ errorMessage }}</p>
+            <button type="button" class="mt-3 font-bold underline" @click="loadDashboard">Thử lại</button>
+        </div>
+        <template v-else-if="dashboard">
+            <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <article
+                    v-for="card in [
+                        { label: 'Số dư ví', value: `${formatCash(Number(dashboard.wallet.balance))}đ`, icon: Wallet },
+                        { label: 'Giá mỗi request', value: `${formatCash(dashboard.api_request_price)}đ`, icon: Search },
+                        { label: 'API tháng này', value: dashboard.api_usage.requests_month.toLocaleString('vi-VN'), icon: BarChart3 },
+                        { label: 'Chi phí tháng này', value: `${formatCash(Number(dashboard.api_usage.amount_month))}đ`, icon: History },
+                    ]"
+                    :key="card.label"
+                    class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
+                >
+                    <div class="flex items-start justify-between gap-4">
+                        <div>
+                            <p class="text-sm font-medium text-slate-500">{{ card.label }}</p>
+                            <p class="mt-2 text-2xl font-black text-slate-950">{{ card.value }}</p>
                         </div>
-                        <div
-                            class="flex h-12 w-36 items-center justify-between rounded-xl border border-blue-300/30 bg-blue-300/10 px-4 shadow-lg backdrop-blur-sm"
-                        >
-                            <Server class="h-5 w-5 text-blue-200" /><span class="h-2 w-2 rounded-full bg-cyan-300 shadow-[0_0_12px_#67e8f9]" />
+                        <span class="flex h-10 w-10 items-center justify-center rounded-lg bg-sky-50 text-sky-700"
+                            ><component :is="card.icon" class="h-5 w-5"
+                        /></span>
+                    </div>
+                </article>
+            </section>
+
+            <section class="grid gap-5 xl:grid-cols-[1.35fr_0.65fr]">
+                <article class="rounded-xl border border-slate-200 bg-white p-5 sm:p-6">
+                    <div class="flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                            <h2 class="text-lg font-bold text-slate-950">Lượt gọi API trong 14 ngày</h2>
+                            <p class="mt-1 text-sm text-slate-500">Chỉ tính các request đã trừ tiền thành công.</p>
                         </div>
+                        <RouterLink to="/dashboard/api-usage" class="text-sm font-bold text-sky-700">Xem log chi tiết →</RouterLink>
+                    </div>
+                    <div class="mt-6 flex h-52 items-end gap-2 border-b border-slate-200 px-1">
                         <div
-                            class="flex h-12 w-32 items-center justify-between rounded-xl border border-cyan-300/30 bg-cyan-300/10 px-4 shadow-lg backdrop-blur-sm"
+                            v-for="item in dashboard.api_chart"
+                            :key="item.date"
+                            class="group flex min-w-0 flex-1 flex-col items-center justify-end gap-2"
                         >
-                            <Server class="h-5 w-5 text-cyan-200" /><span class="h-2 w-2 rounded-full bg-emerald-300 shadow-[0_0_12px_#6ee7b7]" />
+                            <span class="text-[10px] font-bold text-slate-500 opacity-0 transition group-hover:opacity-100">{{ item.requests }}</span>
+                            <div
+                                class="w-full max-w-8 rounded-t bg-sky-600 transition hover:bg-sky-700"
+                                :style="{ height: `${Math.max(4, (item.requests / chartMaximum) * 160)}px` }"
+                                :title="`${item.label}: ${item.requests} request`"
+                            />
+                            <span class="hidden text-[10px] text-slate-400 sm:block">{{ item.label }}</span>
                         </div>
                     </div>
+                </article>
+
+                <aside class="rounded-xl bg-slate-950 p-6 text-white">
+                    <p class="text-sm font-bold text-sky-300">Trả theo lượt dùng</p>
+                    <p class="mt-2 text-3xl font-black">
+                        {{ formatCash(dashboard.api_request_price) }}đ <span class="text-sm font-semibold text-slate-300">/ request</span>
+                    </p>
+                    <p class="mt-3 text-sm leading-6 text-slate-300">
+                        Không cần mua gói. Website tra cứu miễn phí; chỉ API v1 thành công mới trừ tiền, kể cả kết quả lấy từ cache.
+                    </p>
+                    <div class="mt-6 grid grid-cols-2 gap-3 text-sm">
+                        <div class="rounded-lg bg-white/10 p-3">
+                            <p class="text-slate-400">Xe của tôi</p>
+                            <p class="mt-1 text-xl font-black">{{ dashboard.vehicle_count }}</p>
+                        </div>
+                        <div class="rounded-lg bg-white/10 p-3">
+                            <p class="text-slate-400">Đang theo dõi</p>
+                            <p class="mt-1 text-xl font-black">{{ dashboard.monitoring_count }}</p>
+                        </div>
+                    </div>
+                </aside>
+            </section>
+
+            <section class="rounded-xl border border-slate-200 bg-white p-5 sm:p-6">
+                <div class="flex items-center justify-between gap-4">
+                    <h2 class="text-lg font-bold text-slate-950">Tra cứu website gần đây</h2>
+                    <RouterLink to="/dashboard/history" class="text-sm font-bold text-sky-700">Xem tất cả</RouterLink>
                 </div>
-            </div>
-        </section>
-
-        <div
-            v-if="errorMessage"
-            class="flex items-center justify-between gap-4 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700"
-        >
-            <span>{{ errorMessage }}</span>
-            <button type="button" class="inline-flex shrink-0 items-center gap-2 font-bold" @click="loadDashboard">
-                <RefreshCcw class="h-4 w-4" /> Thử lại
-            </button>
-        </div>
-
-        <section v-if="loading" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Đang tải thống kê">
-            <div v-for="index in 4" :key="index" class="h-32 animate-pulse rounded-2xl border border-slate-200 bg-white/70" />
-        </section>
-
-        <section v-else class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <SummaryCard title="Số dư" :value="money(dashboard?.summary.balance)" action="Nạp tiền" to="/wallet" :icon="WalletCards" tone="blue" />
-            <SummaryCard
-                title="Proxy đang hoạt động"
-                :value="dashboard?.summary.active_proxies ?? 0"
-                action="Xem proxy"
-                to="/proxy-orders"
-                :icon="Activity"
-                tone="green"
-            />
-            <SummaryCard
-                title="Sắp hết hạn"
-                :value="dashboard?.summary.expiring_proxies ?? 0"
-                action="Gia hạn ngay"
-                to="/proxy-orders"
-                :icon="Clock3"
-                tone="orange"
-            />
-            <SummaryCard
-                title="Thông báo mới"
-                :value="dashboard?.summary.unread_notifications ?? 0"
-                action="Xem thông báo"
-                to="#dashboard-notifications"
-                :icon="BellRing"
-                tone="violet"
-            />
-        </section>
-
-        <section v-if="loading" class="flex h-64 items-center justify-center rounded-2xl border border-slate-200 bg-white text-sm text-slate-500">
-            <LoaderCircle class="mr-2 h-5 w-5 animate-spin" /> Đang tải dữ liệu quản lý...
-        </section>
-
-        <section v-else class="grid items-start gap-5 xl:grid-cols-[minmax(0,1.65fr)_minmax(320px,0.95fr)]">
-            <ExpiringProxyList :proxies="dashboard?.expiring_proxies ?? []" />
-            <AdminNotificationList
-                :notifications="dashboard?.notifications ?? []"
-                :show-all="allNotificationsLoaded"
-                @open="openNotification"
-                @view-all="viewAllNotifications"
-            />
-            <RecentActivityList :activities="dashboard?.recent_activities ?? []" />
-            <QuickActions />
-        </section>
+                <div v-if="dashboard.recent_lookups.length" class="mt-5 divide-y divide-slate-200">
+                    <div
+                        v-for="item in dashboard.recent_lookups"
+                        :key="item.id"
+                        class="flex items-center justify-between gap-4 py-4 first:pt-0 last:pb-0"
+                    >
+                        <div>
+                            <p class="font-bold text-slate-950">{{ item.plate }}</p>
+                            <p class="mt-1 text-xs text-slate-500">{{ new Date(item.created_at).toLocaleString('vi-VN') }}</p>
+                        </div>
+                        <span
+                            class="rounded-full px-3 py-1 text-xs font-bold"
+                            :class="item.violation_count ? 'bg-red-50 text-red-700' : 'bg-emerald-50 text-emerald-700'"
+                            >{{ item.violation_count ? `${item.violation_count} lỗi` : 'Chưa ghi nhận lỗi' }}</span
+                        >
+                    </div>
+                </div>
+                <p v-else class="mt-5 rounded-lg bg-slate-50 p-5 text-sm text-slate-500">Bạn chưa có lịch sử tra cứu.</p>
+            </section>
+        </template>
     </div>
 </template>

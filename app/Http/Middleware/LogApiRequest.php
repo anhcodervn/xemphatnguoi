@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Features\TrafficFine\Services\ApiLookupBillingService;
 use App\Models\ApiKey;
 use App\Models\ApiLog;
 use Closure;
@@ -25,14 +26,23 @@ class LogApiRequest
 
         try {
             $response = $next($request);
-            $this->storeLog($request, $response, $startedAt);
-
-            return $response;
         } catch (Throwable $throwable) {
-            $this->storeThrowableLog($request, $throwable, $startedAt);
+            try {
+                $this->storeThrowableLog($request, $throwable, $startedAt);
+            } catch (Throwable $loggingException) {
+                report($loggingException);
+            }
 
             throw $throwable;
         }
+
+        try {
+            $this->storeLog($request, $response, $startedAt);
+        } catch (Throwable $loggingException) {
+            report($loggingException);
+        }
+
+        return $response;
     }
 
     private function storeLog(Request $request, Response $response, float $startedAt): void
@@ -43,7 +53,7 @@ class LogApiRequest
             return;
         }
 
-        ApiLog::query()->create([
+        $this->persistLog($request, [
             'user_id' => $apiKey->user_id,
             'api_key_id' => $apiKey->id,
             'endpoint' => $request->path(),
@@ -54,6 +64,10 @@ class LogApiRequest
             'response_data' => $this->responsePayload($response),
             'status_code' => $response->getStatusCode(),
             'response_time_ms' => (int) round((microtime(true) - $startedAt) * 1000),
+            'wallet_transaction_id' => $request->attributes->get(ApiLookupBillingService::ATTRIBUTE_TRANSACTION_ID),
+            'unit_price' => $request->attributes->get(ApiLookupBillingService::ATTRIBUTE_UNIT_PRICE, 0),
+            'charged_amount' => $request->attributes->get(ApiLookupBillingService::ATTRIBUTE_CHARGED_AMOUNT, 0),
+            'billing_status' => $request->attributes->get(ApiLookupBillingService::ATTRIBUTE_STATUS, 'not_billable'),
             'created_at' => now(),
         ]);
 
@@ -75,7 +89,7 @@ class LogApiRequest
             : (int) $throwable->getCode();
         $statusCode = $statusCode >= 100 && $statusCode <= 599 ? $statusCode : 500;
 
-        ApiLog::query()->create([
+        $this->persistLog($request, [
             'user_id' => $apiKey->user_id,
             'api_key_id' => $apiKey->id,
             'endpoint' => $request->path(),
@@ -85,12 +99,32 @@ class LogApiRequest
             'service_response_data' => $this->serviceResponsePayload($request),
             'response_data' => [
                 'status' => false,
-                'message' => Str::limit($throwable->getMessage(), 1000, '...'),
+                'message' => 'Request could not be completed.',
             ],
             'status_code' => $statusCode,
             'response_time_ms' => (int) round((microtime(true) - $startedAt) * 1000),
+            'wallet_transaction_id' => $request->attributes->get(ApiLookupBillingService::ATTRIBUTE_TRANSACTION_ID),
+            'unit_price' => $request->attributes->get(ApiLookupBillingService::ATTRIBUTE_UNIT_PRICE, 0),
+            'charged_amount' => $request->attributes->get(ApiLookupBillingService::ATTRIBUTE_CHARGED_AMOUNT, 0),
+            'billing_status' => $request->attributes->get(ApiLookupBillingService::ATTRIBUTE_STATUS, 'not_billable'),
             'created_at' => now(),
         ]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $attributes
+     */
+    private function persistLog(Request $request, array $attributes): void
+    {
+        $apiLogId = $request->attributes->get(ApiLookupBillingService::ATTRIBUTE_LOG_ID);
+
+        if (is_int($apiLogId)) {
+            ApiLog::query()->whereKey($apiLogId)->update($attributes);
+
+            return;
+        }
+
+        ApiLog::query()->create($attributes);
     }
 
     /**
@@ -135,7 +169,7 @@ class LogApiRequest
     }
 
     /**
-     * Không lưu thông tin kết nối proxy hoặc credential vào lịch sử API dạng văn bản thuần.
+     * Không lưu credential vào lịch sử API dạng văn bản thuần.
      *
      * @param  array<string, mixed>|list<mixed>  $data
      * @return array<string, mixed>|list<mixed>
@@ -145,12 +179,20 @@ class LogApiRequest
         $sensitiveKeys = [
             'api_secret',
             'x-api-secret',
+            'api_key',
+            'x-api-key',
+            'api_token',
+            'authorization',
+            'token',
+            'url',
+            'debug_url',
+            'debug_token',
+            'provider',
+            'provider_url',
             'password',
             'username',
             'host',
-            'proxy',
             'access_key',
-            'provider_proxy_id',
             'provider_code',
             'external_order_id',
             'connection',

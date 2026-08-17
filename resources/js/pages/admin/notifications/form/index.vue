@@ -102,14 +102,19 @@ onMounted(loadDetail);
             <p class="mt-1 text-sm text-slate-500">Chọn phạm vi hệ thống hoặc người dùng cụ thể.</p>
         </section>
 
-        <section v-if="loading" class="rounded-[10px] border border-slate-200 bg-white p-10 text-center text-sm text-slate-500">Đang tải dữ liệu...</section>
+        <section v-if="loading" class="rounded-[10px] border border-slate-200 bg-white p-10 text-center text-sm text-slate-500">
+            Đang tải dữ liệu...
+        </section>
 
         <section v-else class="rounded-[10px] border border-slate-200 bg-white p-4 shadow-sm">
             <form class="space-y-4" @submit.prevent="submit">
                 <div class="grid gap-3 sm:grid-cols-2">
                     <label class="space-y-1">
                         <span class="text-sm font-semibold text-slate-700">Phạm vi</span>
-                        <select v-model="form.scope" class="w-full rounded-[10px] border border-slate-200 px-3 py-2 text-sm outline-none focus:border-indigo-400">
+                        <select
+                            v-model="form.scope"
+                            class="w-full rounded-[10px] border border-slate-200 px-3 py-2 text-sm outline-none focus:border-indigo-400"
+                        >
                             <option value="system">Toàn hệ thống</option>
                             <option value="user">Người dùng cụ thể</option>
                         </select>
@@ -120,7 +125,7 @@ onMounted(loadDetail);
                             v-model="form.type"
                             type="text"
                             class="w-full rounded-[10px] border border-slate-200 px-3 py-2 text-sm outline-none focus:border-indigo-400"
-                            placeholder="system, payment, proxy..."
+                            placeholder="system, payment, traffic-fine..."
                         />
                     </label>
                 </div>
@@ -164,7 +169,7 @@ onMounted(loadDetail);
                         v-model="form.redirect_url"
                         type="url"
                         class="w-full rounded-[10px] border border-slate-200 px-3 py-2 text-sm outline-none focus:border-indigo-400"
-                        placeholder="https://giapproxy.vn/api-docs"
+                        placeholder="https://xemphatnguoi.vn/huong-dan"
                     />
                 </label>
 

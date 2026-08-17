@@ -13,6 +13,10 @@ class DispatchWalletBalanceChangedMailAction
 
     public function handle(WalletTransaction $walletTransaction): void
     {
+        if ($walletTransaction->reference_type === 'traffic_fine_api_request') {
+            return;
+        }
+
         $walletTransaction->loadMissing('wallet.user');
 
         $user = $walletTransaction->wallet?->user;

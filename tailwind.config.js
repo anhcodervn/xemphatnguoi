@@ -20,6 +20,12 @@ export default {
                 sm: 'calc(var(--radius) - 4px)',
             },
             colors: {
+                brand: '#0875BE',
+                navy: '#071A33',
+                page: '#F6F9FC',
+                success: '#16A36A',
+                warning: '#F59E0B',
+                danger: '#DC3545',
                 background: 'hsl(var(--background))',
                 foreground: 'hsl(var(--foreground))',
                 card: {

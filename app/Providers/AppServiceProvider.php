@@ -3,10 +3,13 @@
 namespace App\Providers;
 
 use App\Features\Client\Wallet\Observers\WalletTransactionObserver;
+use App\Features\TrafficFine\Services\Source\TrafficFineSourceInterface;
+use App\Features\TrafficFine\Services\Source\TrafficFineSourceRegistry;
 use App\Models\ApiKey;
 use App\Models\QueueLog;
 use App\Models\WalletTransaction;
 use App\Utils\SendMessage;
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Queue\Events\JobFailed;
 use Illuminate\Queue\Events\JobProcessed;
@@ -15,12 +18,21 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 use Throwable;
 
 class AppServiceProvider extends ServiceProvider
 {
+    public function register(): void
+    {
+        $this->app->singleton(
+            TrafficFineSourceInterface::class,
+            fn (): TrafficFineSourceInterface => $this->app->make(TrafficFineSourceRegistry::class)->resolve(),
+        );
+    }
+
     /**
      * Bootstrap any application services.
      */
@@ -29,6 +41,18 @@ class AppServiceProvider extends ServiceProvider
         App::setLocale('vi');
         config(['app.locale' => 'vi']);
         WalletTransaction::observe(WalletTransactionObserver::class);
+
+        RateLimiter::for('traffic-fine-lookup', function (Request $request): Limit {
+            return Limit::perMinute((int) config('traffic-fines.rate_limit.per_minute', 20))
+                ->by($request->ip() ?: 'unknown')
+                ->response(static function (Request $request, array $headers) {
+                    return response()->json([
+                        'success' => false,
+                        'status' => 'rate_limited',
+                        'message' => 'Bạn thao tác quá nhanh. Vui lòng chờ một phút rồi thử lại.',
+                    ], 429, $headers);
+                });
+        });
 
         Auth::viaRequest('api-key', function (Request $request) {
             $apiKeyValue = trim((string) $request->header('X-API-KEY'));

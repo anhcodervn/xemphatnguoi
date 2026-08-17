@@ -1,12 +1,15 @@
 <template>
     <div class="space-y-4">
-        <Breadcrumb title="Nội dung pháp lý" description="Quản lý điều khoản, chính sách bảo mật và chính sách hoàn tiền dùng chung cho toàn hệ thống." />
+        <Breadcrumb
+            title="Nội dung pháp lý"
+            description="Quản lý điều khoản, chính sách bảo mật và chính sách hoàn tiền dùng chung cho toàn hệ thống."
+        />
 
         <section class="overflow-hidden rounded-[10px] border border-slate-200 bg-white shadow-sm">
             <div class="flex flex-col gap-3 border-b border-slate-200 px-4 py-4 md:flex-row md:items-start md:justify-between">
                 <div>
                     <h2 class="text-base font-semibold text-slate-900">Nội dung chung toàn website</h2>
-                    <p class="text-sm text-slate-500">Các văn bản này được dùng cho nhóm trang pháp lý và thông tin công khai của giapproxy.vn.</p>
+                    <p class="text-sm text-slate-500">Các văn bản này được dùng cho nhóm trang pháp lý và thông tin công khai của XemPhatNguoi.vn.</p>
                 </div>
 
                 <button
@@ -14,7 +17,7 @@
                     :disabled="isSaving || !isRootDomain"
                     @click="submitForm"
                 >
-                    {{ !isRootDomain ? "Chỉ main domain được chỉnh sửa" : isSaving ? "Đang lưu" : "Lưu nội dung" }}
+                    {{ !isRootDomain ? 'Chỉ main domain được chỉnh sửa' : isSaving ? 'Đang lưu' : 'Lưu nội dung' }}
                 </button>
             </div>
 
@@ -85,20 +88,20 @@
 </template>
 
 <script setup lang="ts">
-import Breadcrumb from "@/components/MasterLayouts/Breadcrumb/index.vue";
-import Editor from "@/components/shared/Editor/index.vue";
-import { adminSettingService } from "@/services/admin-setting.service";
-import type { OptionSettingType } from "@/types/setting.type";
-import { uploadEditorImages } from "@/utils/editor-image-upload";
-import { handleErrorResponse, handleSuccessResponse } from "@/utils/response";
-import { computed, onMounted, ref } from "vue";
+import Breadcrumb from '@/components/MasterLayouts/Breadcrumb/index.vue';
+import Editor from '@/components/shared/Editor/index.vue';
+import { adminSettingService } from '@/services/admin-setting.service';
+import type { OptionSettingType } from '@/types/setting.type';
+import { uploadEditorImages } from '@/utils/editor-image-upload';
+import { handleErrorResponse, handleSuccessResponse } from '@/utils/response';
+import { computed, onMounted, ref } from 'vue';
 
-type OptionTabKey = "terms_of_use" | "privacy_policy" | "refund_policy";
+type OptionTabKey = 'terms_of_use' | 'privacy_policy' | 'refund_policy';
 
 const isSaving = ref(false);
 const isRootDomain = ref(Boolean((window as Window & { APP_IS_ROOT_DOMAIN?: boolean }).APP_IS_ROOT_DOMAIN));
 const editorKey = ref(0);
-const activeTab = ref<OptionTabKey>("terms_of_use");
+const activeTab = ref<OptionTabKey>('terms_of_use');
 
 const tabs: Array<{
     key: OptionTabKey;
@@ -108,25 +111,25 @@ const tabs: Array<{
     help: string;
 }> = [
     {
-        key: "terms_of_use",
-        label: "Điều khoản sử dụng",
-        shortLabel: "Điều khoản",
-        description: "Quy định chung khi người dùng truy cập và sử dụng website.",
-        help: "Mô tả điều kiện sử dụng, trách nhiệm người dùng và phạm vi áp dụng dịch vụ.",
+        key: 'terms_of_use',
+        label: 'Điều khoản sử dụng',
+        shortLabel: 'Điều khoản',
+        description: 'Quy định chung khi người dùng truy cập và sử dụng website.',
+        help: 'Mô tả điều kiện sử dụng, trách nhiệm người dùng và phạm vi áp dụng dịch vụ.',
     },
     {
-        key: "privacy_policy",
-        label: "Chính sách bảo mật",
-        shortLabel: "Bảo mật",
-        description: "Cam kết xử lý, lưu trữ và bảo vệ dữ liệu người dùng.",
-        help: "Trình bày cách thu thập dữ liệu, mục đích sử dụng và quyền riêng tư.",
+        key: 'privacy_policy',
+        label: 'Chính sách bảo mật',
+        shortLabel: 'Bảo mật',
+        description: 'Cam kết xử lý, lưu trữ và bảo vệ dữ liệu người dùng.',
+        help: 'Trình bày cách thu thập dữ liệu, mục đích sử dụng và quyền riêng tư.',
     },
     {
-        key: "refund_policy",
-        label: "Chính sách hoàn tiền",
-        shortLabel: "Hoàn tiền",
-        description: "Điều kiện, phạm vi và quy trình hoàn tiền cho khách hàng.",
-        help: "Nêu rõ trường hợp được hoàn tiền, thời gian xử lý và các ngoại lệ.",
+        key: 'refund_policy',
+        label: 'Chính sách hoàn tiền',
+        shortLabel: 'Hoàn tiền',
+        description: 'Điều kiện, phạm vi và quy trình hoàn tiền cho khách hàng.',
+        help: 'Nêu rõ trường hợp được hoàn tiền, thời gian xử lý và các ngoại lệ.',
     },
 ];
 
@@ -180,7 +183,7 @@ const submitForm = async (): Promise<void> => {
         };
 
         editorKey.value += 1;
-        handleSuccessResponse({ data: { status: true, message: "Cập nhật nội dung pháp lý thành công" } });
+        handleSuccessResponse({ data: { status: true, message: 'Cập nhật nội dung pháp lý thành công' } });
     } catch (err) {
         handleErrorResponse(err);
     } finally {

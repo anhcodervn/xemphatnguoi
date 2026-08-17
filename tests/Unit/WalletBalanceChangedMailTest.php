@@ -111,9 +111,9 @@ test('debiting wallet through wallet service queues a balance change mail', func
     app(WalletService::class)->debit(
         user: $user,
         amount: 120000,
-        referenceType: 'proxy_order',
+        referenceType: 'traffic_fine_package',
         referenceId: 22,
-        description: 'Thanh toán đơn proxy',
+        description: 'Thanh toán gói tra cứu',
     );
 
     Queue::assertPushed(SendSystemMailJob::class, function (SendSystemMailJob $job) use ($user): bool {
@@ -122,6 +122,6 @@ test('debiting wallet through wallet service queues a balance change mail', func
             && $job->title === 'Biến động giảm số dư ví'
             && in_array('Số tiền biến động: 120.000đ', $job->messageLines, true)
             && in_array('Số dư sau biến động: 380.000đ', $job->messageLines, true)
-            && in_array('Nội dung: Thanh toán đơn proxy', $job->messageLines, true);
+            && in_array('Nội dung: Thanh toán gói tra cứu', $job->messageLines, true);
     });
 });

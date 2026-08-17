@@ -51,6 +51,8 @@ class ApiLogController extends Controller
                     'success' => (clone $summaryQuery)->whereBetween('status_code', [200, 299])->count(),
                     'client_error' => (clone $summaryQuery)->whereBetween('status_code', [400, 499])->count(),
                     'server_error' => (clone $summaryQuery)->where('status_code', '>=', 500)->count(),
+                    'charged' => (clone $summaryQuery)->where('billing_status', 'charged')->count(),
+                    'revenue' => (string) (clone $summaryQuery)->where('billing_status', 'charged')->sum('charged_amount'),
                 ],
             ],
         ]);

@@ -1,0 +1,329 @@
+<?php
+
+use App\Models\SeoPost;
+use App\Models\TrafficFineResult;
+use App\Models\User;
+use App\Support\SettingStore;
+use Laravel\Sanctum\Sanctum;
+
+beforeEach(function (): void {
+    $this->withoutVite();
+});
+
+it('renders the public lookup website with Blade and no Vue application bundle', function (): void {
+    $response = $this->get('/');
+
+    $response
+        ->assertOk()
+        ->assertSee('Tra cứu phạt nguội toàn quốc')
+        ->assertSee('data-lookup-form', false)
+        ->assertSee('data-mobile-priority-lookup', false)
+        ->assertSee('name="vehicle_type"', false)
+        ->assertSee('Kết quả tra cứu')
+        ->assertSee('Tra cứu phạt nguội là gì?')
+        ->assertSee('Chọn loại phương tiện bạn muốn tra cứu')
+        ->assertSee('Chỉ 3 bước để tra cứu phạt nguội')
+        ->assertSee('Giải đáp thắc mắc về tra cứu phạt nguội')
+        ->assertSee('>API</a>', false)
+        ->assertSee('href="'.route('partners.api').'"', false)
+        ->assertDontSee('id="app"', false);
+
+    expect(substr_count($response->getContent(), '<h1'))->toBe(1)
+        ->and(substr_count($response->getContent(), 'data-home-accent-icon'))->toBeGreaterThanOrEqual(20);
+});
+
+it('introduces the partner api publicly before requiring login for documentation', function (): void {
+    app(SettingStore::class)->putString('traffic_fine_api_request_price', '35');
+
+    $this->get('/doi-tac')
+        ->assertOk()
+        ->assertSee('API dành cho đối tác')
+        ->assertSee('35đ')
+        ->assertSee('Xem tài liệu và thuê API')
+        ->assertSee('href="'.route('dashboard', ['any' => 'api']).'"', false)
+        ->assertSee('<link rel="canonical" href="'.route('partners.api').'">', false)
+        ->assertDontSee('id="app"', false)
+        ->assertDontSee('api.xephatnguoi.com');
+
+    $this->get('/dashboard/api')
+        ->assertRedirect('/login')
+        ->assertSessionHas('url.intended', url('/dashboard/api'));
+
+    $this->actingAs(User::factory()->create())
+        ->get('/dashboard/api')
+        ->assertOk();
+});
+
+it('renders canonical metadata and crawlable topic links on the home page', function (): void {
+    $this->get('/?utm_source=campaign')
+        ->assertOk()
+        ->assertSee('<title>Tra Cứu Phạt Nguội Ô Tô, Xe Máy Toàn Quốc | '.config('app.name').'</title>', false)
+        ->assertSee('<meta name="description"', false)
+        ->assertSee('<link rel="canonical" href="'.url('/').'">', false)
+        ->assertSee('<meta property="og:type" content="website">', false)
+        ->assertSee('<meta property="og:image"', false)
+        ->assertSee('href="'.url('/tra-cuu-phat-nguoi-o-to').'"', false)
+        ->assertSee('href="'.url('/tra-cuu-phat-nguoi-xe-may').'"', false)
+        ->assertSee('href="'.url('/tra-cuu-phat-nguoi-xe-may-dien').'"', false)
+        ->assertSee('href="'.url('/muc-phat/loi-vuot-den-do').'"', false)
+        ->assertSee('href="'.url('/muc-phat/loi-qua-toc-do').'"', false)
+        ->assertSee('href="'.url('/muc-phat/loi-sai-lan').'"', false)
+        ->assertSee('href="'.url('/phat-nguoi-la-gi').'"', false)
+        ->assertSee('href="'.url('/huong-dan-tra-cuu-phat-nguoi').'"', false)
+        ->assertSee('<details', false)
+        ->assertSee('"@type":"FAQPage"', false)
+        ->assertDontSee('utm_source=campaign');
+});
+
+it('keeps the public home compact, centered and vertical without a sidebar', function (): void {
+    $this->get('/')
+        ->assertOk()
+        ->assertSee('site-container', false)
+        ->assertSee('data-home-layout="vertical-centered"', false)
+        ->assertSee('max-w-[720px]', false)
+        ->assertSee('h-12 w-full', false)
+        ->assertSee('h-[58px]', false)
+        ->assertDontSee('lg:grid-cols-[minmax(0,780px)_320px]', false)
+        ->assertDontSee('max-w-[1180px]', false)
+        ->assertDontSee('max-w-[820px]', false)
+        ->assertDontSee('h-[52px]', false)
+        ->assertDontSee('min-h-[205px]', false)
+        ->assertDontSee('<aside', false)
+        ->assertDontSee('lg:min-h-screen', false)
+        ->assertDontSee('text-6xl', false);
+});
+
+it('serves the public traffic fine content cluster', function (string $url, string $heading): void {
+    $this->get($url)
+        ->assertOk()
+        ->assertSee($heading)
+        ->assertSee('<link rel="canonical" href="'.url($url).'">', false);
+})->with([
+    'car lookup' => ['/tra-cuu-phat-nguoi-o-to', 'Tra cứu phạt nguội ô tô'],
+    'motorbike lookup' => ['/tra-cuu-phat-nguoi-xe-may', 'Tra cứu phạt nguội xe máy'],
+    'electric motorbike lookup' => ['/tra-cuu-phat-nguoi-xe-may-dien', 'Tra cứu phạt nguội xe máy điện'],
+    'penalty overview' => ['/muc-phat', 'Mức phạt giao thông'],
+    'red light penalty' => ['/muc-phat/loi-vuot-den-do', 'Lỗi vượt đèn đỏ'],
+    'speeding penalty' => ['/muc-phat/loi-qua-toc-do', 'Lỗi chạy quá tốc độ'],
+    'wrong lane penalty' => ['/muc-phat/loi-sai-lan', 'Lỗi đi sai làn đường'],
+    'traffic fine explainer' => ['/phat-nguoi-la-gi', 'Phạt nguội là gì?'],
+    'lookup guide' => ['/huong-dan-tra-cuu-phat-nguoi', 'Hướng dẫn tra cứu phạt nguội'],
+]);
+
+it('keeps the legacy guide url as a permanent redirect', function (): void {
+    $this->get('/huong-dan')
+        ->assertMovedPermanently()
+        ->assertRedirectToRoute('traffic-fines.knowledge.guide');
+});
+
+it('presents api pay per request pricing without service packages', function (): void {
+    app(SettingStore::class)->putString('traffic_fine_api_request_price', '35');
+
+    $this->get('/bang-gia')
+        ->assertOk()
+        ->assertSee('35đ')
+        ->assertSee('Không cần mua gói')
+        ->assertSee('request thành công')
+        ->assertSee('href="'.route('dashboard', ['any' => 'api']).'"', false)
+        ->assertDontSee('BASIC')
+        ->assertDontSee('PRO')
+        ->assertDontSee('/dashboard/packages', false);
+});
+
+it('canonicalizes the legacy lookup landing page to the home pillar page', function (): void {
+    $this->get('/tra-cuu-phat-nguoi')
+        ->assertOk()
+        ->assertSee('<link rel="canonical" href="'.url('/').'">', false)
+        ->assertSee('<meta name="robots" content="noindex,follow">', false);
+});
+
+it('marks plate result pages as noindex follow', function (): void {
+    $checkedAt = now();
+    TrafficFineResult::factory()->create([
+        'plate' => '30A12345',
+        'vehicle_type' => 'car',
+        'status' => 'success',
+        'violation_count' => 1,
+        'provider' => 'xephatnguoi',
+        'response_json' => [
+            'plate' => '30A12345',
+            'display_plate' => '30A-123.45',
+            'vehicle_type' => 'car',
+            'status' => 'success',
+            'violation_count' => 1,
+            'violations' => [[
+                'plate_color' => 'Nền trắng',
+                'time' => '2026-08-17 09:04:00',
+                'location' => 'Quốc lộ 1, Bắc Ninh',
+                'behavior' => 'Điều khiển xe chạy quá tốc độ quy định',
+                'status' => 'Chưa xử phạt',
+                'agency' => 'Phòng Cảnh sát giao thông',
+                'resolution_agency' => 'Đội CSGT số 2',
+                'resolution_address' => 'Số 8A Xuân La, Hà Nội',
+                'resolution_phone' => null,
+            ]],
+            'checked_at' => $checkedAt->toISOString(),
+        ],
+        'checked_at' => $checkedAt,
+        'expires_at' => now()->addDay(),
+    ]);
+
+    $this->get('/tra-cuu/30A12345?vehicle_type=car')
+        ->assertOk()
+        ->assertSee('Tra cứu phạt nguội biển số 30A-123.45')
+        ->assertSee('data-result-tone="violation"', false)
+        ->assertSee('Tra cứu vi phạm')
+        ->assertSee('Cập nhật:')
+        ->assertSee('Đã xử phạt')
+        ->assertSee('Chưa xử phạt')
+        ->assertSee('href="#danh-sach-loi"', false)
+        ->assertSee('Danh sách vi phạm')
+        ->assertSee('Nội dung vi phạm')
+        ->assertSee('Xem mức phạt')
+        ->assertSee('href="'.route('traffic-fines.penalties.index').'"', false)
+        ->assertSee('Nơi giải quyết')
+        ->assertDontSee('Tự động thông báo')
+        ->assertDontSee('Trang này được đặt noindex')
+        ->assertDontSee('2026-08-17 09:04:00')
+        ->assertSee('<meta name="robots" content="noindex,follow">', false);
+});
+
+it('presents a calm and honest empty state when no violation is recorded', function (): void {
+    $checkedAt = now();
+    TrafficFineResult::factory()->create([
+        'plate' => '30A67890',
+        'vehicle_type' => 'car',
+        'status' => 'no_violation',
+        'violation_count' => 0,
+        'provider' => 'xephatnguoi',
+        'response_json' => [
+            'plate' => '30A67890',
+            'display_plate' => '30A-678.90',
+            'vehicle_type' => 'car',
+            'status' => 'no_violation',
+            'violation_count' => 0,
+            'violations' => [],
+            'checked_at' => $checkedAt->toISOString(),
+        ],
+        'checked_at' => $checkedAt,
+        'expires_at' => now()->addDay(),
+    ]);
+
+    $this->get('/tra-cuu/30A67890?vehicle_type=car')
+        ->assertOk()
+        ->assertSee('data-result-tone="clear"', false)
+        ->assertSee('Chưa ghi nhận vi phạm')
+        ->assertSee('Chưa có thông tin vi phạm')
+        ->assertSee('Đã xử phạt')
+        ->assertSee('Chưa xử phạt')
+        ->assertDontSee('Kết quả an toàn')
+        ->assertDontSee('Tra cứu vi phạm')
+        ->assertDontSee('Danh sách vi phạm')
+        ->assertDontSee('Tự động thông báo');
+});
+
+it('includes only published blog posts and public static pages in the sitemap', function (): void {
+    SeoPost::query()->create([
+        'title' => 'Bài đã xuất bản',
+        'slug' => 'bai-da-xuat-ban',
+        'status' => 'published',
+        'published_at' => now()->subMinute(),
+    ]);
+    SeoPost::query()->create([
+        'title' => 'Bài nháp',
+        'slug' => 'bai-nhap',
+        'status' => 'draft',
+    ]);
+
+    $this->get('/sitemap.xml')
+        ->assertOk()
+        ->assertSee('/tra-cuu-phat-nguoi-o-to')
+        ->assertSee('/tra-cuu-phat-nguoi-xe-may')
+        ->assertSee('/tra-cuu-phat-nguoi-xe-may-dien')
+        ->assertSee('/muc-phat/loi-vuot-den-do')
+        ->assertSee('/phat-nguoi-la-gi')
+        ->assertSee('/huong-dan-tra-cuu-phat-nguoi')
+        ->assertSee('/bang-gia')
+        ->assertSee('/doi-tac')
+        ->assertSee('/blog/bai-da-xuat-ban')
+        ->assertDontSee('/blog/bai-nhap')
+        ->assertDontSee('<loc>'.url('/huong-dan').'</loc>', false)
+        ->assertDontSee('/dashboard')
+        ->assertDontSee('/admin')
+        ->assertDontSee('/tra-cuu/30A12345');
+});
+
+it('keeps public assets and indexable content crawlable in robots rules', function (): void {
+    $this->get('/robots.txt')
+        ->assertOk()
+        ->assertSee('Allow: /')
+        ->assertSee('Disallow: /admin')
+        ->assertSee('Disallow: /dashboard')
+        ->assertSee('Disallow: /login')
+        ->assertSee('Disallow: /api')
+        ->assertDontSee('Disallow: /build')
+        ->assertDontSee('Disallow: /blog');
+});
+
+it('reports the actual public sitemap file and url count to admins', function (): void {
+    SeoPost::query()->create([
+        'title' => 'Bài đã xuất bản',
+        'slug' => 'bai-da-xuat-ban',
+        'status' => 'published',
+        'published_at' => now()->subMinute(),
+    ]);
+    Sanctum::actingAs(User::factory()->create(['role' => 'admin']));
+
+    $this->getJson('/api/admin-api/seo/overview')
+        ->assertOk()
+        ->assertJsonPath('data.summary.sitemap_files', 1);
+
+    $this->getJson('/api/admin-api/seo/sitemaps')
+        ->assertOk()
+        ->assertJsonCount(1, 'data.entries')
+        ->assertJsonPath('data.entries.0.path', '/sitemap.xml')
+        ->assertJsonPath('data.entries.0.included_count', '17 URL');
+});
+
+it('renders published blog content safely with valid article and faq schema', function (): void {
+    SeoPost::query()->create([
+        'title' => 'Cách đọc kết quả phạt nguội',
+        'slug' => 'cach-doc-ket-qua-phat-nguoi',
+        'excerpt' => 'Hướng dẫn đọc kết quả.',
+        'content' => [[
+            'type' => 'paragraph',
+            'children' => [['text' => '<script>alert("xss")</script>']],
+        ]],
+        'faq' => [[
+            'question' => 'Kết quả có phải xác nhận chính thức?',
+            'answer' => 'Không, cần đối chiếu với cơ quan có thẩm quyền.',
+        ]],
+        'article_schema' => true,
+        'breadcrumb_schema' => true,
+        'status' => 'published',
+        'published_at' => now()->subMinute(),
+    ]);
+
+    $this->get('/blog/cach-doc-ket-qua-phat-nguoi')
+        ->assertOk()
+        ->assertSee('Cách đọc kết quả phạt nguội')
+        ->assertSee('&lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;', false)
+        ->assertDontSee('<script>alert("xss")</script>', false)
+        ->assertSee('"@type":"Article"', false)
+        ->assertSee('"@type":"BreadcrumbList"', false)
+        ->assertSee('"@type":"FAQPage"', false);
+});
+
+it('redirects guests away from dashboard and admin', function (): void {
+    $this->get('/dashboard')->assertRedirect('/login');
+    $this->get('/admin')->assertRedirect('/login');
+});
+
+it('redirects the legacy dashboard lookup page to the Blade lookup page', function (): void {
+    $this->get('/dashboard/lookup')
+        ->assertRedirectToRoute('traffic-fines.lookup-page');
+
+    $this->actingAs(User::factory()->create())
+        ->get('/dashboard/lookup')
+        ->assertRedirectToRoute('traffic-fines.lookup-page');
+});

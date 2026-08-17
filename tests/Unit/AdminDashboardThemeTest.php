@@ -1,24 +1,26 @@
 <?php
 
-test('admin dashboard uses the blue product palette', function () {
+test('admin dashboard uses the traffic fine product palette', function () {
     $dashboardSource = file_get_contents(dirname(__DIR__, 2).'/resources/js/pages/admin/home/index.vue');
 
     expect($dashboardSource)
-        ->toContain('#071a3d', '#0b4bd9', 'bg-blue-600')
-        ->not->toContain('emerald', 'teal');
+        ->toContain('bg-slate-950', 'bg-sky-50', 'text-sky-700')
+        ->not->toContain('gradient');
 });
 
-test('admin dashboard includes complete operational sections', function () {
+test('admin dashboard includes real api billing and operational metrics', function () {
     $dashboardSource = file_get_contents(dirname(__DIR__, 2).'/resources/js/pages/admin/home/index.vue');
 
     expect($dashboardSource)
-        ->toContain('Xu hướng tài chính')
-        ->toContain('Trạng thái task')
-        ->toContain('Sức khỏe hệ thống')
-        ->toContain('Dịch vụ doanh thu cao')
-        ->toContain('Task lỗi gần đây')
-        ->toContain('Các khu vực quản trị thường dùng')
-        ->toContain("adminAnalyticsService.dashboard('7d')")
-        ->toContain('adminProxyProviderService.list({ per_page: 100 })')
-        ->toContain('adminProxyProductService.list({ per_page: 100 })');
+        ->toContain('API hôm nay')
+        ->toContain('API tháng này')
+        ->toContain('Doanh thu hôm nay')
+        ->toContain('Doanh thu tháng')
+        ->toContain('Giá / request')
+        ->toContain('Cache hit')
+        ->toContain('Provider requests')
+        ->toContain('Provider errors')
+        ->toContain('Độ trễ TB')
+        ->toContain('api_chart')
+        ->toContain('adminTrafficFineService.overview()');
 });
