@@ -27,6 +27,7 @@ export interface SystemSettingType {
     robots: string;
     gtm_id: string;
     meta_pixel_id: string;
+    custom_header: string;
     custom_script: string;
     [key: string]: unknown;
 }
@@ -121,6 +122,7 @@ export interface SeoSettingType {
     robots?: string;
     gtm_id?: string;
     meta_pixel_id?: string;
+    custom_header?: string;
     custom_script?: string;
     meta_keywords?: string;
     og_image?: string;

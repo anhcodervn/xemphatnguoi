@@ -153,6 +153,7 @@ class PublicContentPageController extends Controller
             'og_image' => '',
             'gtm_id' => '',
             'meta_pixel_id' => '',
+            'custom_header' => config('system_settings.defaults.seo.custom_header', ''),
             'custom_script' => '',
             $page['title_key'] => $page['fallback_title'],
             $page['excerpt_key'] => $page['fallback_description'],

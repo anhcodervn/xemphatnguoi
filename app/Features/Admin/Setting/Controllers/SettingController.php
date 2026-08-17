@@ -52,6 +52,7 @@ class SettingController extends Controller
                 'robots' => 'index,follow',
                 'gtm_id' => '',
                 'meta_pixel_id' => '',
+                'custom_header' => config('system_settings.defaults.seo.custom_header', ''),
                 'custom_script' => '',
             ],
             'options' => [
@@ -185,6 +186,7 @@ class SettingController extends Controller
                 'robots' => 'robots',
                 'gtm_id' => 'gtm_id',
                 'meta_pixel_id' => 'meta_pixel_id',
+                'custom_header' => 'custom_header',
                 'custom_script' => 'custom_script',
             ],
             'options' => [
@@ -378,6 +380,7 @@ class SettingController extends Controller
     {
         $payload = [
             ...$this->defaultSystem(),
+            ...$this->systemSettings($settingStore),
             ...$request->validated(),
         ];
 

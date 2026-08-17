@@ -41,6 +41,7 @@ Route::prefix('')->group(function (): void {
             'robots' => 'index,follow',
             'gtm_id' => '',
             'meta_pixel_id' => '',
+            'custom_header' => config('system_settings.defaults.seo.custom_header', ''),
             'custom_script' => '',
             'contact_page_content' => [],
             'terms_page_content' => [],

@@ -2,6 +2,8 @@
 
 namespace App\Features\Admin\Setting\Requests;
 
+use App\Rules\ValidCustomMetaTags;
+use App\Support\CustomMetaTags;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
@@ -16,7 +18,7 @@ class UpdateSystemSettingRequest extends FormRequest
     /**
      * @return array<string, array<int, mixed>>
      */
-    public function rules(): array
+    public function rules(CustomMetaTags $customMetaTags): array
     {
         return [
             'site_name' => ['required', 'string', 'max:190'],
@@ -42,6 +44,7 @@ class UpdateSystemSettingRequest extends FormRequest
             'robots' => ['nullable', 'string', 'max:100'],
             'gtm_id' => ['nullable', 'string', 'max:100'],
             'meta_pixel_id' => ['nullable', 'string', 'max:100'],
+            'custom_header' => ['nullable', 'string', 'max:10000', new ValidCustomMetaTags($customMetaTags)],
             'custom_script' => ['nullable', 'string'],
         ];
     }

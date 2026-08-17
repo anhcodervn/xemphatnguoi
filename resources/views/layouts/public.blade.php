@@ -101,6 +101,7 @@
     @foreach ($schemas as $schema)
         <script type="application/ld+json">{!! json_encode(array_filter($schema, static fn ($value) => $value !== null && $value !== ''), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
     @endforeach
+    <x-custom-meta-tags :html="$settings['custom_header'] ?? ''" />
 </head>
 <body class="public-site min-h-screen bg-white text-navy">
     @if ($gtmId !== '')

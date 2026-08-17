@@ -4,6 +4,7 @@ use App\Models\SeoPost;
 use App\Models\TrafficFineResult;
 use App\Models\User;
 use App\Support\SettingStore;
+use Illuminate\Support\Str;
 use Laravel\Sanctum\Sanctum;
 
 beforeEach(function (): void {
@@ -32,28 +33,126 @@ it('renders the public lookup website with Blade and no Vue application bundle',
         ->and(substr_count($response->getContent(), 'data-home-accent-icon'))->toBeGreaterThanOrEqual(20);
 });
 
-it('renders the administrator custom script exactly once in public and spa layouts', function (): void {
+it('renders administrator custom head and script content exactly once in public and spa layouts', function (): void {
+    $customHeader = '<meta name="google-site-verification" content="xpn-verification-token">';
     $customScript = '<script data-custom-script>window.__xpnCustomLoaded=true;</script>';
     $admin = User::factory()->create(['role' => 'admin']);
+    config()->set(
+        'system_settings.defaults.seo.custom_header',
+        '<meta name="google-site-verification" content="fallback-token">',
+    );
 
     Sanctum::actingAs($admin);
     $this->patchJson('/api/admin-api/settings/seo', [
+        'custom_header' => $customHeader,
         'custom_script' => $customScript,
     ])
         ->assertOk()
+        ->assertJsonPath('data.settings.custom_header', $customHeader)
         ->assertJsonPath('data.settings.custom_script', $customScript);
 
     foreach (['/', '/gioi-thieu', '/blog'] as $path) {
         $response = $this->get($path)->assertOk();
+        $html = $response->getContent();
 
-        expect(substr_count($response->getContent(), $customScript))->toBe(1);
+        expect(substr_count($html, $customHeader))->toBe(1)
+            ->and(Str::before($html, '</head>'))->toContain($customHeader)
+            ->and(Str::after($html, '</head>'))->not->toContain($customHeader)
+            ->and(substr_count($html, $customScript))->toBe(1);
     }
 
     $dashboard = $this->actingAs($admin)
         ->get('/dashboard')
         ->assertOk();
+    $dashboardHtml = $dashboard->getContent();
 
-    expect(substr_count($dashboard->getContent(), $customScript))->toBe(1);
+    expect(substr_count($dashboardHtml, $customHeader))->toBe(1)
+        ->and(Str::before($dashboardHtml, '</head>'))->toContain($customHeader)
+        ->and(Str::after($dashboardHtml, '</head>'))->not->toContain($customHeader)
+        ->and(substr_count($dashboardHtml, $customScript))->toBe(1);
+});
+
+it('uses the configured custom header when no database override exists', function (): void {
+    $customHeader = '<meta name="google-site-verification" content="configured-token">';
+    config()->set('system_settings.defaults.seo.custom_header', $customHeader);
+
+    $response = $this->get('/')->assertOk();
+    $html = $response->getContent();
+
+    expect(substr_count($html, $customHeader))->toBe(1)
+        ->and(Str::before($html, '</head>'))->toContain($customHeader);
+});
+
+it('defines an empty custom header configuration default', function (): void {
+    expect(config('system_settings.defaults.seo.custom_header'))->toBe('');
+});
+
+it('drops unsafe custom header markup supplied through configuration', function (): void {
+    $unsafeHeader = '<script data-unsafe-config>alert(1)</script>';
+    config()->set('system_settings.defaults.seo.custom_header', $unsafeHeader);
+
+    $this->get('/')
+        ->assertOk()
+        ->assertDontSee('data-unsafe-config', false);
+});
+
+it('limits custom header payload size', function (): void {
+    Sanctum::actingAs(User::factory()->create(['role' => 'admin']));
+
+    $this->patchJson('/api/admin-api/settings/seo', [
+        'custom_header' => str_repeat('x', 10001),
+    ])
+        ->assertUnprocessable()
+        ->assertJsonStructure(['data' => ['errors' => ['custom_header']]]);
+});
+
+it('rejects unsafe or application-owned custom header markup', function (string $customHeader): void {
+    Sanctum::actingAs(User::factory()->create(['role' => 'admin']));
+
+    $this->patchJson('/api/admin-api/settings/seo', [
+        'custom_header' => $customHeader,
+    ])
+        ->assertUnprocessable()
+        ->assertJsonStructure(['data' => ['errors' => ['custom_header']]]);
+})->with([
+    'script' => '<script>alert(1)</script>',
+    'stylesheet' => '<link rel="stylesheet" href="https://example.com/style.css">',
+    'http redirect' => '<meta http-equiv="refresh" content="0;url=https://example.com">',
+    'event attribute' => '<meta name="google-site-verification" content="token" onload="alert(1)">',
+    'system robots' => '<meta name="robots" content="noindex">',
+    'referrer policy' => '<meta name="referrer" content="unsafe-url">',
+]);
+
+it('escapes custom meta values before rendering them in the document head', function (): void {
+    $customHeader = '<meta name="google-site-verification" content="token &quot; &lt;unsafe&gt;">';
+    Sanctum::actingAs(User::factory()->create(['role' => 'admin']));
+
+    $this->patchJson('/api/admin-api/settings/seo', [
+        'custom_header' => $customHeader,
+    ])->assertOk();
+
+    $response = $this->get('/')->assertOk();
+    $html = $response->getContent();
+
+    expect(Str::before($html, '</head>'))->toContain($customHeader)
+        ->and($html)->not->toContain('<unsafe>');
+});
+
+it('preserves custom header when a legacy system update omits the field', function (): void {
+    $customHeader = '<meta name="google-site-verification" content="persistent-token">';
+    $settingStore = app(SettingStore::class);
+    $settingStore->putString('custom_header', $customHeader);
+    Sanctum::actingAs(User::factory()->create(['role' => 'admin']));
+
+    $this->patchJson('/api/admin-api/settings/system', [
+        'site_name' => 'XemPhatNguoi.vn',
+        'site_active' => true,
+        'allow_register' => true,
+    ])
+        ->assertOk()
+        ->assertJsonPath('data.settings.custom_header', $customHeader);
+
+    expect($settingStore->getString('custom_header'))->toBe($customHeader);
 });
 
 it('introduces the partner api publicly before requiring login for documentation', function (): void {

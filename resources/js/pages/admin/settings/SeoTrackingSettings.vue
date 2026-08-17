@@ -13,7 +13,7 @@
                         :disabled="isSaving"
                         @click="submitForm"
                     >
-                        {{ isSaving ? "Đang lưu..." : "Lưu thay đổi" }}
+                        {{ isSaving ? 'Đang lưu...' : 'Lưu thay đổi' }}
                     </button>
                 </div>
 
@@ -74,6 +74,20 @@
                     </div>
 
                     <div class="space-y-2">
+                        <label class="text-sm font-medium text-slate-700">Custom header / meta tags</label>
+                        <textarea
+                            v-model="formData.custom_header"
+                            rows="5"
+                            maxlength="10000"
+                            class="w-full rounded-xl border border-slate-300 px-3 py-2 font-mono text-xs outline-none focus:border-slate-900"
+                            placeholder='<meta name="google-site-verification" content="...">'
+                        />
+                        <p class="text-xs leading-5 text-slate-500">
+                            Tối đa 20 thẻ meta với thuộc tính name hoặc property và content. Không chấp nhận script, link hay http-equiv.
+                        </p>
+                    </div>
+
+                    <div class="space-y-2">
                         <label class="text-sm font-medium text-slate-700">Script tùy biến</label>
                         <textarea
                             v-model="formData.custom_script"
@@ -107,19 +121,20 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
-import { adminSettingService } from "@/services/admin-setting.service";
-import type { SeoSettingType } from "@/types/setting.type";
-import { handleErrorResponse, handleSuccessResponse } from "@/utils/response";
+import { adminSettingService } from '@/services/admin-setting.service';
+import type { SeoSettingType } from '@/types/setting.type';
+import { handleErrorResponse, handleSuccessResponse } from '@/utils/response';
+import { onMounted, ref } from 'vue';
 
 const isSaving = ref(false);
 const formData = ref<SeoSettingType>({
-    meta_title: "",
-    meta_description: "",
-    robots: "index,follow",
-    gtm_id: "",
-    meta_pixel_id: "",
-    custom_script: "",
+    meta_title: '',
+    meta_description: '',
+    robots: 'index,follow',
+    gtm_id: '',
+    meta_pixel_id: '',
+    custom_header: '',
+    custom_script: '',
 });
 
 const loadData = async (): Promise<void> => {
@@ -136,7 +151,7 @@ const submitForm = async (): Promise<void> => {
         isSaving.value = true;
         const res = await adminSettingService.updateSeo(formData.value);
         formData.value = { ...res.settings };
-        handleSuccessResponse({ data: { status: true, message: "Cập nhật cài đặt SEO và tracking thành công" } });
+        handleSuccessResponse({ data: { status: true, message: 'Cập nhật cài đặt SEO và tracking thành công' } });
     } catch (err) {
         handleErrorResponse(err);
     } finally {

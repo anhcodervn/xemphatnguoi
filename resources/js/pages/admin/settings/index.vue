@@ -92,6 +92,7 @@ const seoForm = ref<SeoSettingType>({
     robots: 'index,follow',
     gtm_id: '',
     meta_pixel_id: '',
+    custom_header: '',
     custom_script: '',
 });
 
@@ -649,6 +650,19 @@ onMounted(async () => {
                                         type="text"
                                         class="w-full rounded-[10px] border border-slate-200 px-3 py-2 text-sm outline-none focus:border-indigo-400"
                                     />
+                                </label>
+                                <label class="space-y-1">
+                                    <span class="text-xs font-semibold text-slate-600">Custom header / meta tags</span>
+                                    <textarea
+                                        v-model="seoForm.custom_header"
+                                        rows="6"
+                                        maxlength="10000"
+                                        class="w-full rounded-[10px] border border-slate-200 px-3 py-2 font-mono text-xs outline-none focus:border-indigo-400"
+                                        placeholder='<meta name="google-site-verification" content="...">'
+                                    />
+                                    <span class="block text-[11px] leading-5 text-slate-500">
+                                        Tối đa 20 thẻ meta với thuộc tính name hoặc property và content. Không chấp nhận script, link hay http-equiv.
+                                    </span>
                                 </label>
                                 <label class="space-y-1">
                                     <span class="text-xs font-semibold text-slate-600">Custom script</span>

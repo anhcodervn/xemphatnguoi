@@ -204,6 +204,7 @@ class PublicTrafficFineController extends Controller
             'og_image' => '',
             'gtm_id' => '',
             'meta_pixel_id' => '',
+            'custom_header' => config('system_settings.defaults.seo.custom_header', ''),
             'custom_script' => '',
         ]);
 

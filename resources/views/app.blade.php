@@ -80,6 +80,7 @@
                 src="https://www.facebook.com/tr?id={{ $settings['meta_pixel_id'] }}&ev=PageView&noscript=1" /></noscript>
         <!-- End Meta Pixel Code -->
     @endif
+    <x-custom-meta-tags :html="$settings['custom_header'] ?? ''" />
 </head>
 
 <body class="font-sans antialiased">

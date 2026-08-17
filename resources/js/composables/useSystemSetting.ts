@@ -23,6 +23,7 @@ const defaultSettings: SystemSettingType = {
     robots: 'index,follow',
     gtm_id: '',
     meta_pixel_id: '',
+    custom_header: '',
     custom_script: '',
 };
 

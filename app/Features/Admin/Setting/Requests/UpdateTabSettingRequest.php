@@ -2,6 +2,8 @@
 
 namespace App\Features\Admin\Setting\Requests;
 
+use App\Rules\ValidCustomMetaTags;
+use App\Support\CustomMetaTags;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
@@ -16,7 +18,7 @@ class UpdateTabSettingRequest extends FormRequest
     /**
      * @return array<string, array<int, mixed>>
      */
-    public function rules(): array
+    public function rules(CustomMetaTags $customMetaTags): array
     {
         return match ((string) $this->route('tab')) {
             'general' => [
@@ -49,6 +51,7 @@ class UpdateTabSettingRequest extends FormRequest
                 'robots' => ['nullable', 'string', 'max:100'],
                 'gtm_id' => ['nullable', 'string', 'max:100'],
                 'meta_pixel_id' => ['nullable', 'string', 'max:100'],
+                'custom_header' => ['nullable', 'string', 'max:10000', new ValidCustomMetaTags($customMetaTags)],
                 'custom_script' => ['nullable', 'string'],
             ],
             'content-pages' => $this->contentPageRules(),
@@ -136,6 +139,7 @@ class UpdateTabSettingRequest extends FormRequest
             'robots' => 'robots',
             'gtm_id' => 'Google Tag Manager ID',
             'meta_pixel_id' => 'Meta Pixel ID',
+            'custom_header' => 'header tùy chỉnh',
             'custom_script' => 'script tùy chỉnh',
             'category_ids' => 'danh mục trang chủ',
             'items' => 'danh sách slider',
