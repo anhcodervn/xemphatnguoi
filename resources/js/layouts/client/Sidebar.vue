@@ -38,7 +38,7 @@ const items: NavItem[] = [
 ];
 
 const isActive = (href: string): boolean => (href === '/dashboard' ? route.path === href : route.path === href || route.path.startsWith(`${href}/`));
-const siteLogo = computed(() => settings.value.light_logo || '');
+const siteLogo = computed(() => settings.value.dark_logo || '');
 const siteName = computed(() => settings.value.site_name || 'XemPhatNguoi.vn');
 const siteInitial = computed(() => siteName.value.trim().charAt(0).toUpperCase() || 'X');
 

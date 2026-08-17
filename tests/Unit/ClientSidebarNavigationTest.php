@@ -47,14 +47,14 @@ it('keeps lookup actions on Blade while dashboard retains management services', 
         ->not->toContain('trafficFineService.lookupVehicle');
 });
 
-it('uses the light logo with the client specific dimensions', function () {
+it('uses the client specific logos and dimensions', function () {
     $projectRoot = dirname(__DIR__, 2);
     $sidebar = file_get_contents($projectRoot.'/resources/js/layouts/client/Sidebar.vue');
     $publicHeader = file_get_contents($projectRoot.'/resources/views/components/header.blade.php');
     $maintenancePage = file_get_contents($projectRoot.'/resources/views/pages/maintenance/index.blade.php');
 
     expect($sidebar)
-        ->toContain("settings.value.light_logo || ''")
+        ->toContain("settings.value.dark_logo || ''")
         ->toContain('class="max-h-15 max-w-100 object-contain"')
         ->and($publicHeader)
         ->toContain("\$logo = \$settings['light_logo'] ?? null;")
