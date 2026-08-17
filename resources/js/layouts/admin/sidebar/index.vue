@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useSupportStore } from '@/stores/support.store';
 import { ChevronRight, ShieldCheck, X } from 'lucide-vue-next';
 import { reactive, watch } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
@@ -14,7 +13,6 @@ const emit = defineEmits<{
 }>();
 
 const route = useRoute();
-const supportStore = useSupportStore();
 
 const findBestMatchingChildHref = (hrefs: string[], currentPath: string): string | null => {
     return (
@@ -23,12 +21,9 @@ const findBestMatchingChildHref = (hrefs: string[], currentPath: string): string
     );
 };
 
-const expandedGroups = reactive<Record<string, boolean>>({
-    users: false,
-    products: false,
-    discounts: false,
-    settings: false,
-});
+const expandedGroups = reactive<Record<string, boolean>>(
+    Object.fromEntries(adminMenuGroups.filter((group) => group.children).map((group) => [group.key, false])),
+);
 
 const isGroupActive = (group: AdminMenuGroup): boolean => {
     if (group.href) {
@@ -80,71 +75,64 @@ watch(
     >
         <aside
             v-if="props.isOpen"
-            class="fixed inset-y-0 left-0 z-50 flex w-[290px] flex-col border-r border-slate-200 bg-white text-slate-700 shadow-[0_24px_80px_rgba(15,23,42,0.14)] lg:sticky lg:top-0 lg:shadow-none"
+            class="fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-slate-200 bg-white text-slate-700 shadow-[0_24px_80px_rgba(15,23,42,0.14)] lg:sticky lg:top-0 lg:shadow-none"
         >
-            <div class="flex items-center justify-between border-b border-slate-200 px-6 py-5">
+            <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
                 <RouterLink to="/admin" class="flex items-center gap-3" @click="closeSidebarOnMobile">
                     <div
-                        class="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-400 text-white shadow-[0_12px_28px_rgba(6,182,212,0.24)]"
+                        class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-cyan-400 text-white shadow-sm"
                     >
-                        <ShieldCheck class="h-5 w-5" />
+                        <ShieldCheck class="h-5 w-5" aria-hidden="true" />
                     </div>
                     <div>
                         <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-blue-600">XemPhatNguoi</p>
-                        <h1 class="text-lg font-black tracking-tight text-slate-950">Admin Control</h1>
+                        <h1 class="text-base font-black tracking-tight text-slate-950">Admin Control</h1>
                     </div>
                 </RouterLink>
 
                 <button
                     type="button"
-                    class="rounded-2xl border border-slate-200 p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 lg:hidden"
+                    aria-label="Đóng menu quản trị"
+                    class="rounded-xl border border-slate-200 p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 lg:hidden"
                     @click="emit('close')"
                 >
-                    <X class="h-5 w-5" />
+                    <X class="h-5 w-5" aria-hidden="true" />
                 </button>
             </div>
 
-            <nav class="flex-1 overflow-y-auto px-4 py-5">
-                <div class="mb-4 px-2">
+            <nav class="flex-1 overflow-y-auto px-3 py-4">
+                <div class="mb-3 px-3">
                     <p class="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Điều hướng</p>
                 </div>
 
-                <div class="space-y-2">
+                <div class="grid gap-1.5">
                     <template v-for="group in adminMenuGroups" :key="group.key">
                         <RouterLink
                             v-if="group.href"
                             :to="group.href"
-                            class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition"
-                            :class="
-                                isGroupActive(group)
-                                    ? 'bg-blue-600 text-white shadow-[0_12px_24px_rgba(37,99,235,0.2)]'
-                                    : 'text-slate-600 hover:bg-blue-50 hover:text-blue-700'
-                            "
+                            class="flex min-h-11 items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                            :class="isGroupActive(group) ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-blue-50 hover:text-blue-700'"
                             @click="closeSidebarOnMobile"
                         >
-                            <component :is="group.icon" class="h-5 w-5" />
-                            <span class="flex-1">{{ group.label }}</span>
-                            <span
-                                v-if="group.badge === 'support' && supportStore.adminUnread > 0"
-                                class="inline-flex min-h-6 min-w-6 items-center justify-center rounded-full bg-red-600 px-1.5 text-[11px] font-black tabular-nums text-white ring-2"
-                                :class="isGroupActive(group) ? 'ring-white/30' : 'ring-red-100'"
-                            >
-                                {{ supportStore.adminUnread > 99 ? '99+' : supportStore.adminUnread }}
-                            </span>
+                            <component :is="group.icon" class="h-5 w-5 shrink-0" aria-hidden="true" />
+                            <span class="min-w-0 flex-1">{{ group.label }}</span>
                         </RouterLink>
 
-                        <div v-else class="rounded-[1.35rem] border border-slate-200 bg-slate-50/80">
+                        <div v-else>
                             <button
                                 type="button"
-                                class="flex w-full items-center gap-3 px-4 py-3 text-left text-sm font-semibold transition"
-                                :class="isGroupActive(group) ? 'text-blue-700' : 'text-slate-600 hover:bg-blue-50 hover:text-blue-700'"
+                                :aria-expanded="expandedGroups[group.key]"
+                                :aria-controls="`admin-menu-${group.key}`"
+                                class="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                                :class="isGroupActive(group) ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-blue-50 hover:text-blue-700'"
                                 @click="toggleGroup(group.key)"
                             >
-                                <component :is="group.icon" class="h-5 w-5" />
-                                <span class="flex-1">{{ group.label }}</span>
+                                <component :is="group.icon" class="h-5 w-5 shrink-0" aria-hidden="true" />
+                                <span class="min-w-0 flex-1">{{ group.label }}</span>
                                 <ChevronRight
-                                    class="h-4 w-4 transition"
+                                    class="h-4 w-4 shrink-0 transition-transform"
                                     :class="expandedGroups[group.key] ? 'rotate-90 text-blue-600' : 'text-slate-400'"
+                                    aria-hidden="true"
                                 />
                             </button>
 
@@ -156,21 +144,25 @@ watch(
                                 leave-from-class="max-h-96 opacity-100"
                                 leave-to-class="max-h-0 opacity-0"
                             >
-                                <div v-if="expandedGroups[group.key]" class="overflow-hidden px-3 pb-3">
+                                <div
+                                    v-if="expandedGroups[group.key]"
+                                    :id="`admin-menu-${group.key}`"
+                                    class="ml-5 grid gap-1 overflow-hidden border-l border-slate-200 py-1 pl-3"
+                                >
                                     <RouterLink
                                         v-for="child in group.children"
                                         :key="child.href"
                                         :to="child.href"
-                                        class="mt-1 flex items-center gap-3 rounded-2xl px-4 py-2.5 text-sm transition"
+                                        class="flex min-h-11 items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                                         :class="
                                             isChildActive(child.href)
-                                                ? 'bg-blue-50 font-semibold text-blue-700 ring-1 ring-blue-100'
-                                                : 'text-slate-500 hover:bg-white hover:text-blue-700'
+                                                ? 'bg-blue-50 font-semibold text-blue-700'
+                                                : 'text-slate-500 hover:bg-slate-50 hover:text-blue-700'
                                         "
                                         @click="closeSidebarOnMobile"
                                     >
-                                        <span class="bg-current/70 h-1.5 w-1.5 rounded-full" />
-                                        <span>{{ child.label }}</span>
+                                        <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-current opacity-60" aria-hidden="true" />
+                                        <span class="min-w-0 flex-1">{{ child.label }}</span>
                                     </RouterLink>
                                 </div>
                             </Transition>

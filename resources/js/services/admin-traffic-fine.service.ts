@@ -18,6 +18,58 @@ export type AdminTrafficFineMetrics = {
     api_chart: AdminApiUsageDaily[];
 };
 
+export type AdminTrafficFineReportDaily = {
+    date: string;
+    label: string;
+    total: number;
+    completed: number;
+    provider_errors: number;
+    cache_hits: number;
+    negative_cache_hits: number;
+};
+
+export type AdminTrafficFineReportBreakdown = {
+    key: string;
+    label: string;
+    total: number;
+    percentage: number;
+};
+
+export type AdminTrafficFineReport = {
+    period: {
+        days: number;
+        from: string;
+        to: string;
+    };
+    summary: {
+        total_lookups: number;
+        unique_plates: number;
+        completed_lookups: number;
+        violation_lookups: number;
+        no_violation_lookups: number;
+        provider_errors: number;
+        cache_hits: number;
+        negative_cache_hits: number;
+        cache_misses: number;
+        cache_hit_rate: number;
+        completion_rate: number;
+        provider_requests: number;
+        average_provider_latency_ms: number | null;
+    };
+    daily: AdminTrafficFineReportDaily[];
+    vehicle_types: AdminTrafficFineReportBreakdown[];
+    sources: AdminTrafficFineReportBreakdown[];
+    recent_errors: Array<{
+        id: number;
+        plate: string;
+        vehicle_type: string;
+        provider: string | null;
+        source: string;
+        provider_latency_ms: number | null;
+        created_at: string;
+    }>;
+};
+
 export type AdminApiUsageDaily = {
     date: string;
     label: string;
@@ -40,7 +92,7 @@ export type AdminApiBilling = {
     chart: AdminApiUsageDaily[];
 };
 
-export type AdminTrafficFineResult = {
+export type AdminCachedPlate = {
     id: number;
     plate: string;
     vehicle_type: string;
@@ -49,6 +101,53 @@ export type AdminTrafficFineResult = {
     provider: string;
     checked_at: string;
     expires_at: string;
+    remaining_seconds: number;
+    cache_duration_seconds: number;
+    cache_state: 'active' | 'expiring' | 'expired';
+    lookup_count: number;
+    positive_cache_hits: number;
+    provider_requests: number;
+    provider_errors: number;
+    cache_hit_rate: number;
+    last_lookup_at: string | null;
+};
+
+export type AdminCachedPlateFilters = {
+    days: 7 | 30 | 90;
+    search: string;
+    state: 'all' | 'active' | 'expiring' | 'expired';
+    vehicle_type: '' | 'car' | 'motorbike' | 'electric_motorbike';
+    status: '' | 'success' | 'no_violation';
+    sort: 'lookup_count' | 'last_lookup_at' | 'expires_at' | 'checked_at' | 'plate';
+    direction: 'asc' | 'desc';
+    per_page: number;
+    page: number;
+};
+
+export type AdminCachedPlateResponse = {
+    server_time: string;
+    period: { days: number; from: string; to: string };
+    cache: { store: string; configured_ttl_seconds: number };
+    items: AdminCachedPlate[];
+    meta: {
+        current_page: number;
+        last_page: number;
+        per_page: number;
+        total: number;
+        from: number | null;
+        to: number | null;
+    };
+    summary: {
+        total_entries: number;
+        active_entries: number;
+        expiring_entries: number;
+        expired_entries: number;
+        violation_entries: number;
+        period_lookups: number;
+        period_positive_cache_hits: number;
+        period_provider_requests: number;
+        positive_cache_hit_rate: number;
+    };
 };
 
 export type AdminLookupLog = {
@@ -93,9 +192,13 @@ export const adminTrafficFineService = {
         const response = await api.get('/api/admin-api/traffic-fines/overview');
         return response.data.data.metrics as AdminTrafficFineMetrics;
     },
-    async results(search = ''): Promise<Paginated<AdminTrafficFineResult>> {
-        const response = await api.get('/api/admin-api/traffic-fines/results', { params: { search, per_page: 50 } });
-        return response.data.data as Paginated<AdminTrafficFineResult>;
+    async report(days = 30): Promise<AdminTrafficFineReport> {
+        const response = await api.get('/api/admin-api/traffic-fines/report', { params: { days } });
+        return response.data.data as AdminTrafficFineReport;
+    },
+    async results(params: Partial<AdminCachedPlateFilters> = {}): Promise<AdminCachedPlateResponse> {
+        const response = await api.get('/api/admin-api/traffic-fines/results', { params });
+        return response.data.data as AdminCachedPlateResponse;
     },
     async logs(search = ''): Promise<Paginated<AdminLookupLog>> {
         const response = await api.get('/api/admin-api/traffic-fines/logs', { params: { search, per_page: 50 } });

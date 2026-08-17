@@ -38,6 +38,7 @@ Route::prefix('admin-api/traffic-fines')
     ->middleware(['auth:sanctum', 'admin'])
     ->group(function (): void {
         Route::get('/overview', [TrafficFineAdminController::class, 'overview'])->name('overview');
+        Route::get('/report', [TrafficFineAdminController::class, 'report'])->name('report');
         Route::get('/results', [TrafficFineAdminController::class, 'results'])->name('results');
         Route::get('/logs', [TrafficFineAdminController::class, 'logs'])->name('logs');
         Route::get('/provider', [TrafficFineAdminController::class, 'provider'])->name('provider');

@@ -1,48 +1,54 @@
-import {
-    BookOpen,
-    Cable,
-    ChartNoAxesCombined,
-    CircleDollarSign,
-    Database,
-    Eye,
-    FileClock,
-    LayoutDashboard,
-    Logs,
-    ReceiptText,
-    Settings,
-    UserRound,
-    Users,
-    WalletCards,
-    type LucideIcon,
-} from 'lucide-vue-next';
+import { BookOpen, Database, LayoutDashboard, Settings, UserRound, Users, type LucideIcon } from 'lucide-vue-next';
 
 export type AdminMenuChild = { label: string; href: string };
-export type AdminMenuGroup = { key: string; label: string; icon: LucideIcon; href?: string; children?: AdminMenuChild[]; badge?: 'support' };
+export type AdminMenuGroup = { key: string; label: string; icon: LucideIcon; href?: string; children?: AdminMenuChild[] };
 
 export const adminMenuGroups: AdminMenuGroup[] = [
     { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, href: '/admin' },
-    { key: 'users', label: 'Users', icon: Users, href: '/admin/users' },
-    { key: 'lookup-logs', label: 'Lookup Logs', icon: FileClock, href: '/admin/lookup-logs' },
-    { key: 'traffic-results', label: 'Traffic Fine Results', icon: Database, href: '/admin/traffic-fine-results' },
-    { key: 'providers', label: 'Providers', icon: Cable, href: '/admin/providers' },
-    { key: 'api-billing', label: 'API Billing', icon: CircleDollarSign, href: '/admin/api-billing' },
-    { key: 'transactions', label: 'Transactions', icon: WalletCards, href: '/admin/transactions' },
     {
-        key: 'recharge',
-        label: 'Quản lý nạp tiền',
-        icon: WalletCards,
+        key: 'lookup-data',
+        label: 'Tra cứu & dữ liệu',
+        icon: Database,
         children: [
+            { label: 'Báo cáo chi tiết', href: '/admin/reports' },
+            { label: 'Nhật ký tra cứu', href: '/admin/lookup-logs' },
+            { label: 'Cache biển số', href: '/admin/traffic-fine-results' },
+            { label: 'Nguồn dữ liệu', href: '/admin/providers' },
+            { label: 'Theo dõi biển số', href: '/admin/monitoring' },
+        ],
+    },
+    {
+        key: 'users-finance',
+        label: 'Người dùng & tài chính',
+        icon: Users,
+        children: [
+            { label: 'Người dùng', href: '/admin/users' },
+            { label: 'Thanh toán API', href: '/admin/api-billing' },
+            { label: 'Giao dịch ví', href: '/admin/transactions' },
             { label: 'Cấu hình nạp tiền', href: '/admin/recharge/config' },
             { label: 'Lịch sử nạp tiền', href: '/admin/recharge/history' },
         ],
     },
-    { key: 'monitoring', label: 'Monitoring', icon: Eye, href: '/admin/monitoring' },
-    { key: 'api-usage', label: 'API Usage', icon: ChartNoAxesCombined, href: '/admin/api-usage' },
-    { key: 'blog', label: 'Blog', icon: BookOpen, href: '/admin/blog' },
-    { key: 'seo', label: 'SEO', icon: ReceiptText, href: '/admin/seo' },
-    { key: 'ads', label: 'Ads', icon: ChartNoAxesCombined, href: '/admin/ads' },
-    { key: 'settings', label: 'Settings', icon: Settings, href: '/admin/settings/general' },
-    { key: 'logs', label: 'Logs', icon: Logs, href: '/admin/logs' },
+    {
+        key: 'content-growth',
+        label: 'Nội dung & quảng bá',
+        icon: BookOpen,
+        children: [
+            { label: 'Blog', href: '/admin/blog' },
+            { label: 'SEO', href: '/admin/seo' },
+            { label: 'Quảng cáo', href: '/admin/ads' },
+        ],
+    },
+    {
+        key: 'system-operations',
+        label: 'Hệ thống & vận hành',
+        icon: Settings,
+        children: [
+            { label: 'Lượt dùng API', href: '/admin/api-usage' },
+            { label: 'Cài đặt hệ thống', href: '/admin/settings/general' },
+            { label: 'Queue & nhật ký', href: '/admin/logs' },
+        ],
+    },
     { key: 'profile', label: 'Tài khoản admin', icon: UserRound, href: '/dashboard/account' },
 ];
 

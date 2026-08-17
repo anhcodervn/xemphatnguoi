@@ -8,6 +8,7 @@ export default {
     component: () => import('@/layouts/AdminLayout.vue'),
     children: [
         { path: '', name: 'admin.dashboard', component: () => import('@/pages/admin/home/index.vue') },
+        { path: 'reports', name: 'admin.reports', component: () => import('@/pages/admin/traffic-fines/ReportPage.vue') },
         { path: 'lookup-logs', name: 'admin.lookup-logs', component: () => import('@/pages/admin/traffic-fines/LogsPage.vue') },
         { path: 'traffic-fine-results', name: 'admin.traffic-fine-results', component: () => import('@/pages/admin/traffic-fines/ResultsPage.vue') },
         { path: 'providers', name: 'admin.providers', component: () => import('@/pages/admin/traffic-fines/ProviderPage.vue') },

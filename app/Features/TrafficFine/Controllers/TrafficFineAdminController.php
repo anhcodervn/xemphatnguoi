@@ -2,14 +2,16 @@
 
 namespace App\Features\TrafficFine\Controllers;
 
+use App\Features\TrafficFine\Requests\AdminCachedPlateIndexRequest;
+use App\Features\TrafficFine\Requests\AdminTrafficFineReportRequest;
 use App\Features\TrafficFine\Requests\UpdateApiBillingSettingRequest;
 use App\Features\TrafficFine\Services\ApiLookupBillingService;
 use App\Features\TrafficFine\Services\ApiUsageStatisticsService;
+use App\Features\TrafficFine\Services\CachedPlateService;
 use App\Features\TrafficFine\Services\Source\TrafficFineSourceRegistry;
 use App\Features\TrafficFine\Services\TrafficFineStatisticsService;
 use App\Http\Controllers\Controller;
 use App\Models\TrafficFineLookupLog;
-use App\Models\TrafficFineResult;
 use App\Support\SettingStore;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -26,18 +28,23 @@ class TrafficFineAdminController extends Controller
         ]);
     }
 
-    public function results(Request $request): JsonResponse
-    {
-        $search = trim($request->string('search')->toString());
-
-        $results = TrafficFineResult::query()
-            ->when($search !== '', fn ($query) => $query->where('plate', 'like', "%{$search}%"))
-            ->latest('checked_at')
-            ->paginate(min(max($request->integer('per_page', 20), 1), 100));
-
+    public function report(
+        AdminTrafficFineReportRequest $request,
+        TrafficFineStatisticsService $statistics,
+    ): JsonResponse {
         return response()->json([
             'status' => true,
-            'data' => $results,
+            'data' => $statistics->detailedReport($request->integer('days', 30)),
+        ]);
+    }
+
+    public function results(
+        AdminCachedPlateIndexRequest $request,
+        CachedPlateService $cachedPlates,
+    ): JsonResponse {
+        return response()->json([
+            'status' => true,
+            'data' => $cachedPlates->paginate($request->validated()),
         ]);
     }
 
