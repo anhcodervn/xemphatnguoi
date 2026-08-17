@@ -385,7 +385,7 @@ class WalletDepositService
                 notification: $eventPayload['notification'],
             );
 
-            SendMessage::sendActivityReport('Người dùng nạp tiền thành công', [
+            SendMessage::sendSalesReport('Người dùng nạp tiền thành công', [
                 'Mã giao dịch' => $eventPayload['transaction_code'],
                 'User ID' => $eventPayload['user_id'],
                 'Số tiền' => number_format((float) $eventPayload['amount'], 0, ',', '.').' đ',

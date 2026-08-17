@@ -93,16 +93,17 @@ export interface ContactSettingType {
     [key: string]: unknown;
 }
 
-export interface DiscordWebhookSettingItemType {
+export interface DiscordRoomStatusType {
+    key: string;
     name: string;
-    url: string;
-    is_active: boolean;
-    events: string[];
+    env: string;
+    receives: string;
+    configured: boolean;
     [key: string]: unknown;
 }
 
 export interface MonitoringSettingType {
-    discord_webhooks: DiscordWebhookSettingItemType[];
+    rooms: DiscordRoomStatusType[];
     [key: string]: unknown;
 }
 

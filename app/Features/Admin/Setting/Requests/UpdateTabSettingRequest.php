@@ -59,14 +59,6 @@ class UpdateTabSettingRequest extends FormRequest
             'slider-images' => [
                 'items' => ['nullable', 'array'],
             ],
-            'monitoring' => [
-                'discord_webhooks' => ['nullable', 'array'],
-                'discord_webhooks.*.name' => ['required', 'string', 'max:120'],
-                'discord_webhooks.*.url' => ['required', 'url', 'max:2048'],
-                'discord_webhooks.*.is_active' => ['required', 'boolean'],
-                'discord_webhooks.*.events' => ['nullable', 'array'],
-                'discord_webhooks.*.events.*' => ['string', 'in:test_ping,user_registered,recharge_success'],
-            ],
             default => [],
         };
     }
@@ -147,7 +139,6 @@ class UpdateTabSettingRequest extends FormRequest
             'custom_script' => 'script tùy chỉnh',
             'category_ids' => 'danh mục trang chủ',
             'items' => 'danh sách slider',
-            'discord_webhooks' => 'danh sách webhook Discord',
         ];
     }
 

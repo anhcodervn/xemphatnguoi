@@ -6,16 +6,11 @@ use App\Models\ApiLog;
 use App\Models\PaymentTransaction;
 use App\Models\User;
 use App\Models\Wallet;
-use App\Service\DiscordWebhookNotifier;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 
 class AnalyticsService
 {
-    public function __construct(
-        private readonly DiscordWebhookNotifier $discordWebhookNotifier,
-    ) {}
-
     /**
      * @return array<string, mixed>
      */
@@ -30,7 +25,10 @@ class AnalyticsService
             ->where('status', 'success')
             ->when($from, fn (Builder $query) => $query->where('created_at', '>=', $from));
         $apiLogsQuery = ApiLog::query()->when($from, fn (Builder $query) => $query->where('created_at', '>=', $from));
-        $webhooks = $this->discordWebhookNotifier->configuredWebhooks();
+        $configuredRooms = collect(config('services.discord.rooms', []))
+            ->keys()
+            ->filter(fn (string $key): bool => filled(config("services.discord.channels.{$key}")))
+            ->count();
 
         return [
             'range' => $resolvedRange['key'],
@@ -63,8 +61,8 @@ class AnalyticsService
                 'avg_processing_seconds' => 0,
                 'api_requests' => (int) (clone $apiLogsQuery)->count(),
                 'api_avg_response_ms' => round((float) ((clone $apiLogsQuery)->avg('response_time_ms') ?? 0), 2),
-                'active_webhooks' => collect($webhooks)->where('is_active', true)->count(),
-                'configured_webhooks' => count($webhooks),
+                'active_webhooks' => $configuredRooms,
+                'configured_webhooks' => count(config('services.discord.rooms', [])),
             ],
             'top_services' => [],
             'daily_overview' => $this->dailyOverview($days, $from),
@@ -84,21 +82,16 @@ class AnalyticsService
                 ])
                 ->all(),
             'discord' => [
-                'events' => $this->discordWebhookNotifier->eventOptions(),
-                'webhooks' => $webhooks,
+                'rooms' => collect(config('services.discord.rooms', []))
+                    ->map(fn (array $room, string $key): array => [
+                        ...$room,
+                        'key' => $key,
+                        'configured' => filled(config("services.discord.channels.{$key}")),
+                    ])
+                    ->values()
+                    ->all(),
             ],
         ];
-    }
-
-    /**
-     * @param  array{webhook_index:int,event:string}  $payload
-     */
-    public function testDiscordWebhook(array $payload): void
-    {
-        $this->discordWebhookNotifier->sendTestWebhook(
-            webhookIndex: (int) $payload['webhook_index'],
-            eventKey: (string) $payload['event'],
-        );
     }
 
     /**

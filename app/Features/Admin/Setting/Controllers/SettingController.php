@@ -133,9 +133,6 @@ class SettingController extends Controller
             'slider-images' => [
                 'items' => [],
             ],
-            'monitoring' => [
-                'discord_webhooks' => [],
-            ],
         ];
     }
 
@@ -204,9 +201,6 @@ class SettingController extends Controller
             'slider-images' => [
                 'items' => 'home_slider_items',
             ],
-            'monitoring' => [
-                'discord_webhooks' => 'discord_webhooks',
-            ],
         ];
     }
 
@@ -268,6 +262,27 @@ class SettingController extends Controller
         ];
     }
 
+    /**
+     * @return array<int, array{key:string,name:string,env:string,receives:string,configured:bool}>
+     */
+    protected function discordRooms(): array
+    {
+        return collect(config('services.discord.rooms', []))
+            ->map(function (mixed $room, string $key): array {
+                $settings = is_array($room) ? $room : [];
+
+                return [
+                    'key' => $key,
+                    'name' => (string) Arr::get($settings, 'name', $key),
+                    'env' => (string) Arr::get($settings, 'env', ''),
+                    'receives' => (string) Arr::get($settings, 'receives', ''),
+                    'configured' => filled(config("services.discord.channels.{$key}")),
+                ];
+            })
+            ->values()
+            ->all();
+    }
+
     public function show(string $tab, SettingStore $settingStore): JsonResponse
     {
         if ($tab === self::SYSTEM_TAB) {
@@ -276,6 +291,18 @@ class SettingController extends Controller
                 'data' => [
                     'tab' => $tab,
                     'settings' => $this->systemSettings($settingStore),
+                ],
+            ]);
+        }
+
+        if ($tab === 'monitoring') {
+            return response()->json([
+                'status' => true,
+                'data' => [
+                    'tab' => $tab,
+                    'settings' => [
+                        'rooms' => $this->discordRooms(),
+                    ],
                 ],
             ]);
         }
@@ -327,7 +354,7 @@ class SettingController extends Controller
 
     public function update(string $tab, UpdateTabSettingRequest $request, SettingStore $settingStore): JsonResponse
     {
-        abort_if($tab === self::SYSTEM_TAB || $tab === 'options', 404);
+        abort_if(in_array($tab, [self::SYSTEM_TAB, 'options', 'monitoring'], true), 404);
         abort_if(! $this->tabExists($tab), 404);
 
         $payload = [

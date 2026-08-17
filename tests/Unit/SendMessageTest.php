@@ -1,7 +1,6 @@
 <?php
 
 use App\Utils\SendMessage;
-use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
@@ -10,6 +9,7 @@ uses(TestCase::class);
 
 beforeEach(function () {
     app()->detectEnvironment(fn (): string => 'local');
+    config()->set('services.discord.channels.staging', '');
 });
 
 afterEach(function () {
@@ -18,7 +18,7 @@ afterEach(function () {
 
 it('silently skips a Discord channel without a configured webhook', function () {
     Http::preventStrayRequests();
-    config()->set('services.discord.channels.queue');
+    config()->set('services.discord.channels.ops');
 
     SendMessage::sendQueueReport('Queue finished');
 
@@ -30,7 +30,7 @@ it('sends to Discord when the channel webhook is configured', function () {
     Http::fake([
         'https://discord.com/api/webhooks/test' => Http::response([], 204),
     ]);
-    config()->set('services.discord.channels.queue', 'https://discord.com/api/webhooks/test');
+    config()->set('services.discord.channels.ops', 'https://discord.com/api/webhooks/test');
 
     SendMessage::sendQueueReport('Queue finished', ['Job' => 'ExampleJob']);
 
@@ -50,11 +50,14 @@ it('reports a configured Discord webhook failure without breaking the caller', f
     Http::fake([
         'https://discord.com/api/webhooks/failing' => Http::response(['message' => 'Unavailable'], 500),
     ]);
-    config()->set('services.discord.channels.queue', 'https://discord.com/api/webhooks/failing');
+    config()->set('services.discord.channels.ops', 'https://discord.com/api/webhooks/failing');
 
     SendMessage::sendQueueReport('Queue finished');
 
-    Exceptions::assertReported(RequestException::class);
+    Exceptions::assertReported(fn (RuntimeException $exception): bool => str_contains(
+        $exception->getMessage(),
+        'Discord report delivery failed for channel [queue]',
+    ));
 });
 
 it('sends domain reports to their configured webhook channels', function (string $method, string $channel, string $prefix) {
@@ -72,6 +75,7 @@ it('sends domain reports to their configured webhook channels', function (string
 })->with([
     'activity' => ['sendActivityReport', 'activity', 'ACTIVITY'],
     'sales' => ['sendSalesReport', 'sales', 'SALES'],
-    'provider' => ['sendProviderReport', 'provider', 'PROVIDER'],
-    'feedback' => ['sendFeedbackReport', 'feedback', 'FEEDBACK'],
+    'provider' => ['sendProviderReport', 'ops', 'PROVIDER'],
+    'feedback' => ['sendFeedbackReport', 'support', 'FEEDBACK'],
+    'support' => ['sendSupportReport', 'support', 'SUPPORT'],
 ]);

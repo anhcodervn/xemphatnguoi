@@ -12,8 +12,10 @@ use App\Models\LookupHistory;
 use App\Models\TrafficFineLookupLog;
 use App\Models\TrafficFineResult;
 use App\Models\User;
+use App\Utils\SendMessage;
 use Illuminate\Contracts\Cache\Factory as CacheFactory;
 use Illuminate\Contracts\Cache\LockTimeoutException;
+use Illuminate\Contracts\Cache\Repository;
 use Illuminate\Support\Carbon;
 use Throwable;
 
@@ -145,6 +147,7 @@ class TrafficFineLookupService
             );
 
             report($exception);
+            $this->reportProviderFailure($cache, $sourceName, $resolvedVehicleType);
             $this->recordLookup(
                 user: $user,
                 plate: $normalizedPlate,
@@ -166,6 +169,7 @@ class TrafficFineLookupService
             );
 
             report($exception);
+            $this->reportProviderFailure($cache, $sourceName, $resolvedVehicleType);
             $this->recordLookup(
                 user: $user,
                 plate: $normalizedPlate,
@@ -182,6 +186,33 @@ class TrafficFineLookupService
         }
 
         return $this->completeLookup($resolved, $user, $resolvedVehicleType, $ip);
+    }
+
+    private function reportProviderFailure(
+        Repository $cache,
+        string $sourceName,
+        VehicleType $vehicleType,
+    ): void {
+        try {
+            $shouldReport = $cache->add(
+                "discord_report:traffic_fine_provider_failure:{$sourceName}",
+                true,
+                now()->addMinutes(5),
+            );
+
+            if (! $shouldReport) {
+                return;
+            }
+
+            SendMessage::sendProviderReport('Nguồn tra cứu phạt nguội đang lỗi', [
+                'Nguồn' => $sourceName,
+                'Loại phương tiện' => $vehicleType->value,
+                'Mức độ' => 'incident',
+                'Giới hạn thông báo' => 'Tối đa 1 báo cáo mỗi 5 phút cho từng nguồn',
+            ]);
+        } catch (Throwable $exception) {
+            report($exception);
+        }
     }
 
     public function findCachedResult(string $plate, string $vehicleType): ?TrafficFineLookupResponseDto

@@ -5,9 +5,8 @@ import { adminSettingService } from '@/services/admin-setting.service';
 import type {
     BrandingSettingType,
     ContactSettingType,
-    DiscordWebhookSettingItemType,
+    DiscordRoomStatusType,
     GeneralSettingType,
-    MonitoringSettingType,
     SeoSettingType,
     TurnstileSettingType,
 } from '@/types/setting.type';
@@ -45,7 +44,7 @@ const tabs: Array<{ key: TabKey; label: string; description: string }> = [
     {
         key: 'monitoring',
         label: 'Webhook Discord',
-        description: 'Bot cảnh báo vận hành cho đăng ký mới, nạp tiền và lỗi tra cứu.',
+        description: 'Theo dõi trạng thái 5 room báo cáo và biến môi trường tương ứng.',
     },
 ];
 
@@ -96,9 +95,7 @@ const seoForm = ref<SeoSettingType>({
     custom_script: '',
 });
 
-const monitoringForm = ref<MonitoringSettingType>({
-    discord_webhooks: [],
-});
+const monitoringRooms = ref<DiscordRoomStatusType[]>([]);
 
 const turnstileForm = ref<TurnstileSettingType>({
     enabled: false,
@@ -106,12 +103,6 @@ const turnstileForm = ref<TurnstileSettingType>({
     secret_key: '',
     secret_configured: false,
 });
-
-const webhookEventOptions = [
-    { label: 'Ping kiểm tra', value: 'test_ping' },
-    { label: 'Đăng ký mới', value: 'user_registered' },
-    { label: 'Nạp tiền thành công', value: 'recharge_success' },
-];
 
 const currentTab = computed(() => tabs.find((tab) => tab.key === activeTab.value) ?? tabs[0]);
 const siteDomainPreview = computed(() => generalForm.value.site_domain?.trim() || window.location.origin);
@@ -143,16 +134,7 @@ const loadData = async (): Promise<void> => {
             secret_key: '',
             secret_configured: Boolean(turnstile.settings.secret_configured),
         };
-        monitoringForm.value = {
-            discord_webhooks: Array.isArray(monitoring.settings.discord_webhooks)
-                ? monitoring.settings.discord_webhooks.map((item) => ({
-                      name: String(item.name ?? ''),
-                      url: String(item.url ?? ''),
-                      is_active: Boolean(item.is_active ?? true),
-                      events: Array.isArray(item.events) ? item.events.map((event) => String(event)) : [],
-                  }))
-                : [],
-        };
+        monitoringRooms.value = Array.isArray(monitoring.settings.rooms) ? monitoring.settings.rooms : [];
     } catch (error) {
         handleErrorResponse(error);
     } finally {
@@ -200,45 +182,6 @@ const saveSeo = async (): Promise<void> => {
         const response = await adminSettingService.updateSeo(seoForm.value);
         seoForm.value = { ...seoForm.value, ...response.settings };
         handleSuccessResponse({ data: { status: true, message: 'Đã cập nhật cấu hình SEO.' } });
-    });
-};
-
-const createWebhook = (): DiscordWebhookSettingItemType => ({
-    name: '',
-    url: '',
-    is_active: true,
-    events: ['test_ping', 'recharge_success'],
-});
-
-const addWebhook = (): void => {
-    monitoringForm.value.discord_webhooks.push(createWebhook());
-};
-
-const removeWebhook = (index: number): void => {
-    monitoringForm.value.discord_webhooks.splice(index, 1);
-};
-
-const toggleWebhookEvent = (webhook: DiscordWebhookSettingItemType, event: string): void => {
-    const exists = webhook.events.includes(event);
-    webhook.events = exists ? webhook.events.filter((item) => item !== event) : [...webhook.events, event];
-};
-
-const saveMonitoring = async (): Promise<void> => {
-    await withSaving('monitoring', async () => {
-        const payload: MonitoringSettingType = {
-            discord_webhooks: monitoringForm.value.discord_webhooks.map((item) => ({
-                name: item.name.trim(),
-                url: item.url.trim(),
-                is_active: item.is_active,
-                events: item.events,
-            })),
-        };
-
-        const response = await adminSettingService.updateMonitoring(payload);
-        monitoringForm.value = {
-            discord_webhooks: Array.isArray(response.settings.discord_webhooks) ? response.settings.discord_webhooks : [],
-        };
-        handleSuccessResponse({ data: { status: true, message: 'Đã cập nhật webhook Discord giám sát.' } });
     });
 };
 
@@ -810,116 +753,54 @@ onMounted(async () => {
 
                 <div v-show="activeTab === 'monitoring'" class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
                     <article class="rounded-[10px] border border-slate-200 bg-white p-4">
-                        <div class="mb-4 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                            <div>
-                                <h3 class="text-sm font-semibold text-slate-900">Webhook Discord giám sát</h3>
-                                <p class="text-sm text-slate-500">Thêm nhiều bot Discord để theo dõi các sự kiện vận hành quan trọng của hệ thống.</p>
-                            </div>
-
-                            <div class="flex gap-2">
-                                <button
-                                    type="button"
-                                    class="rounded-[10px] border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-300"
-                                    @click="addWebhook"
-                                >
-                                    Thêm webhook
-                                </button>
-                                <button
-                                    type="button"
-                                    class="rounded-[10px] bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:opacity-60"
-                                    :disabled="saving.monitoring"
-                                    @click="saveMonitoring"
-                                >
-                                    {{ saving.monitoring ? 'Đang lưu...' : 'Lưu webhook' }}
-                                </button>
-                            </div>
+                        <div>
+                            <h3 class="text-sm font-semibold text-slate-900">5 room Discord cần tạo</h3>
+                            <p class="mt-1 text-sm leading-6 text-slate-500">
+                                Mỗi room tạo một webhook riêng rồi gắn URL vào biến môi trường tương ứng. URL webhook không được lưu trong database
+                                hoặc trả về trình duyệt.
+                            </p>
                         </div>
 
-                        <div class="space-y-4">
+                        <div class="mt-4 grid gap-3 md:grid-cols-2">
                             <div
-                                v-for="(webhook, index) in monitoringForm.discord_webhooks"
-                                :key="index"
-                                class="rounded-[14px] border border-slate-200 bg-slate-50 p-4"
+                                v-for="room in monitoringRooms"
+                                :key="room.key"
+                                class="rounded-[12px] border p-4"
+                                :class="room.configured ? 'border-emerald-200 bg-emerald-50/60' : 'border-amber-200 bg-amber-50/60'"
                             >
-                                <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                                    <div class="grid flex-1 gap-3 md:grid-cols-2">
-                                        <label class="space-y-1">
-                                            <span class="text-xs font-semibold text-slate-600">Tên webhook</span>
-                                            <input
-                                                v-model="webhook.name"
-                                                type="text"
-                                                class="w-full rounded-[10px] border border-slate-200 px-3 py-2 text-sm outline-none focus:border-indigo-400"
-                                                placeholder="Ví dụ: Bot vận hành chính"
-                                            />
-                                        </label>
-                                        <label class="space-y-1 md:col-span-2">
-                                            <span class="text-xs font-semibold text-slate-600">Discord webhook URL</span>
-                                            <input
-                                                v-model="webhook.url"
-                                                type="text"
-                                                class="w-full rounded-[10px] border border-slate-200 px-3 py-2 text-sm outline-none focus:border-indigo-400"
-                                                placeholder="https://discord.com/api/webhooks/..."
-                                            />
-                                        </label>
+                                <div class="flex items-start justify-between gap-3">
+                                    <div class="min-w-0">
+                                        <p class="font-mono text-sm font-bold text-slate-900">{{ room.name }}</p>
+                                        <p class="mt-1 break-all font-mono text-[11px] text-slate-500">{{ room.env }}</p>
                                     </div>
-
-                                    <button
-                                        type="button"
-                                        class="rounded-[10px] border border-rose-200 bg-white px-3 py-2 text-sm font-semibold text-rose-600 transition hover:bg-rose-50"
-                                        @click="removeWebhook(index)"
+                                    <span
+                                        class="shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold"
+                                        :class="room.configured ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'"
                                     >
-                                        Xoá
-                                    </button>
+                                        {{ room.configured ? 'Đã cấu hình' : 'Chưa cấu hình' }}
+                                    </span>
                                 </div>
-
-                                <div
-                                    class="mt-4 flex items-center justify-between rounded-[10px] border border-slate-200 bg-white px-3 py-3 text-sm text-slate-700"
-                                >
-                                    <span>Bật webhook này</span>
-                                    <input v-model="webhook.is_active" type="checkbox" class="h-4 w-4 rounded border-slate-300" />
-                                </div>
-
-                                <div class="mt-4">
-                                    <p class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Sự kiện lắng nghe</p>
-                                    <div class="mt-3 grid gap-2 md:grid-cols-2">
-                                        <label
-                                            v-for="event in webhookEventOptions"
-                                            :key="event.value"
-                                            class="flex items-center justify-between rounded-[10px] border border-slate-200 bg-white px-3 py-3 text-sm text-slate-700"
-                                        >
-                                            <span>{{ event.label }}</span>
-                                            <input
-                                                :checked="webhook.events.includes(event.value)"
-                                                type="checkbox"
-                                                class="h-4 w-4 rounded border-slate-300"
-                                                @change="toggleWebhookEvent(webhook, event.value)"
-                                            />
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div
-                                v-if="monitoringForm.discord_webhooks.length === 0"
-                                class="rounded-[14px] border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500"
-                            >
-                                Chưa có webhook nào. Thêm bot Discord để nhận cảnh báo đăng ký mới, nạp tiền và lỗi tra cứu.
+                                <p class="mt-3 text-sm leading-6 text-slate-600">{{ room.receives }}</p>
                             </div>
                         </div>
                     </article>
 
                     <aside class="rounded-[10px] border border-slate-200 bg-slate-50 p-4">
-                        <p class="text-xs uppercase tracking-[0.18em] text-slate-400">Gợi ý vận hành</p>
-                        <div class="mt-3 space-y-3 rounded-[10px] border border-slate-200 bg-white p-4 text-sm text-slate-600">
-                            <p>Tạo ít nhất 2 bot riêng: một bot cho giao dịch nạp tiền, một bot cho cảnh báo tra cứu lỗi.</p>
-                            <p>
-                                Bật sự kiện <span class="font-semibold text-slate-900">test_ping</span> để kiểm tra kết nối trước khi đưa vào dùng
-                                thật.
-                            </p>
-                            <p>
-                                Trang <span class="font-semibold text-slate-900">Báo cáo vận hành</span> có nút gửi test nhanh cho từng webhook sau
-                                khi lưu.
-                            </p>
+                        <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Cách cấu hình</p>
+                        <ol class="mt-3 grid gap-3 text-sm leading-6 text-slate-600">
+                            <li class="rounded-[10px] border border-slate-200 bg-white p-3">
+                                <strong class="text-slate-900">1.</strong> Tạo 5 channel theo đúng tên bên trái.
+                            </li>
+                            <li class="rounded-[10px] border border-slate-200 bg-white p-3">
+                                <strong class="text-slate-900">2.</strong> Vào Integrations → Webhooks và tạo webhook cho từng channel.
+                            </li>
+                            <li class="rounded-[10px] border border-slate-200 bg-white p-3">
+                                <strong class="text-slate-900">3.</strong> Dán URL vào `.env`, sau đó chạy `php artisan config:clear`.
+                            </li>
+                        </ol>
+                        <div class="mt-4 rounded-[10px] border border-sky-200 bg-sky-50 p-3 text-xs leading-5 text-sky-800">
+                            Production dùng #xpn-ops, #xpn-activity, #xpn-sales và #xpn-support. Local, test và staging tự động chuyển toàn bộ báo cáo
+                            vào #xpn-staging nếu room này đã cấu hình.
                         </div>
                     </aside>
                 </div>

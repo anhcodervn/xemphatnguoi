@@ -9,5 +9,4 @@ Route::middleware(['auth:sanctum', 'admin'])
     ->controller(AnalyticsController::class)
     ->group(function (): void {
         Route::get('/', [AnalyticsController::class, 'index'])->name('index');
-        Route::post('/discord-webhooks/test', 'testDiscordWebhook')->name('discord-webhooks.test');
     });

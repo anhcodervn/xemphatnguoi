@@ -131,8 +131,6 @@ class AppServiceProvider extends ServiceProvider
                         'updated_at' => now(),
                     ]);
             }
-
-            $this->sendQueueProcessedNotification($event);
         });
 
         Queue::failing(function (JobFailed $event): void {
@@ -211,20 +209,6 @@ class AppServiceProvider extends ServiceProvider
         }
 
         return $canWrite;
-    }
-
-    private function sendQueueProcessedNotification(JobProcessed $event): void
-    {
-        $payload = $this->sanitizeQueuePayload($event->job->payload());
-
-        SendMessage::sendQueueReport('Task xử lý thành công', [
-            'Job' => $event->job->resolveName(),
-            'Queue' => $event->job->getQueue(),
-            'Connection' => $event->connectionName,
-            'Attempts' => (int) $event->job->attempts(),
-            'Job UUID' => $event->job->uuid() ?: Arr::get($payload, 'uuid'),
-            'Payload' => $payload,
-        ]);
     }
 
     private function sendQueueFailedNotification(JobFailed $event): void

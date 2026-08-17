@@ -3,25 +3,29 @@
 namespace App\Utils;
 
 use DateTimeInterface;
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
+use RuntimeException;
 use Throwable;
 
 class SendMessage
 {
     private const DISCORD_CHANNELS = [
-        'queue' => 'queue',
-        'info' => 'info',
+        'queue' => 'ops',
+        'info' => 'ops',
         'ops' => 'ops',
-        'security' => 'security',
-        'alerts' => 'alerts',
-        'recovered' => 'recovered',
+        'security' => 'ops',
+        'alerts' => 'ops',
+        'recovered' => 'ops',
         'staging' => 'staging',
         'sales' => 'sales',
-        'provider' => 'provider',
-        'feedback' => 'feedback',
+        'provider' => 'ops',
+        'feedback' => 'support',
+        'support' => 'support',
         'activity' => 'activity',
     ];
 
@@ -72,17 +76,29 @@ class SendMessage
         }
 
         $channels = config('services.discord.channels', []);
+
+        if (! app()->isProduction() && $type !== 'staging' && filled(Arr::get($channels, 'staging'))) {
+            $channelKey = 'staging';
+        }
+
         $url = Arr::get($channels, $channelKey);
 
         if (! is_string($url) || trim($url) === '') {
             return;
         }
 
-        Http::connectTimeout(5)
-            ->timeout(10)
+        Http::connectTimeout(3)
+            ->timeout(7)
+            ->acceptJson()
+            ->retry([250, 750], static function (Throwable $exception): bool {
+                return $exception instanceof ConnectionException
+                    || ($exception instanceof RequestException
+                        && ($exception->response->serverError() || $exception->response->status() === 429));
+            }, throw: false)
             ->post($url, [
                 'username' => (string) config('services.discord.bot_name', 'XemPhatNguoi Monitor'),
                 'avatar_url' => (string) config('services.discord.bot_avatar_url', ''),
+                'allowed_mentions' => ['parse' => []],
                 'content' => $message,
             ])
             ->throw();
@@ -193,6 +209,15 @@ class SendMessage
     }
 
     /** @param array<string, mixed> $details */
+    public static function sendSupportReport(string $title, array $details = []): void
+    {
+        self::safeSendDiscord(
+            self::formatDiscordReport('SUPPORT', $title, $details),
+            'support',
+        );
+    }
+
+    /** @param array<string, mixed> $details */
     public static function sendActivityReport(string $title, array $details = []): void
     {
         self::safeSendDiscord(
@@ -206,7 +231,11 @@ class SendMessage
         try {
             self::sendDiscord($message, $type);
         } catch (Throwable $exception) {
-            report($exception);
+            report(new RuntimeException(sprintf(
+                'Discord report delivery failed for channel [%s] with [%s].',
+                $type,
+                class_basename($exception),
+            )));
         }
     }
 

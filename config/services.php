@@ -45,18 +45,46 @@ return [
         'bot_name' => env('DISCORD_BOT_NAME', 'XemPhatNguoi Monitor'),
         'bot_avatar_url' => env('DISCORD_BOT_AVATAR_URL'),
         'channels' => [
-            'queue' => env('DISCORD_WEBHOOK_QUEUE'),
-            'info' => env('DISCORD_WEBHOOK_INFO'),
-            'ops' => env('DISCORD_WEBHOOK_OPS'),
-            'security' => env('DISCORD_WEBHOOK_SECURITY'),
-            'alerts' => env('DISCORD_WEBHOOK_ALERTS'),
-            'recovered' => env('DISCORD_WEBHOOK_RECOVERED'),
-            'staging' => env('DISCORD_WEBHOOK_STAGING'),
-            'sales' => env('DISCORD_WEBHOOK_SALES') ?: env('DISCORD_WEBHOOK_OPS'),
-            'provider' => env('DISCORD_WEBHOOK_PROVIDER') ?: env('DISCORD_WEBHOOK_ALERTS'),
-            'feedback' => env('DISCORD_WEBHOOK_FEEDBACK') ?: env('DISCORD_WEBHOOK_INFO'),
-            'support' => env('DISCORD_WEBHOOK_SUPPORT') ?: env('DISCORD_WEBHOOK_INFO'),
+            'ops' => env('DISCORD_WEBHOOK_OPS')
+                ?: env('DISCORD_WEBHOOK_PROVIDER')
+                ?: env('DISCORD_WEBHOOK_ALERTS')
+                ?: env('DISCORD_WEBHOOK_QUEUE')
+                ?: env('DISCORD_WEBHOOK_SECURITY')
+                ?: env('DISCORD_WEBHOOK_RECOVERED')
+                ?: env('DISCORD_WEBHOOK_INFO'),
             'activity' => env('DISCORD_WEBHOOK_ACTIVITY') ?: env('DISCORD_WEBHOOK_INFO'),
+            'sales' => env('DISCORD_WEBHOOK_SALES') ?: env('DISCORD_WEBHOOK_OPS'),
+            'support' => env('DISCORD_WEBHOOK_SUPPORT')
+                ?: env('DISCORD_WEBHOOK_FEEDBACK')
+                ?: env('DISCORD_WEBHOOK_INFO'),
+            'staging' => env('DISCORD_WEBHOOK_STAGING'),
+        ],
+        'rooms' => [
+            'ops' => [
+                'name' => '#xpn-ops',
+                'env' => 'DISCORD_WEBHOOK_OPS',
+                'receives' => 'Heartbeat production, queue thất bại, lỗi nguồn tra cứu, cảnh báo bảo mật và phục hồi hệ thống.',
+            ],
+            'activity' => [
+                'name' => '#xpn-activity',
+                'env' => 'DISCORD_WEBHOOK_ACTIVITY',
+                'receives' => 'Đăng ký tài khoản mới và các thay đổi vòng đời tài khoản.',
+            ],
+            'sales' => [
+                'name' => '#xpn-sales',
+                'env' => 'DISCORD_WEBHOOK_SALES',
+                'receives' => 'Nạp tiền thành công, giao dịch ví và sự kiện doanh thu.',
+            ],
+            'support' => [
+                'name' => '#xpn-support',
+                'env' => 'DISCORD_WEBHOOK_SUPPORT',
+                'receives' => 'Tin nhắn hỗ trợ mới và góp ý từ biểu mẫu liên hệ.',
+            ],
+            'staging' => [
+                'name' => '#xpn-staging',
+                'env' => 'DISCORD_WEBHOOK_STAGING',
+                'receives' => 'Toàn bộ báo cáo từ local, testing và staging để không lẫn với production.',
+            ],
         ],
         'context' => [
             'app_name' => env('APP_NAME', 'XemPhatNguoi.vn'),

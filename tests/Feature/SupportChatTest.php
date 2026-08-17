@@ -242,7 +242,13 @@ test('discord job is unique retries failures and blocks user mentions', function
     Http::fake(['https://discord.test/webhook' => Http::response([], 204)]);
 
     $job = new SendSupportMessageToDiscord($message->id);
-    $job->handle(app(DiscordSupportNotifierService::class));
+    app()->detectEnvironment(fn (): string => 'production');
+
+    try {
+        $job->handle(app(DiscordSupportNotifierService::class));
+    } finally {
+        app()->detectEnvironment(fn (): string => 'testing');
+    }
 
     expect($job)->toBeInstanceOf(ShouldBeUnique::class)
         ->and($job->uniqueId())->toBe((string) $message->id)
@@ -250,10 +256,13 @@ test('discord job is unique retries failures and blocks user mentions', function
         ->and($job->timeout)->toBeLessThan((int) config('queue.connections.database.retry_after'));
 
     Http::assertSent(function (Request $request) use ($conversation): bool {
+        $content = (string) $request['content'];
+
         return $request->url() === 'https://discord.test/webhook'
             && $request['allowed_mentions'] === ['parse' => []]
-            && $request['embeds'][0]['url'] === "https://xemphatnguoi.test/admin/support?conversation={$conversation->id}"
-            && ! str_contains((string) $request['embeds'][0]['description'], '@everyone');
+            && str_contains($content, 'SUPPORT')
+            && str_contains($content, "https://xemphatnguoi.test/admin/support?conversation={$conversation->id}")
+            && ! str_contains($content, '@everyone');
     });
 });
 
