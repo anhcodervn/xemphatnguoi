@@ -31,10 +31,12 @@ export const adminMenuGroups: AdminMenuGroup[] = [
     },
     {
         key: 'content-growth',
-        label: 'Nội dung & quảng bá',
+        label: 'Nội dung',
         icon: BookOpen,
         children: [
-            { label: 'Blog', href: '/admin/blog' },
+            { label: 'Bài viết', href: '/admin/articles' },
+            { label: 'Danh mục', href: '/admin/categories' },
+            { label: 'Tags', href: '/admin/tags' },
             { label: 'SEO', href: '/admin/seo' },
             { label: 'Quảng cáo', href: '/admin/ads' },
         ],

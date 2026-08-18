@@ -110,6 +110,12 @@ return [
         'log_retention_days' => (int) env('API_LOG_RETENTION_DAYS', 30),
     ],
 
+    'n8n_content' => [
+        'enabled' => filter_var(env('N8N_CONTENT_API_ENABLED', false), FILTER_VALIDATE_BOOL),
+        'key' => (string) env('N8N_CONTENT_API_KEY', ''),
+        'rate_limit_per_minute' => (int) env('N8N_CONTENT_API_RATE_LIMIT_PER_MINUTE', 30),
+    ],
+
     'turnstile' => [
         'enabled' => filter_var(env('TURNSTILE_ENABLED', false), FILTER_VALIDATE_BOOL),
         'site_key' => env('TURNSTILE_SITE_KEY', ''),

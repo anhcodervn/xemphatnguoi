@@ -54,6 +54,17 @@ class AppServiceProvider extends ServiceProvider
                 });
         });
 
+        RateLimiter::for('n8n-content', function (Request $request): Limit {
+            return Limit::perMinute(max(1, (int) config('services.n8n_content.rate_limit_per_minute', 30)))
+                ->by($request->ip() ?: 'unknown')
+                ->response(static function (Request $request, array $headers) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'N8N content API rate limit exceeded.',
+                    ], 429, $headers);
+                });
+        });
+
         Auth::viaRequest('api-key', function (Request $request) {
             $apiKeyValue = trim((string) $request->header('X-API-KEY'));
             $apiSecret = trim((string) $request->header('X-API-SECRET'));

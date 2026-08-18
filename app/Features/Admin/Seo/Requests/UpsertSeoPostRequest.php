@@ -43,15 +43,19 @@ class UpsertSeoPostRequest extends FormRequest
             'canonical_url' => ['nullable', 'url', 'max:2048'],
             'og_image' => ['nullable', 'url', 'max:2048'],
             'robots' => ['required', Rule::in(['index,follow', 'noindex,follow'])],
+            'index_status' => ['sometimes', Rule::in(['index', 'noindex'])],
             'focus_keyword' => ['nullable', 'string', 'max:255'],
             'tags' => ['nullable', 'array'],
             'tags.*' => ['string', 'max:100'],
             'cover_alt' => ['nullable', 'string', 'max:255'],
             'article_schema' => ['sometimes', 'boolean'],
             'breadcrumb_schema' => ['sometimes', 'boolean'],
-            'status' => ['required', Rule::in(['draft', 'published', 'scheduled'])],
+            'status' => ['required', Rule::in(['draft', 'pending_review', 'approved', 'published', 'rejected', 'scheduled'])],
             'published_at' => ['nullable', 'date'],
             'scheduled_at' => ['nullable', 'date'],
+            'rejection_reason' => ['nullable', 'string', 'max:5000'],
+            'published_by' => ['prohibited'],
+            'reviewed_by' => ['prohibited'],
         ];
     }
 

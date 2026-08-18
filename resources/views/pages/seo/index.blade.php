@@ -36,7 +36,7 @@
             <aside class="space-y-5">
                 <x-ad-slot name="article_top" />
                 @if ($popularTags->isNotEmpty())
-                    <div><h2 class="font-bold text-slate-950">Chủ đề</h2><div class="mt-4 flex flex-wrap gap-2">@foreach($popularTags as $tag)<span class="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-600">{{ $tag }}</span>@endforeach</div></div>
+                    <div><h2 class="font-bold text-slate-950">Chủ đề</h2><div class="mt-4 flex flex-wrap gap-2">@foreach($popularTags as $tag)<a href="{{ route('seo.index', ['tag' => $tag->slug]) }}" class="app-focus rounded-full px-3 py-1.5 text-xs font-semibold {{ ($activeTagSlug ?? '') === $tag->slug ? 'bg-sky-700 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' }}">{{ $tag->name }}</a>@endforeach</div></div>
                 @endif
             </aside>
         </div>

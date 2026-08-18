@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\SeoCategory;
 use App\Models\SeoPost;
+use App\Models\SeoTag;
 use App\Support\EditorContentRenderer;
 use App\Support\SettingStore;
 use Illuminate\Contracts\View\View;
@@ -21,6 +22,7 @@ class PublicSeoPageController extends Controller
     {
         $search = trim($request->string('q')->toString());
         $categorySlug = trim($request->string('category')->toString());
+        $tagSlug = trim($request->string('tag')->toString());
 
         $baseQuery = SeoPost::query()
             ->with(['category:id,name,slug'])
@@ -40,6 +42,11 @@ class PublicSeoPageController extends Controller
                     $query
                         ->where('slug', $categorySlug)
                         ->where('is_active', true);
+                });
+            })
+            ->when($tagSlug !== '', function (Builder $builder) use ($tagSlug): void {
+                $builder->whereHas('seoTags', function (Builder $query) use ($tagSlug): void {
+                    $query->where('slug', $tagSlug)->where('is_active', true);
                 });
             });
 
@@ -84,17 +91,21 @@ class PublicSeoPageController extends Controller
             'sidebarPosts' => $sidebarPosts->map(fn (SeoPost $post) => $this->transformPost($post)),
             'categories' => $categories,
             'activeCategorySlug' => $categorySlug,
+            'activeTagSlug' => $tagSlug,
             'search' => $search,
-            'popularTags' => $posts
-                ->flatMap(fn (SeoPost $post): array => [
-                    ...($post->tags ?? []),
-                    $post->focus_keyword,
-                ])
-                ->filter()
-                ->map(fn (string $tag) => trim($tag))
-                ->unique()
-                ->take(8)
-                ->values(),
+            'popularTags' => SeoTag::query()
+                ->where('is_active', true)
+                ->whereHas('posts', fn (Builder $query) => $query
+                    ->where('status', SeoPost::STATUS_PUBLISHED)
+                    ->whereNotNull('published_at')
+                    ->where('published_at', '<=', now()))
+                ->withCount(['posts' => fn (Builder $query) => $query
+                    ->where('status', SeoPost::STATUS_PUBLISHED)
+                    ->whereNotNull('published_at')
+                    ->where('published_at', '<=', now())])
+                ->orderByDesc('posts_count')
+                ->limit(8)
+                ->get(['id', 'name', 'slug']),
         ]);
     }
 

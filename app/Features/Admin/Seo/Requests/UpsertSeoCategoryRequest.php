@@ -31,11 +31,14 @@ class UpsertSeoCategoryRequest extends FormRequest
                 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/',
                 Rule::unique('seo_categories', 'slug')->ignore($categoryId),
             ],
+            'description' => ['nullable', 'string', 'max:5000'],
+            'parent_id' => ['nullable', 'integer', 'exists:seo_categories,id', Rule::notIn(array_filter([$categoryId]))],
             'seo_title' => ['nullable', 'string', 'max:255'],
             'seo_description' => ['nullable', 'string', 'max:320'],
             'robots' => ['required', Rule::in(['index,follow', 'noindex,follow'])],
             'is_active' => ['sometimes', 'boolean'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
+            'created_by_type' => ['prohibited'],
         ];
     }
 
