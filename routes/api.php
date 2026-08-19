@@ -177,3 +177,7 @@ if (file_exists(base_path('app/Features/TrafficFine/routes.php'))) {
 if (file_exists(base_path('app/Features/N8nContent/routes.php'))) {
     require base_path('app/Features/N8nContent/routes.php');
 }
+
+if (file_exists(base_path('app/Features/N8nMedia/routes.php'))) {
+    require base_path('app/Features/N8nMedia/routes.php');
+}
