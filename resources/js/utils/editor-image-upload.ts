@@ -8,6 +8,9 @@ type EditorInlineNode = {
     strike?: boolean;
     color?: string;
     background?: string;
+    href?: string;
+    target?: '_blank' | '_self';
+    title?: string;
 };
 
 type EditorContentNode = {

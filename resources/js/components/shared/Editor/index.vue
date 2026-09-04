@@ -24,6 +24,9 @@ type EditorInlineNode = {
     strike?: boolean;
     color?: string;
     background?: string;
+    href?: string;
+    target?: '_blank' | '_self';
+    title?: string;
 };
 
 type EditorContentNode = {
@@ -96,14 +99,17 @@ export default {
             on: (event: string, callback: () => void) => void;
         } | null = null;
         let isApplyingExternalValue = false;
+        let lastEmittedFingerprint: string | null = null;
         let saveTimer: ReturnType<typeof setTimeout> | null = null;
 
         const getTinyMce = () =>
             typeof window !== 'undefined' && window.tinymce && typeof window.tinymce.init === 'function' ? window.tinymce : null;
 
         const currentValue = () => props.modelValue ?? props.value ?? (props.format === 'html' ? '' : []);
+        const valueFingerprint = (value: EditorContentNode[] | string): string => JSON.stringify(value);
 
         const emitValue = (value: EditorContentNode[] | string) => {
+            lastEmittedFingerprint = valueFingerprint(value);
             emit('update:value', value);
             emit('update:modelValue', value);
         };
@@ -244,7 +250,7 @@ export default {
 
         function parseInline(node: Node, style: EditorInlineNode = {}): EditorInlineNode[] {
             if (node.nodeType === Node.TEXT_NODE) {
-                if (!node.textContent?.trim()) {
+                if (node.textContent === null || node.textContent === '') {
                     return [];
                 }
 
@@ -263,6 +269,16 @@ export default {
             if (tag === 'em' || tag === 'i') next.italic = true;
             if (tag === 'u') next.underline = true;
             if (tag === 's' || tag === 'strike') next.strike = true;
+
+            if (tag === 'a') {
+                const href = safeLinkUrl(element.getAttribute('href'));
+                const target = element.getAttribute('target');
+                const title = element.getAttribute('title')?.trim();
+
+                if (href) next.href = href;
+                if (target === '_blank' || target === '_self') next.target = target;
+                if (title) next.title = title;
+            }
 
             if (element.style?.color) next.color = element.style.color;
             if (element.style?.backgroundColor) next.background = element.style.backgroundColor;
@@ -338,7 +354,7 @@ export default {
         function renderInline(children: EditorInlineNode[] = []): string {
             return children
                 .map((item) => {
-                    let text = item.text ?? '';
+                    let text = escapeHtml(item.text ?? '');
 
                     if (item.bold) text = `<strong>${text}</strong>`;
                     if (item.italic) text = `<em>${text}</em>`;
@@ -349,9 +365,34 @@ export default {
                     if (item.color) style += `color:${item.color};`;
                     if (item.background) style += `background-color:${item.background};`;
 
-                    return style ? `<span style="${style}">${text}</span>` : text;
+                    if (style) text = `<span style="${style}">${text}</span>`;
+
+                    const href = safeLinkUrl(item.href);
+
+                    if (href) {
+                        const target = item.target === '_blank' || item.target === '_self' ? ` target="${item.target}"` : '';
+                        const rel = item.target === '_blank' ? ' rel="noopener noreferrer"' : '';
+                        const title = item.title ? ` title="${escapeHtml(item.title)}"` : '';
+                        text = `<a href="${escapeHtml(href)}"${target}${rel}${title}>${text}</a>`;
+                    }
+
+                    return text;
                 })
                 .join('');
+        }
+
+        function safeLinkUrl(value: string | null | undefined): string | null {
+            const url = value?.trim() ?? '';
+
+            if (url.startsWith('/') || url.startsWith('#') || /^(https?:|mailto:|tel:)/i.test(url)) {
+                return url;
+            }
+
+            return null;
+        }
+
+        function escapeHtml(value: string): string {
+            return value.replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
         }
 
         function handleFallbackInput(): void {
@@ -373,6 +414,7 @@ export default {
                 language_url: '/assets/libs/tinymce/langs/vi.js',
                 height: props.height,
                 menubar: true,
+                link_assume_external_targets: true,
                 plugins: [
                     'advlist autolink lists link image charmap print preview anchor',
                     'searchreplace visualblocks code fullscreen',
@@ -419,23 +461,25 @@ export default {
         watch(
             () => currentValue(),
             (value) => {
+                const fingerprint = valueFingerprint(value as EditorContentNode[] | string);
+
+                if (fingerprint === lastEmittedFingerprint) {
+                    lastEmittedFingerprint = null;
+                    return;
+                }
+
+                lastEmittedFingerprint = null;
                 applyEditorValue(value);
             },
             { deep: true },
         );
 
         return {
-      editorContainer,
-      fallbackContent,
-      handleFallbackInput,
-      useFallback,
+            editorContainer,
+            fallbackContent,
+            handleFallbackInput,
+            useFallback,
         };
     },
 };
 </script>
-
-<style>
-span#mceu_56 {
-    display: none;
-}
-</style>

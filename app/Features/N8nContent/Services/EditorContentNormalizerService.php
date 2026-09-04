@@ -139,7 +139,7 @@ class EditorContentNormalizerService
         if ($node->nodeType === XML_TEXT_NODE) {
             $text = (string) $node->textContent;
 
-            return trim($text) === '' ? [] : [['text' => $text, ...$style]];
+            return $text === '' ? [] : [['text' => $text, ...$style]];
         }
 
         if (! $node instanceof DOMElement) {
@@ -152,7 +152,29 @@ class EditorContentNormalizerService
         $nextStyle['italic'] = ($nextStyle['italic'] ?? false) || in_array($tag, ['em', 'i'], true);
         $nextStyle['underline'] = ($nextStyle['underline'] ?? false) || $tag === 'u';
         $nextStyle['strike'] = ($nextStyle['strike'] ?? false) || in_array($tag, ['s', 'strike'], true);
-        $nextStyle = array_filter($nextStyle, fn (mixed $value): bool => $value === true);
+
+        if ($tag === 'a') {
+            $href = $this->safeLinkUrl($node->getAttribute('href'));
+            $target = $node->getAttribute('target');
+            $title = trim(strip_tags($node->getAttribute('title')));
+
+            if ($href !== null) {
+                $nextStyle['href'] = $href;
+            }
+
+            if (in_array($target, ['_blank', '_self'], true)) {
+                $nextStyle['target'] = $target;
+            }
+
+            if ($title !== '') {
+                $nextStyle['title'] = $title;
+            }
+        }
+
+        $nextStyle = array_filter(
+            $nextStyle,
+            fn (mixed $value): bool => $value === true || (is_string($value) && $value !== ''),
+        );
 
         if ($tag === 'br') {
             return [['text' => "\n", ...$nextStyle]];
@@ -253,12 +275,19 @@ class EditorContentNormalizerService
         return collect($children)
             ->filter(fn (mixed $child): bool => is_array($child) && array_key_exists('text', $child))
             ->map(function (array $child): array {
+                $href = $this->safeLinkUrl($child['href'] ?? null);
+                $target = in_array($child['target'] ?? null, ['_blank', '_self'], true) ? $child['target'] : null;
+                $title = is_string($child['title'] ?? null) ? trim(strip_tags($child['title'])) : '';
+
                 return array_filter([
                     'text' => strip_tags((string) $child['text']),
                     'bold' => ! empty($child['bold']) ?: null,
                     'italic' => ! empty($child['italic']) ?: null,
                     'underline' => ! empty($child['underline']) ?: null,
                     'strike' => ! empty($child['strike']) ?: null,
+                    'href' => $href,
+                    'target' => $href !== null ? $target : null,
+                    'title' => $href !== null && $title !== '' ? $title : null,
                 ], fn (mixed $value): bool => $value !== null);
             })
             ->values()
@@ -274,5 +303,26 @@ class EditorContentNormalizerService
         $url = trim($value);
 
         return Str::startsWith($url, ['https://', 'http://', '/']) ? $url : null;
+    }
+
+    private function safeLinkUrl(mixed $value): ?string
+    {
+        if (! is_string($value)) {
+            return null;
+        }
+
+        $url = trim(html_entity_decode($value, ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+
+        if ($url === '') {
+            return null;
+        }
+
+        if (Str::startsWith($url, ['/', '#'])) {
+            return $url;
+        }
+
+        $scheme = strtolower((string) parse_url($url, PHP_URL_SCHEME));
+
+        return in_array($scheme, ['http', 'https', 'mailto', 'tel'], true) ? $url : null;
     }
 }

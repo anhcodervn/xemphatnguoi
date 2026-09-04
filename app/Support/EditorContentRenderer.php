@@ -231,7 +231,28 @@ class EditorContentRenderer
                 }
 
                 if ($styles !== []) {
-                    return '<span style="'.implode(';', $styles).'">'.$text.'</span>';
+                    $text = '<span style="'.implode(';', $styles).'">'.$text.'</span>';
+                }
+
+                if ($href = $this->safeLinkUrl($child['href'] ?? null)) {
+                    $target = in_array($child['target'] ?? null, ['_blank', '_self'], true)
+                        ? (string) $child['target']
+                        : null;
+                    $attributes = ' href="'.e($href).'"';
+
+                    if ($target !== null) {
+                        $attributes .= ' target="'.$target.'"';
+                    }
+
+                    if ($target === '_blank') {
+                        $attributes .= ' rel="noopener noreferrer"';
+                    }
+
+                    if (is_string($child['title'] ?? null) && trim($child['title']) !== '') {
+                        $attributes .= ' title="'.e((string) $child['title']).'"';
+                    }
+
+                    $text = '<a'.$attributes.'>'.$text.'</a>';
                 }
 
                 return $text;
@@ -260,6 +281,27 @@ class EditorContentRenderer
         $url = trim($value);
 
         return Str::startsWith($url, ['https://', 'http://', '/']) ? $url : null;
+    }
+
+    private function safeLinkUrl(mixed $value): ?string
+    {
+        if (! is_string($value)) {
+            return null;
+        }
+
+        $url = trim(html_entity_decode($value, ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+
+        if ($url === '') {
+            return null;
+        }
+
+        if (Str::startsWith($url, ['/', '#'])) {
+            return $url;
+        }
+
+        $scheme = strtolower((string) parse_url($url, PHP_URL_SCHEME));
+
+        return in_array($scheme, ['http', 'https', 'mailto', 'tel'], true) ? $url : null;
     }
 
     /**
