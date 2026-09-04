@@ -22,7 +22,11 @@ export default {
             name: 'client.monitoring',
             component: () => import('@/pages/client/monitoring/index.vue'),
         },
-        { path: 'packages', redirect: { name: 'client.api-docs' } },
+        {
+            path: 'packages',
+            name: 'client.packages',
+            component: () => import('@/pages/client/packages/index.vue'),
+        },
         {
             path: 'api',
             name: 'client.api-docs',

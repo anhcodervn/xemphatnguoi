@@ -11,7 +11,6 @@
     data-lookup-form
     data-endpoint="{{ url('/api/lookup') }}"
     data-result-url="{{ url('/tra-cuu') }}/__PLATE__"
-    data-penalties-url="{{ route('traffic-fines.penalties.index') }}"
     data-turnstile-required="{{ $turnstileRequired ? 'true' : 'false' }}"
 >
     <fieldset>

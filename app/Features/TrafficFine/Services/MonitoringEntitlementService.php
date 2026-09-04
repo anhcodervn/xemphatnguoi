@@ -1,0 +1,43 @@
+<?php
+
+namespace App\Features\TrafficFine\Services;
+
+use App\Models\MonitoringSubscription;
+use App\Models\User;
+
+class MonitoringEntitlementService
+{
+    public function current(User $user, bool $lock = false): ?MonitoringSubscription
+    {
+        $query = $user->monitoringSubscriptions()->active()->latest('expires_at');
+
+        if ($lock) {
+            $query->lockForUpdate();
+        }
+
+        return $query->first();
+    }
+
+    /** @return array<string, mixed>|null */
+    public function summary(User $user): ?array
+    {
+        $subscription = $this->current($user);
+
+        if (! $subscription instanceof MonitoringSubscription) {
+            return null;
+        }
+
+        $enabledCount = $user->vehicleMonitorings()->where('enabled', true)->count();
+
+        return [
+            'id' => $subscription->id,
+            'plan_name' => $subscription->plan_name,
+            'vehicle_limit' => $subscription->vehicle_limit,
+            'enabled_vehicle_count' => $enabledCount,
+            'remaining_vehicle_count' => max(0, $subscription->vehicle_limit - $enabledCount),
+            'total_price' => $subscription->total_price,
+            'started_at' => $subscription->started_at?->toISOString(),
+            'expires_at' => $subscription->expires_at?->toISOString(),
+        ];
+    }
+}

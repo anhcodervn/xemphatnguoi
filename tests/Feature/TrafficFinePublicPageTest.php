@@ -262,6 +262,8 @@ it('canonicalizes the legacy lookup landing page to the home pillar page', funct
 
 it('marks plate result pages as noindex follow', function (): void {
     $checkedAt = now();
+    $violationBehavior = '16824.6.3.a.01.Điều khiển xe chạy quá tốc độ quy định từ 05 km/h đến dưới 10 km/h';
+
     TrafficFineResult::factory()->create([
         'plate' => '30A12345',
         'vehicle_type' => 'car',
@@ -278,7 +280,7 @@ it('marks plate result pages as noindex follow', function (): void {
                 'plate_color' => 'Nền trắng',
                 'time' => '2026-08-17 09:04:00',
                 'location' => 'Quốc lộ 1, Bắc Ninh',
-                'behavior' => 'Điều khiển xe chạy quá tốc độ quy định',
+                'behavior' => $violationBehavior,
                 'status' => 'Chưa xử phạt',
                 'agency' => 'Phòng Cảnh sát giao thông',
                 'resolution_agency' => 'Đội CSGT số 2',
@@ -303,7 +305,8 @@ it('marks plate result pages as noindex follow', function (): void {
         ->assertSee('Danh sách vi phạm')
         ->assertSee('Nội dung vi phạm')
         ->assertSee('Xem mức phạt')
-        ->assertSee('href="'.route('traffic-fines.penalties.index').'"', false)
+        ->assertSee('href="https://www.google.com/search?q='.rawurlencode($violationBehavior).'"', false)
+        ->assertSee('target="_blank" rel="noopener noreferrer"', false)
         ->assertSee('Nơi giải quyết')
         ->assertDontSee('Tự động thông báo')
         ->assertDontSee('Trang này được đặt noindex')

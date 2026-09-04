@@ -1,8 +1,3 @@
-const placeholder = (title: string, description: string) => ({
-    component: () => import('@/pages/admin/PlaceholderPage.vue'),
-    props: { title, description },
-});
-
 export default {
     path: '/admin',
     component: () => import('@/layouts/AdminLayout.vue'),
@@ -12,13 +7,13 @@ export default {
         { path: 'lookup-logs', name: 'admin.lookup-logs', component: () => import('@/pages/admin/traffic-fines/LogsPage.vue') },
         { path: 'traffic-fine-results', name: 'admin.traffic-fine-results', component: () => import('@/pages/admin/traffic-fines/ResultsPage.vue') },
         { path: 'providers', name: 'admin.providers', component: () => import('@/pages/admin/traffic-fines/ProviderPage.vue') },
-        { path: 'packages', redirect: { name: 'admin.api-billing' } },
+        { path: 'packages', redirect: { name: 'admin.monitoring' } },
         { path: 'subscriptions', redirect: { name: 'admin.api-billing' } },
         { path: 'api-billing', name: 'admin.api-billing', component: () => import('@/pages/admin/traffic-fines/BillingPage.vue') },
         {
             path: 'monitoring',
             name: 'admin.monitoring',
-            ...placeholder('Monitoring', 'Quản lý lịch theo dõi biển số và scheduler sau khi phase monitoring được triển khai.'),
+            component: () => import('@/pages/admin/monitoring-plans/index.vue'),
         },
         { path: 'ads', name: 'admin.ads', component: () => import('@/pages/admin/traffic-fines/AdSlotsPage.vue') },
         { path: 'support', name: 'admin.support.index', component: () => import('@/pages/admin/support/index.vue') },
@@ -86,6 +81,7 @@ export default {
         { path: 'recharge/config', name: 'admin.recharge.config', component: () => import('@/pages/admin/settings/recharge/index.vue') },
         { path: 'recharge/history', name: 'admin.recharge.history', component: () => import('@/pages/admin/recharge/history/index.vue') },
         { path: 'setting', redirect: { name: 'admin.settings.general' } },
+        { path: 'settings', redirect: { name: 'admin.settings.general' } },
         { path: 'settings/general', name: 'admin.settings.general', component: () => import('@/pages/admin/settings/index.vue') },
         { path: 'settings/content', name: 'admin.settings.content', component: () => import('@/pages/admin/settings/content/index.vue') },
         { path: 'settings/recharge', redirect: { name: 'admin.recharge.config' } },

@@ -18,3 +18,8 @@ Schedule::command(sprintf('monitor:discord-heartbeat --channel=%s', $heartbeatCh
 Schedule::command('api:prune-logs')
     ->daily()
     ->withoutOverlapping();
+
+Schedule::command('traffic-fines:dispatch-monitoring-checks')
+    ->everyMinute()
+    ->withoutOverlapping()
+    ->onOneServer();

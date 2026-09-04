@@ -5,6 +5,7 @@ use App\Features\TrafficFine\Controllers\TrafficFineAdminController;
 use App\Features\TrafficFine\Controllers\TrafficFineDashboardController;
 use App\Features\TrafficFine\Controllers\TrafficFineLookupController;
 use App\Features\TrafficFine\Controllers\UserVehicleController;
+use App\Features\TrafficFine\Controllers\VehicleMonitoringController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/lookup', TrafficFineLookupController::class)
@@ -24,12 +25,15 @@ Route::prefix('client/traffic-fines')
         Route::get('/dashboard', [TrafficFineDashboardController::class, 'index'])->name('dashboard');
         Route::get('/histories', [TrafficFineDashboardController::class, 'histories'])->name('histories');
         Route::get('/api-usage', [TrafficFineDashboardController::class, 'apiUsage'])->name('api-usage');
+        Route::get('/monitoring', [VehicleMonitoringController::class, 'index'])->name('monitoring.index');
         Route::post('/lookup', TrafficFineLookupController::class)
             ->middleware('throttle:traffic-fine-lookup')
             ->name('lookup');
         Route::post('/vehicles/{vehicle}/lookup', [UserVehicleController::class, 'lookup'])
             ->middleware('throttle:traffic-fine-lookup')
             ->name('vehicles.lookup');
+        Route::patch('/vehicles/{vehicle}/monitoring', [VehicleMonitoringController::class, 'update'])
+            ->name('vehicles.monitoring.update');
         Route::apiResource('vehicles', UserVehicleController::class);
     });
 

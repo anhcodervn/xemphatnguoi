@@ -49,6 +49,7 @@ export type UserVehicle = {
     updated_at: string;
     monitoring?: {
         enabled: boolean;
+        email_notifications: boolean;
         last_checked_at: string | null;
         last_violation_count: number | null;
     } | null;

@@ -25,7 +25,9 @@ class VehicleMonitoringFactory extends Factory
                 'user_id' => $attributes['user_id'],
             ])->getKey(),
             'enabled' => false,
+            'email_notifications' => false,
             'last_checked_at' => null,
+            'last_dispatched_at' => null,
             'last_violation_count' => null,
         ];
     }

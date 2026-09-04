@@ -32,6 +32,7 @@ class TrafficFineLookupService
         string $vehicleType,
         ?User $user = null,
         ?string $ip = null,
+        bool $forceRefresh = false,
     ): TrafficFineLookupResponseDto {
         $normalizedPlate = $this->normalizer->normalize($plate);
         $resolvedVehicleType = VehicleType::tryFrom($vehicleType);
@@ -61,7 +62,7 @@ class TrafficFineLookupService
             throw new TrafficFineProviderException('Hệ thống tra cứu đang tạm thời gián đoạn. Vui lòng thử lại sau ít phút.');
         }
 
-        $cachedPayload = $cache->get($cacheKey);
+        $cachedPayload = $forceRefresh ? null : $cache->get($cacheKey);
 
         if (is_array($cachedPayload)) {
             $resolved = $this->resolvedFromCachePayload($cachedPayload);
@@ -69,7 +70,7 @@ class TrafficFineLookupService
             return $this->completeLookup($resolved, $user, $resolvedVehicleType, $ip);
         }
 
-        $databaseResult = $this->freshDatabaseResult($sourceName, $normalizedPlate, $resolvedVehicleType);
+        $databaseResult = $forceRefresh ? null : $this->freshDatabaseResult($sourceName, $normalizedPlate, $resolvedVehicleType);
 
         if ($databaseResult instanceof TrafficFineResult) {
             $resolved = $this->resolvedFromDatabase($databaseResult);
@@ -85,14 +86,14 @@ class TrafficFineLookupService
         try {
             $resolved = $cache
                 ->lock('lock:'.$cacheKey, (int) config('traffic-fines.cache.lock_seconds', 15))
-                ->block((int) config('traffic-fines.cache.lock_wait_seconds', 3), function () use ($cache, $cacheKey, $normalizedPlate, $resolvedVehicleType, $sourceName): array {
-                    $cachedPayload = $cache->get($cacheKey);
+                ->block((int) config('traffic-fines.cache.lock_wait_seconds', 3), function () use ($cache, $cacheKey, $normalizedPlate, $resolvedVehicleType, $sourceName, $forceRefresh): array {
+                    $cachedPayload = $forceRefresh ? null : $cache->get($cacheKey);
 
                     if (is_array($cachedPayload)) {
                         return $this->resolvedFromCachePayload($cachedPayload);
                     }
 
-                    $databaseResult = $this->freshDatabaseResult($sourceName, $normalizedPlate, $resolvedVehicleType);
+                    $databaseResult = $forceRefresh ? null : $this->freshDatabaseResult($sourceName, $normalizedPlate, $resolvedVehicleType);
 
                     if ($databaseResult instanceof TrafficFineResult) {
                         $resolved = $this->resolvedFromDatabase($databaseResult);

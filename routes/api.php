@@ -98,6 +98,10 @@ if (file_exists(base_path('app/Features/Client/Wallet/routes.php'))) {
     require base_path('app/Features/Client/Wallet/routes.php');
 }
 
+if (file_exists(base_path('app/Features/Client/MonitoringPlan/routes.php'))) {
+    require base_path('app/Features/Client/MonitoringPlan/routes.php');
+}
+
 if (file_exists(base_path('app/Features/Client/Notification/routes.php'))) {
     require base_path('app/Features/Client/Notification/routes.php');
 }
@@ -116,6 +120,10 @@ if (file_exists(base_path('app/Features/Admin/Upload/routes.php'))) {
 
 if (file_exists(base_path('app/Features/Admin/RechargeConfig/routes.php'))) {
     require base_path('app/Features/Admin/RechargeConfig/routes.php');
+}
+
+if (file_exists(base_path('app/Features/Admin/MonitoringPlan/routes.php'))) {
+    require base_path('app/Features/Admin/MonitoringPlan/routes.php');
 }
 
 if (file_exists(base_path('app/Features/Admin/RechargeHistory/routes.php'))) {

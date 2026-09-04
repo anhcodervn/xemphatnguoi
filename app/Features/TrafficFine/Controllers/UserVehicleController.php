@@ -24,7 +24,7 @@ class UserVehicleController extends Controller
             'status' => true,
             'data' => [
                 'vehicles' => $user->vehicles()
-                    ->with('monitoring:id,user_vehicle_id,enabled,last_checked_at,last_violation_count')
+                    ->with('monitoring:id,user_vehicle_id,enabled,email_notifications,last_checked_at,last_violation_count')
                     ->latest('id')
                     ->get(),
             ],

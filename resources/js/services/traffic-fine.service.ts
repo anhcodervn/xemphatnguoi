@@ -1,4 +1,5 @@
 import api from '@/config/axios';
+import type { MonitoringSubscription } from '@/types/monitoring-plan.type';
 import type {
     ApiUsageDaily,
     ApiUsageLog,
@@ -28,6 +29,12 @@ export type ApiUsageDashboard = {
     logs: PaginatedResponse<ApiUsageLog>;
 };
 
+export type VehicleMonitoringDashboard = {
+    interval_hours: number;
+    subscription: MonitoringSubscription | null;
+    vehicles: UserVehicle[];
+};
+
 export const trafficFineService = {
     async dashboard(): Promise<TrafficFineDashboard> {
         const response = await api.get('/api/client/traffic-fines/dashboard');
@@ -47,6 +54,12 @@ export const trafficFineService = {
         return response.data.data.vehicles as UserVehicle[];
     },
 
+    async monitoring(): Promise<VehicleMonitoringDashboard> {
+        const response = await api.get('/api/client/traffic-fines/monitoring');
+
+        return response.data.data as VehicleMonitoringDashboard;
+    },
+
     async createVehicle(payload: { name: string; plate: string; vehicle_type: VehicleType }): Promise<UserVehicle> {
         const response = await api.post('/api/client/traffic-fines/vehicles', payload);
 
@@ -61,6 +74,15 @@ export const trafficFineService = {
 
     async deleteVehicle(id: number): Promise<void> {
         await api.delete(`/api/client/traffic-fines/vehicles/${id}`);
+    },
+
+    async updateVehicleMonitoring(
+        id: number,
+        payload: { enabled: boolean; email_notifications: boolean },
+    ): Promise<NonNullable<UserVehicle['monitoring']>> {
+        const response = await api.patch(`/api/client/traffic-fines/vehicles/${id}/monitoring`, payload);
+
+        return response.data.data as NonNullable<UserVehicle['monitoring']>;
     },
 
     async apiUsage(page = 1): Promise<ApiUsageDashboard> {

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useSystemSetting } from '@/composables/useSystemSetting';
+import { useSupportStore } from '@/stores/support.store';
 import {
     BarChart3,
     CarFront,
@@ -9,6 +10,8 @@ import {
     Eye,
     History,
     LayoutDashboard,
+    MessageCircleMore,
+    PackageOpen,
     Search,
     Wallet,
     X,
@@ -23,18 +26,21 @@ defineEmits<{ close: [] }>();
 type NavItem = { label: string; icon: LucideIcon; href: string; external?: boolean };
 
 const route = useRoute();
+const supportStore = useSupportStore();
 const { settings, fetchSettings } = useSystemSetting();
 const items: NavItem[] = [
     { label: 'Tổng quan', icon: LayoutDashboard, href: '/dashboard' },
+    { label: 'Tài khoản', icon: CircleUserRound, href: '/dashboard/account' },
+    { label: 'Nạp tiền', icon: Wallet, href: '/dashboard/wallet' },
+    { label: 'Giao dịch', icon: CreditCard, href: '/dashboard/transactions' },
     { label: 'Tra cứu trên website', icon: Search, href: '/tra-cuu-phat-nguoi', external: true },
     { label: 'Lịch sử tra cứu', icon: History, href: '/dashboard/history' },
     { label: 'Xe của tôi', icon: CarFront, href: '/dashboard/vehicles' },
     { label: 'Theo dõi biển số', icon: Eye, href: '/dashboard/monitoring' },
+    { label: 'Gói dịch vụ', icon: PackageOpen, href: '/dashboard/packages' },
     { label: 'API', icon: Code2, href: '/dashboard/api' },
     { label: 'Lượt dùng API', icon: BarChart3, href: '/dashboard/api-usage' },
-    { label: 'Nạp tiền', icon: Wallet, href: '/dashboard/wallet' },
-    { label: 'Giao dịch', icon: CreditCard, href: '/dashboard/transactions' },
-    { label: 'Tài khoản', icon: CircleUserRound, href: '/dashboard/account' },
+    { label: 'Hỗ trợ trực tiếp', icon: MessageCircleMore, href: '/dashboard/support' },
 ];
 
 const isActive = (href: string): boolean => (href === '/dashboard' ? route.path === href : route.path === href || route.path.startsWith(`${href}/`));
@@ -89,7 +95,12 @@ onMounted(fetchSettings);
                             class="app-focus flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-semibold transition"
                             :class="isActive(item.href) ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-white/[0.07] hover:text-white'"
                             @click="$emit('close')"
-                            ><component :is="item.icon" class="h-5 w-5 shrink-0" /><span>{{ item.label }}</span></RouterLink
+                            ><component :is="item.icon" class="h-5 w-5 shrink-0" /><span class="min-w-0 flex-1">{{ item.label }}</span
+                            ><span
+                                v-if="item.href === '/dashboard/support' && supportStore.userUnread > 0"
+                                class="inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-black tabular-nums text-white"
+                                >{{ supportStore.userUnread > 99 ? '99+' : supportStore.userUnread }}</span
+                            ></RouterLink
                         >
                     </li>
                 </ul>

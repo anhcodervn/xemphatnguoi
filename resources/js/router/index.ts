@@ -46,6 +46,7 @@ const routeTitles: Record<string, string> = {
     'client.lookup-history': 'Lịch sử tra cứu',
     'client.vehicles': 'Xe của tôi',
     'client.monitoring': 'Theo dõi biển số',
+    'client.packages': 'Gói dịch vụ',
     'client.api-usage': 'Lượt dùng API',
     'client.wallet': 'Ví và nạp tiền',
     'client.transactions': 'Giao dịch',

@@ -93,6 +93,8 @@
                                 )
                                 : 'Chưa có dữ liệu';
                             $resolutionStatus = \App\Features\TrafficFine\DTOs\TrafficFineLookupResultDataDto::resolutionStatus($violation['status'] ?? null);
+                            $violationBehavior = $violation['behavior'] ?: 'Vi phạm giao thông';
+                            $penaltySearchUrl = 'https://www.google.com/search?q='.rawurlencode($violationBehavior);
                         @endphp
                         <article class="overflow-hidden rounded-lg border border-slate-300 bg-white" data-violation-card>
                             <header class="flex items-center justify-between gap-2 border-b border-slate-200 px-3 py-2" data-violation-header>
@@ -115,8 +117,8 @@
 
                             <div class="mx-3 rounded-lg border border-red-200 bg-red-50 p-2.5" data-violation-behavior>
                                 <p class="flex items-center gap-1.5 text-xs font-black uppercase tracking-[0.08em] text-red-700"><svg aria-hidden="true" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4"><path d="M10 2 1.5 17h17L10 2Zm0 5v4m0 3h.01"/></svg>Nội dung vi phạm</p>
-                                <p class="mt-2 break-words [overflow-wrap:anywhere] text-sm font-semibold leading-5 text-slate-700">{{ $violation['behavior'] ?: 'Vi phạm giao thông' }}</p>
-                                <a href="{{ route('traffic-fines.penalties.index') }}" class="site-focus mt-3 inline-flex min-h-11 touch-manipulation items-center gap-1.5 rounded-md bg-red-500 px-3 text-xs font-black text-white transition-colors hover:bg-red-600">
+                                <p class="mt-2 break-words [overflow-wrap:anywhere] text-sm font-semibold leading-5 text-slate-700">{{ $violationBehavior }}</p>
+                                <a href="{{ $penaltySearchUrl }}" target="_blank" rel="noopener noreferrer" class="site-focus mt-3 inline-flex min-h-11 touch-manipulation items-center gap-1.5 rounded-md bg-red-500 px-3 text-xs font-black text-white transition-colors hover:bg-red-600">
                                     <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" class="h-4 w-4"><path d="m3 14 8-8 3 3-8 8H3v-3Zm9-9 2-2 3 3-2 2"/></svg>
                                     Xem mức phạt
                                 </a>

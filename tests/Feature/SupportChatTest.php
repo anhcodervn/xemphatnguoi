@@ -273,6 +273,7 @@ test('replaying events or discord jobs never creates duplicate messages', functi
         'sender_id' => $user->id,
         'sender_role' => SupportMessage::ROLE_USER,
     ]);
+    Event::fake([SupportMessageCreated::class]);
     config(['services.discord.channels.support' => '']);
     $payload = [
         'id' => $message->id,

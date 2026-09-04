@@ -371,7 +371,7 @@ const violationMetaItem = (label: string, value: string, iconPath: string): HTML
     return item;
 };
 
-const violationCard = (violation: LookupViolation, index: number, displayPlate: string, vehicleLabel: string, penaltiesUrl: string): HTMLElement => {
+const violationCard = (violation: LookupViolation, index: number, displayPlate: string, vehicleLabel: string): HTMLElement => {
     const card = element('article', 'overflow-hidden rounded-lg border border-slate-300 bg-white');
     card.dataset.violationCard = '';
     const header = element('header', 'flex items-center justify-between gap-2 border-b border-slate-200 px-3 py-2');
@@ -419,14 +419,15 @@ const violationCard = (violation: LookupViolation, index: number, displayPlate: 
         'site-focus mt-3 inline-flex min-h-11 touch-manipulation items-center gap-1.5 rounded-md bg-red-500 px-3 text-xs font-black text-white transition-colors hover:bg-red-600',
         'Xem mức phạt',
     );
-    penaltyLink.href = penaltiesUrl;
+    const violationBehavior = violation.behavior || 'Vi phạm giao thông';
+    const penaltySearchUrl = new URL('https://www.google.com/search');
+    penaltySearchUrl.searchParams.set('q', violationBehavior);
+    penaltyLink.href = penaltySearchUrl.toString();
+    penaltyLink.target = '_blank';
+    penaltyLink.rel = 'noopener noreferrer';
     behavior.append(
         behaviorLabel,
-        element(
-            'p',
-            'mt-2 break-words text-sm font-semibold leading-5 text-slate-700 [overflow-wrap:anywhere]',
-            violation.behavior || 'Vi phạm giao thông',
-        ),
+        element('p', 'mt-2 break-words text-sm font-semibold leading-5 text-slate-700 [overflow-wrap:anywhere]', violationBehavior),
         penaltyLink,
     );
 
@@ -450,7 +451,7 @@ const violationCard = (violation: LookupViolation, index: number, displayPlate: 
     return card;
 };
 
-const renderResult = (container: HTMLElement, data: LookupData, resultUrlTemplate: string, penaltiesUrl: string): void => {
+const renderResult = (container: HTMLElement, data: LookupData, resultUrlTemplate: string): void => {
     detachResultAdvertisement();
     setResultShell(container);
     const hasViolations = data.violation_count > 0;
@@ -546,7 +547,7 @@ const renderResult = (container: HTMLElement, data: LookupData, resultUrlTemplat
         detailsHeading.append(heading, element('span', 'text-xs font-semibold text-slate-500', `${data.violations.length} chi tiết`));
         const list = element('div', 'grid gap-3');
         list.dataset.violationList = '';
-        data.violations.forEach((violation, index) => list.append(violationCard(violation, index, data.display_plate, vehicleLabel, penaltiesUrl)));
+        data.violations.forEach((violation, index) => list.append(violationCard(violation, index, data.display_plate, vehicleLabel)));
         details.append(detailsHeading, list);
     }
 
@@ -577,7 +578,6 @@ document.querySelectorAll<HTMLFormElement>('[data-lookup-form]').forEach((form) 
         const submitLabel = form.querySelector<HTMLElement>('[data-submit-label]');
         const endpoint = form.dataset.endpoint ?? '/api/lookup';
         const resultUrl = form.dataset.resultUrl ?? '/tra-cuu/__PLATE__';
-        const penaltiesUrl = form.dataset.penaltiesUrl ?? '/muc-phat';
         const plateInput = form.elements.namedItem('plate') as HTMLInputElement | null;
         const vehicleInput = form.elements.namedItem('vehicle_type');
         const fieldError = form.querySelector<HTMLElement>('[data-lookup-error]');
@@ -676,7 +676,7 @@ document.querySelectorAll<HTMLFormElement>('[data-lookup-form]').forEach((form) 
                 return;
             }
 
-            renderResult(result, payload.data, resultUrl, penaltiesUrl);
+            renderResult(result, payload.data, resultUrl);
             result.focus({ preventScroll: true });
 
             try {

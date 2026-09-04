@@ -12,7 +12,7 @@ const isSidebarOpen = ref(false);
 const route = useRoute();
 const userStore = useUserStore();
 const supportStore = useSupportStore();
-const isSupportRoute = computed(() => route.path === '/support');
+const isSupportRoute = computed(() => route.path === '/dashboard/support');
 
 watch(
     () => userStore.user?.id ?? null,

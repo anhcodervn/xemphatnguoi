@@ -16,7 +16,9 @@ class VehicleMonitoring extends Model
         'user_id',
         'user_vehicle_id',
         'enabled',
+        'email_notifications',
         'last_checked_at',
+        'last_dispatched_at',
         'last_violation_count',
     ];
 
@@ -24,7 +26,9 @@ class VehicleMonitoring extends Model
     {
         return [
             'enabled' => 'boolean',
+            'email_notifications' => 'boolean',
             'last_checked_at' => 'immutable_datetime',
+            'last_dispatched_at' => 'immutable_datetime',
             'last_violation_count' => 'integer',
         ];
     }

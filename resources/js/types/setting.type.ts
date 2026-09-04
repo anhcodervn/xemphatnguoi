@@ -104,6 +104,7 @@ export interface DiscordRoomStatusType {
 }
 
 export interface MonitoringSettingType {
+    interval_hours: number;
     rooms: DiscordRoomStatusType[];
     [key: string]: unknown;
 }

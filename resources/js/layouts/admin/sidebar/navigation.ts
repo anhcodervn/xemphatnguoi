@@ -1,10 +1,21 @@
-import { BookOpen, Database, LayoutDashboard, Settings, UserRound, Users, type LucideIcon } from 'lucide-vue-next';
+import {
+    BookOpen,
+    Database,
+    LayoutDashboard,
+    MessageCircleMore,
+    Settings,
+    SlidersHorizontal,
+    UserRound,
+    Users,
+    type LucideIcon,
+} from 'lucide-vue-next';
 
 export type AdminMenuChild = { label: string; href: string };
 export type AdminMenuGroup = { key: string; label: string; icon: LucideIcon; href?: string; children?: AdminMenuChild[] };
 
 export const adminMenuGroups: AdminMenuGroup[] = [
     { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, href: '/admin' },
+    { key: 'support', label: 'Tin nhắn hỗ trợ', icon: MessageCircleMore, href: '/admin/support' },
     {
         key: 'lookup-data',
         label: 'Tra cứu & dữ liệu',
@@ -14,7 +25,7 @@ export const adminMenuGroups: AdminMenuGroup[] = [
             { label: 'Nhật ký tra cứu', href: '/admin/lookup-logs' },
             { label: 'Cache biển số', href: '/admin/traffic-fine-results' },
             { label: 'Nguồn dữ liệu', href: '/admin/providers' },
-            { label: 'Theo dõi biển số', href: '/admin/monitoring' },
+            { label: 'Gói theo dõi xe', href: '/admin/monitoring' },
         ],
     },
     {
@@ -47,8 +58,16 @@ export const adminMenuGroups: AdminMenuGroup[] = [
         icon: Settings,
         children: [
             { label: 'Lượt dùng API', href: '/admin/api-usage' },
-            { label: 'Cài đặt hệ thống', href: '/admin/settings/general' },
             { label: 'Queue & nhật ký', href: '/admin/logs' },
+        ],
+    },
+    {
+        key: 'system-settings',
+        label: 'Cấu hình hệ thống',
+        icon: SlidersHorizontal,
+        children: [
+            { label: 'Cấu hình chung', href: '/admin/settings/general' },
+            { label: 'Cấu hình nội dung', href: '/admin/settings/content' },
         ],
     },
     { key: 'profile', label: 'Tài khoản admin', icon: UserRound, href: '/dashboard/account' },

@@ -173,6 +173,11 @@ class User extends Authenticatable implements CanResetPassword, JWTSubject
         return $this->hasMany(VehicleMonitoring::class);
     }
 
+    public function monitoringSubscriptions(): HasMany
+    {
+        return $this->hasMany(MonitoringSubscription::class);
+    }
+
     public function webhooks(): HasMany
     {
         return $this->hasMany(Webhook::class);

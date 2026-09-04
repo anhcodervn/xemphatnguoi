@@ -2,11 +2,13 @@
 
 namespace App\Features\Admin\Setting\Controllers;
 
+use App\Features\Admin\Setting\Requests\UpdateMonitoringSettingRequest;
 use App\Features\Admin\Setting\Requests\UpdateOptionSettingRequest;
 use App\Features\Admin\Setting\Requests\UpdateSystemSettingRequest;
 use App\Features\Admin\Setting\Requests\UpdateTabSettingRequest;
 use App\Features\Admin\Setting\Requests\UpdateTurnstileSettingRequest;
 use App\Features\TrafficFine\Services\TrafficFineTurnstileSettingsService;
+use App\Features\TrafficFine\Services\VehicleMonitoringSettingsService;
 use App\Http\Controllers\Controller;
 use App\Support\SettingStore;
 use Illuminate\Http\JsonResponse;
@@ -289,8 +291,11 @@ class SettingController extends Controller
             ->all();
     }
 
-    public function show(string $tab, SettingStore $settingStore): JsonResponse
-    {
+    public function show(
+        string $tab,
+        SettingStore $settingStore,
+        VehicleMonitoringSettingsService $monitoringSettings,
+    ): JsonResponse {
         if ($tab === self::SYSTEM_TAB) {
             return response()->json([
                 'status' => true,
@@ -307,6 +312,7 @@ class SettingController extends Controller
                 'data' => [
                     'tab' => $tab,
                     'settings' => [
+                        'interval_hours' => $monitoringSettings->intervalHours(),
                         'rooms' => $this->discordRooms(),
                     ],
                 ],
@@ -354,6 +360,26 @@ class SettingController extends Controller
             'data' => [
                 'tab' => 'turnstile',
                 'settings' => $turnstileSettings->adminConfiguration(),
+            ],
+        ]);
+    }
+
+    public function updateMonitoring(
+        UpdateMonitoringSettingRequest $request,
+        VehicleMonitoringSettingsService $monitoringSettings,
+    ): JsonResponse {
+        $intervalHours = (int) $request->validated('interval_hours');
+        $monitoringSettings->updateIntervalHours($intervalHours);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Đã cập nhật chu kỳ theo dõi xe.',
+            'data' => [
+                'tab' => 'monitoring',
+                'settings' => [
+                    'interval_hours' => $intervalHours,
+                    'rooms' => $this->discordRooms(),
+                ],
             ],
         ]);
     }

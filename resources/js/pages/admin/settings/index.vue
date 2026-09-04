@@ -7,6 +7,7 @@ import type {
     ContactSettingType,
     DiscordRoomStatusType,
     GeneralSettingType,
+    MonitoringSettingType,
     SeoSettingType,
     TurnstileSettingType,
 } from '@/types/setting.type';
@@ -43,8 +44,8 @@ const tabs: Array<{ key: TabKey; label: string; description: string }> = [
     },
     {
         key: 'monitoring',
-        label: 'Webhook Discord',
-        description: 'Theo dõi trạng thái 5 room báo cáo và biến môi trường tương ứng.',
+        label: 'Theo dõi hệ thống',
+        description: 'Chu kỳ kiểm tra xe và trạng thái các room báo cáo Discord.',
     },
 ];
 
@@ -99,6 +100,7 @@ const seoForm = ref<SeoSettingType>({
 });
 
 const monitoringRooms = ref<DiscordRoomStatusType[]>([]);
+const monitoringForm = ref<Pick<MonitoringSettingType, 'interval_hours'>>({ interval_hours: 6 });
 
 const turnstileForm = ref<TurnstileSettingType>({
     enabled: false,
@@ -138,6 +140,7 @@ const loadData = async (): Promise<void> => {
             secret_configured: Boolean(turnstile.settings.secret_configured),
         };
         monitoringRooms.value = Array.isArray(monitoring.settings.rooms) ? monitoring.settings.rooms : [];
+        monitoringForm.value.interval_hours = Number(monitoring.settings.interval_hours ?? 6);
     } catch (error) {
         handleErrorResponse(error);
     } finally {
@@ -204,6 +207,15 @@ const saveTurnstile = async (): Promise<void> => {
             secret_configured: Boolean(response.settings.secret_configured),
         };
         handleSuccessResponse({ data: { status: true, message: 'Đã cập nhật Cloudflare Turnstile.' } });
+    });
+};
+
+const saveMonitoring = async (): Promise<void> => {
+    await withSaving('monitoring', async () => {
+        const response = await adminSettingService.updateMonitoring(monitoringForm.value);
+        monitoringForm.value.interval_hours = Number(response.settings.interval_hours);
+        monitoringRooms.value = Array.isArray(response.settings.rooms) ? response.settings.rooms : monitoringRooms.value;
+        handleSuccessResponse({ data: { status: true, message: 'Đã cập nhật chu kỳ theo dõi xe.' } });
     });
 };
 
@@ -815,37 +827,70 @@ onMounted(async () => {
                 </div>
 
                 <div v-show="activeTab === 'monitoring'" class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
-                    <article class="rounded-[10px] border border-slate-200 bg-white p-4">
-                        <div>
-                            <h3 class="text-sm font-semibold text-slate-900">5 room Discord cần tạo</h3>
-                            <p class="mt-1 text-sm leading-6 text-slate-500">
-                                Mỗi room tạo một webhook riêng rồi gắn URL vào biến môi trường tương ứng. URL webhook không được lưu trong database
-                                hoặc trả về trình duyệt.
-                            </p>
-                        </div>
-
-                        <div class="mt-4 grid gap-3 md:grid-cols-2">
-                            <div
-                                v-for="room in monitoringRooms"
-                                :key="room.key"
-                                class="rounded-[12px] border p-4"
-                                :class="room.configured ? 'border-emerald-200 bg-emerald-50/60' : 'border-amber-200 bg-amber-50/60'"
-                            >
-                                <div class="flex items-start justify-between gap-3">
-                                    <div class="min-w-0">
-                                        <p class="font-mono text-sm font-bold text-slate-900">{{ room.name }}</p>
-                                        <p class="mt-1 break-all font-mono text-[11px] text-slate-500">{{ room.env }}</p>
-                                    </div>
-                                    <span
-                                        class="shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold"
-                                        :class="room.configured ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'"
-                                    >
-                                        {{ room.configured ? 'Đã cấu hình' : 'Chưa cấu hình' }}
-                                    </span>
+                    <article class="grid gap-6 rounded-[10px] border border-slate-200 bg-white p-4">
+                        <section>
+                            <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                                <div>
+                                    <h3 class="text-sm font-semibold text-slate-900">Chu kỳ kiểm tra từng xe</h3>
+                                    <p class="mt-1 text-sm leading-6 text-slate-500">
+                                        Scheduler chạy mỗi phút để tìm xe đến hạn; mỗi xe chỉ được kiểm tra lại sau đúng chu kỳ này.
+                                    </p>
                                 </div>
-                                <p class="mt-3 text-sm leading-6 text-slate-600">{{ room.receives }}</p>
+                                <button
+                                    type="button"
+                                    class="min-h-10 shrink-0 rounded-[10px] bg-indigo-600 px-4 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:opacity-60"
+                                    :disabled="saving.monitoring"
+                                    @click="saveMonitoring"
+                                >
+                                    {{ saving.monitoring ? 'Đang lưu...' : 'Lưu chu kỳ' }}
+                                </button>
                             </div>
-                        </div>
+                            <label class="mt-4 block max-w-xs">
+                                <span class="text-xs font-semibold text-slate-600">Số giờ giữa hai lần kiểm tra</span>
+                                <input
+                                    v-model.number="monitoringForm.interval_hours"
+                                    type="number"
+                                    min="1"
+                                    max="720"
+                                    step="1"
+                                    class="mt-1 min-h-11 w-full rounded-[10px] border border-slate-200 px-3 text-sm outline-none focus:border-indigo-400"
+                                />
+                                <span class="mt-1 block text-xs text-slate-500">Mặc định 6 giờ. Cho phép từ 1 đến 720 giờ.</span>
+                            </label>
+                        </section>
+
+                        <section class="border-t border-slate-200 pt-6">
+                            <div>
+                                <h3 class="text-sm font-semibold text-slate-900">5 room Discord cần tạo</h3>
+                                <p class="mt-1 text-sm leading-6 text-slate-500">
+                                    Mỗi room tạo một webhook riêng rồi gắn URL vào biến môi trường tương ứng. URL webhook không được lưu trong
+                                    database hoặc trả về trình duyệt.
+                                </p>
+                            </div>
+
+                            <div class="mt-4 grid gap-3 md:grid-cols-2">
+                                <div
+                                    v-for="room in monitoringRooms"
+                                    :key="room.key"
+                                    class="rounded-[12px] border p-4"
+                                    :class="room.configured ? 'border-emerald-200 bg-emerald-50/60' : 'border-amber-200 bg-amber-50/60'"
+                                >
+                                    <div class="flex items-start justify-between gap-3">
+                                        <div class="min-w-0">
+                                            <p class="font-mono text-sm font-bold text-slate-900">{{ room.name }}</p>
+                                            <p class="mt-1 break-all font-mono text-[11px] text-slate-500">{{ room.env }}</p>
+                                        </div>
+                                        <span
+                                            class="shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold"
+                                            :class="room.configured ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'"
+                                        >
+                                            {{ room.configured ? 'Đã cấu hình' : 'Chưa cấu hình' }}
+                                        </span>
+                                    </div>
+                                    <p class="mt-3 text-sm leading-6 text-slate-600">{{ room.receives }}</p>
+                                </div>
+                            </div>
+                        </section>
                     </article>
 
                     <aside class="rounded-[10px] border border-slate-200 bg-slate-50 p-4">

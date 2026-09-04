@@ -70,6 +70,9 @@ export const adminSettingService = {
     getMonitoring() {
         return getTab<MonitoringSettingType>('monitoring');
     },
+    updateMonitoring(payload: Pick<MonitoringSettingType, 'interval_hours'>) {
+        return updateTab<MonitoringSettingType>('monitoring', payload);
+    },
     getTurnstile() {
         return getTab<TurnstileSettingType>('turnstile');
     },

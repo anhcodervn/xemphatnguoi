@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useSupportStore } from '@/stores/support.store';
 import { ChevronRight, ShieldCheck, X } from 'lucide-vue-next';
 import { reactive, watch } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
@@ -13,6 +14,7 @@ const emit = defineEmits<{
 }>();
 
 const route = useRoute();
+const supportStore = useSupportStore();
 
 const findBestMatchingChildHref = (hrefs: string[], currentPath: string): string | null => {
     return (
@@ -116,6 +118,12 @@ watch(
                         >
                             <component :is="group.icon" class="h-5 w-5 shrink-0" aria-hidden="true" />
                             <span class="min-w-0 flex-1">{{ group.label }}</span>
+                            <span
+                                v-if="group.key === 'support' && supportStore.adminUnread > 0"
+                                class="inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-black tabular-nums text-white"
+                            >
+                                {{ supportStore.adminUnread > 99 ? '99+' : supportStore.adminUnread }}
+                            </span>
                         </RouterLink>
 
                         <div v-else>

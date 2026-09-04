@@ -10,6 +10,7 @@ it('shows the required traffic fine dashboard navigation', function () {
         ->toContain("label: 'Lịch sử tra cứu'")
         ->toContain("label: 'Xe của tôi'")
         ->toContain("label: 'Theo dõi biển số'")
+        ->toContain("label: 'Gói dịch vụ'")
         ->toContain("label: 'API'")
         ->toContain("label: 'Lượt dùng API'")
         ->toContain("label: 'Nạp tiền'")
@@ -17,8 +18,6 @@ it('shows the required traffic fine dashboard navigation', function () {
         ->toContain("label: 'Tài khoản'")
         ->toContain('fixed inset-y-0 left-0')
         ->toContain('min-h-0 flex-1 overflow-y-auto');
-
-    expect($sidebar)->not->toContain("label: 'Gói dịch vụ'");
 
     $layout = file_get_contents(dirname(__DIR__, 2).'/resources/js/layouts/ClientLayout.vue');
 

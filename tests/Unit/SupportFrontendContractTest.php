@@ -5,6 +5,11 @@ test('support frontend keeps realtime and scroll behavior local', function () {
     $store = file_get_contents($root.'/stores/support.store.ts');
     $clientPage = file_get_contents($root.'/pages/client/support/index.vue');
     $adminPage = file_get_contents($root.'/pages/admin/support/index.vue');
+    $floatingButton = file_get_contents($root.'/components/support/FloatingSupportButton.vue');
+    $clientSidebar = file_get_contents($root.'/layouts/client/Sidebar.vue');
+    $adminNavigation = file_get_contents($root.'/layouts/admin/sidebar/navigation.ts');
+    $adminSidebar = file_get_contents($root.'/layouts/admin/sidebar/index.vue');
+    $composer = file_get_contents(dirname(__DIR__, 2).'/composer.json');
 
     expect($store)
         ->toContain("stopListening('.support.message.created', messageCreatedListener)")
@@ -25,4 +30,16 @@ test('support frontend keeps realtime and scroll behavior local', function () {
         ->toContain("status = 'failed'")
         ->toContain('showNewMessageButton.value = true')
         ->not->toContain('setInterval', 'window.location.reload', 'v-html');
+
+    expect($floatingButton)
+        ->toContain('to="/dashboard/support"')
+        ->and($clientSidebar)
+        ->toContain("href: '/dashboard/support'")
+        ->toContain('supportStore.userUnread')
+        ->and($adminNavigation)
+        ->toContain("href: '/admin/support'")
+        ->and($adminSidebar)
+        ->toContain('supportStore.adminUnread')
+        ->and($composer)
+        ->toContain('php artisan reverb:start');
 });
