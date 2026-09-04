@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import Breadcrumb from '@/components/MasterLayouts/Breadcrumb/index.vue';
 import Editor from '@/components/shared/Editor/index.vue';
+import ImageUploadModal from '@/components/shared/ImageUploadModal/index.vue';
 import { adminSeoService } from '@/services/admin-seo.service';
 import type { AdminSeoPostItem, AdminSeoPostPayload, SeoRobotsValue } from '@/types/admin-seo.type';
 import { uploadEditorImages } from '@/utils/editor-image-upload';
 import { handleErrorResponse, handleSuccessResponse } from '@/utils/response';
-import { CheckCircle2, ExternalLink, Save, Send, XCircle } from 'lucide-vue-next';
+import { CheckCircle2, ExternalLink, ImageUp, Save, Send, XCircle } from 'lucide-vue-next';
 import { computed, onMounted, reactive, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
@@ -18,6 +19,7 @@ const post = ref<AdminSeoPostItem | null>(null);
 const categories = ref<Array<{ id: number; name: string }>>([]);
 const tagsInput = ref('');
 const rejectionReason = ref('');
+const imageUploadField = ref<'thumbnail' | 'og_image' | null>(null);
 const editingId = computed(() => (route.params.seo_post_id ? Number(route.params.seo_post_id) : null));
 
 const form = reactive<AdminSeoPostPayload>({
@@ -49,6 +51,8 @@ const canApprove = computed(() => ['draft', 'pending_review', 'rejected'].includ
 const canReject = computed(() => post.value !== null && post.value.status !== 'published' && post.value.status !== 'rejected');
 const canPublish = computed(() => post.value?.status === 'approved');
 const canSaveDraft = computed(() => post.value !== null && post.value.status !== 'published');
+const imageUploadTitle = computed(() => (imageUploadField.value === 'og_image' ? 'Thay đổi ảnh Open Graph' : 'Thay đổi ảnh thumbnail'));
+const imageUploadUrl = computed(() => (imageUploadField.value ? form[imageUploadField.value] : null));
 
 const applyPost = (item: AdminSeoPostItem): void => {
     post.value = item;
@@ -148,6 +152,22 @@ const runAction = async (action: 'draft' | 'approve' | 'reject' | 'publish'): Pr
 
 const formatDate = (value: string | null | undefined): string => (value ? new Date(value).toLocaleString('vi-VN') : '—');
 
+const openImageUpload = (field: 'thumbnail' | 'og_image'): void => {
+    imageUploadField.value = field;
+};
+
+const closeImageUpload = (): void => {
+    imageUploadField.value = null;
+};
+
+const handleImageUploaded = (url: string): void => {
+    if (imageUploadField.value) {
+        form[imageUploadField.value] = url;
+    }
+
+    closeImageUpload();
+};
+
 onMounted(async () => {
     try {
         loading.value = true;
@@ -204,7 +224,11 @@ onMounted(async () => {
                     <div class="grid gap-4 md:grid-cols-2">
                         <label class="md:col-span-2"
                             ><span class="text-sm font-medium text-slate-700">Tiêu đề</span
-                            ><input v-model="form.title" required type="text" class="mt-2 min-h-11 w-full rounded-[10px] border-slate-200 text-sm"
+                            ><input
+                                v-model="form.title"
+                                required
+                                type="text"
+                                class="mt-2 min-h-11 w-full rounded-[10px] border border-slate-300 text-sm"
                         /></label>
                         <label
                             ><span class="text-sm font-medium text-slate-700">Slug</span
@@ -212,29 +236,50 @@ onMounted(async () => {
                                 v-model="form.slug"
                                 required
                                 type="text"
-                                class="mt-2 min-h-11 w-full rounded-[10px] border-slate-200 font-mono text-sm"
+                                class="mt-2 min-h-11 w-full rounded-[10px] border border-slate-300 font-mono text-sm"
                         /></label>
                         <label
                             ><span class="text-sm font-medium text-slate-700">Danh mục chính</span
-                            ><select v-model="form.seo_category_id" class="mt-2 min-h-11 w-full rounded-[10px] border-slate-200 text-sm">
+                            ><select v-model="form.seo_category_id" class="mt-2 min-h-11 w-full rounded-[10px] border border-slate-300 text-sm">
                                 <option :value="null">Không gắn danh mục</option>
                                 <option v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}</option>
                             </select></label
                         >
                         <label class="md:col-span-2"
                             ><span class="text-sm font-medium text-slate-700">Excerpt</span
-                            ><textarea v-model="form.excerpt" rows="3" class="mt-2 w-full rounded-[10px] border-slate-200 text-sm" />
+                            ><textarea v-model="form.excerpt" rows="3" class="mt-2 w-full rounded-[10px] border border-slate-300 text-sm" />
                         </label>
-                        <label class="md:col-span-2"
-                            ><span class="text-sm font-medium text-slate-700">Thumbnail URL</span
-                            ><input v-model="form.thumbnail" type="url" class="mt-2 min-h-11 w-full rounded-[10px] border-slate-200 text-sm"
-                        /></label>
-                        <img
-                            v-if="form.thumbnail"
-                            :src="form.thumbnail"
-                            :alt="form.cover_alt || form.title"
-                            class="aspect-[16/7] w-full rounded-xl border border-slate-200 object-cover md:col-span-2"
-                        />
+                        <div class="grid gap-3 md:col-span-2">
+                            <label>
+                                <span class="text-sm font-medium text-slate-700">Thumbnail URL</span>
+                                <div class="mt-2 flex flex-col gap-2 sm:flex-row">
+                                    <input
+                                        v-model="form.thumbnail"
+                                        type="url"
+                                        class="min-h-11 min-w-0 flex-1 rounded-[10px] border border-slate-300 text-sm"
+                                        placeholder="https://... hoặc tải ảnh từ máy"
+                                    />
+                                    <button
+                                        type="button"
+                                        class="app-focus inline-flex min-h-11 items-center justify-center gap-2 rounded-[10px] border border-violet-200 bg-violet-50 px-4 text-sm font-bold text-violet-700 hover:bg-violet-100"
+                                        @click="openImageUpload('thumbnail')"
+                                    >
+                                        <ImageUp class="h-4 w-4" />
+                                        {{ form.thumbnail ? 'Thay đổi ảnh' : 'Tải ảnh' }}
+                                    </button>
+                                </div>
+                            </label>
+                            <div v-if="form.thumbnail" class="relative overflow-hidden rounded-xl border border-slate-300 bg-slate-50">
+                                <img :src="form.thumbnail" :alt="form.cover_alt || form.title" class="aspect-[16/7] w-full object-contain" />
+                                <button
+                                    type="button"
+                                    class="app-focus absolute bottom-3 right-3 inline-flex min-h-10 items-center gap-2 rounded-lg bg-slate-950/80 px-3 text-xs font-bold text-white backdrop-blur-sm hover:bg-slate-950"
+                                    @click="openImageUpload('thumbnail')"
+                                >
+                                    <ImageUp class="h-4 w-4" /> Thay đổi ảnh
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </section>
 
@@ -248,42 +293,75 @@ onMounted(async () => {
                     <div class="mt-4 grid gap-4 md:grid-cols-2">
                         <label
                             ><span class="text-sm font-medium text-slate-700">Primary keyword</span
-                            ><input v-model="form.focus_keyword" type="text" class="mt-2 min-h-11 w-full rounded-[10px] border-slate-200 text-sm"
+                            ><input
+                                v-model="form.focus_keyword"
+                                type="text"
+                                class="mt-2 min-h-11 w-full rounded-[10px] border border-slate-300 text-sm"
                         /></label>
                         <label
                             ><span class="text-sm font-medium text-slate-700">Tags, cách nhau bằng dấu phẩy</span
-                            ><input v-model="tagsInput" type="text" class="mt-2 min-h-11 w-full rounded-[10px] border-slate-200 text-sm"
+                            ><input v-model="tagsInput" type="text" class="mt-2 min-h-11 w-full rounded-[10px] border border-slate-300 text-sm"
                         /></label>
                         <label class="md:col-span-2"
                             ><span class="text-sm font-medium text-slate-700">Meta title</span
-                            ><input v-model="form.seo_title" type="text" class="mt-2 min-h-11 w-full rounded-[10px] border-slate-200 text-sm"
+                            ><input v-model="form.seo_title" type="text" class="mt-2 min-h-11 w-full rounded-[10px] border border-slate-300 text-sm"
                         /></label>
                         <label class="md:col-span-2"
                             ><span class="text-sm font-medium text-slate-700">Meta description</span
-                            ><textarea v-model="form.seo_description" rows="3" class="mt-2 w-full rounded-[10px] border-slate-200 text-sm" />
+                            ><textarea v-model="form.seo_description" rows="3" class="mt-2 w-full rounded-[10px] border border-slate-300 text-sm" />
                         </label>
                         <label class="md:col-span-2"
                             ><span class="text-sm font-medium text-slate-700">Canonical URL</span
-                            ><input v-model="form.canonical_url" type="url" class="mt-2 min-h-11 w-full rounded-[10px] border-slate-200 text-sm"
+                            ><input
+                                v-model="form.canonical_url"
+                                type="url"
+                                class="mt-2 min-h-11 w-full rounded-[10px] border border-slate-300 text-sm"
                         /></label>
                         <label
                             ><span class="text-sm font-medium text-slate-700">Index status</span
-                            ><select v-model="form.index_status" class="mt-2 min-h-11 w-full rounded-[10px] border-slate-200 text-sm">
+                            ><select v-model="form.index_status" class="mt-2 min-h-11 w-full rounded-[10px] border border-slate-300 text-sm">
                                 <option value="index">index</option>
                                 <option value="noindex">noindex</option>
                             </select></label
                         >
                         <label
                             ><span class="text-sm font-medium text-slate-700">Robots</span
-                            ><select v-model="form.robots" class="mt-2 min-h-11 w-full rounded-[10px] border-slate-200 text-sm">
+                            ><select v-model="form.robots" class="mt-2 min-h-11 w-full rounded-[10px] border border-slate-300 text-sm">
                                 <option value="index,follow">index,follow</option>
                                 <option value="noindex,follow">noindex,follow</option>
                             </select></label
                         >
                         <label class="md:col-span-2"
                             ><span class="text-sm font-medium text-slate-700">Alt text ảnh đại diện</span
-                            ><input v-model="form.cover_alt" type="text" class="mt-2 min-h-11 w-full rounded-[10px] border-slate-200 text-sm"
+                            ><input v-model="form.cover_alt" type="text" class="mt-2 min-h-11 w-full rounded-[10px] border border-slate-300 text-sm"
                         /></label>
+                        <div class="grid gap-3 md:col-span-2">
+                            <label>
+                                <span class="text-sm font-medium text-slate-700">Ảnh Open Graph / background chia sẻ</span>
+                                <div class="mt-2 flex flex-col gap-2 sm:flex-row">
+                                    <input
+                                        v-model="form.og_image"
+                                        type="url"
+                                        class="min-h-11 min-w-0 flex-1 rounded-[10px] border border-slate-300 text-sm"
+                                        placeholder="Ảnh hiển thị khi chia sẻ bài viết"
+                                    />
+                                    <button
+                                        type="button"
+                                        class="app-focus inline-flex min-h-11 items-center justify-center gap-2 rounded-[10px] border border-violet-200 bg-violet-50 px-4 text-sm font-bold text-violet-700 hover:bg-violet-100"
+                                        @click="openImageUpload('og_image')"
+                                    >
+                                        <ImageUp class="h-4 w-4" />
+                                        {{ form.og_image ? 'Thay đổi ảnh' : 'Tải ảnh' }}
+                                    </button>
+                                </div>
+                            </label>
+                            <img
+                                v-if="form.og_image"
+                                :src="form.og_image"
+                                alt="Ảnh Open Graph xem trước"
+                                class="aspect-[1.91/1] w-full rounded-xl border border-slate-300 bg-slate-50 object-contain"
+                            />
+                        </div>
                     </div>
                 </section>
             </main>
@@ -327,7 +405,7 @@ onMounted(async () => {
                             ><textarea
                                 v-model="rejectionReason"
                                 rows="3"
-                                class="mt-2 w-full rounded-[10px] border-slate-200 text-sm"
+                                class="mt-2 w-full rounded-[10px] border border-slate-300 text-sm"
                                 placeholder="Phản hồi để n8n có thể sửa bài"
                             />
                         </label>
@@ -380,5 +458,14 @@ onMounted(async () => {
                 </section>
             </aside>
         </div>
+
+        <ImageUploadModal
+            :model-value="imageUploadField !== null"
+            :title="imageUploadTitle"
+            :current-url="imageUploadUrl"
+            :name-image="`seo-${imageUploadField ?? 'image'}-${form.slug || 'article'}`"
+            @update:model-value="($event) => !$event && closeImageUpload()"
+            @uploaded="handleImageUploaded"
+        />
     </div>
 </template>
