@@ -100,7 +100,7 @@ onMounted(fetchPosts);
                 <label class="md:col-span-2 xl:col-span-2">
                     <span class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Từ khóa</span>
                     <span
-                        class="flex min-h-11 items-center gap-2 rounded-[10px] border border-slate-200 bg-slate-50 px-3 text-sm text-slate-500 focus-within:border-violet-300 focus-within:ring-2 focus-within:ring-violet-100"
+                        class="flex min-h-11 items-center gap-2 rounded-[10px] border border-slate-300 bg-white px-3 text-sm text-slate-500 transition focus-within:border-violet-400 focus-within:ring-2 focus-within:ring-violet-100"
                     >
                         <Search class="h-4 w-4" />
                         <input
@@ -115,7 +115,11 @@ onMounted(fetchPosts);
 
                 <label>
                     <span class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Trạng thái</span>
-                    <select v-model="filters.status" class="min-h-11 w-full rounded-[10px] border-slate-200 text-sm" @change="fetchPosts">
+                    <select
+                        v-model="filters.status"
+                        class="min-h-11 w-full rounded-[10px] border border-slate-300 bg-white text-sm transition focus:border-violet-400 focus:ring-violet-100"
+                        @change="fetchPosts"
+                    >
                         <option value="">Tất cả</option>
                         <option value="pending_review">Chờ duyệt</option>
                         <option value="draft">Bản nháp</option>
@@ -127,7 +131,11 @@ onMounted(fetchPosts);
 
                 <label>
                     <span class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Danh mục</span>
-                    <select v-model="filters.category_id" class="min-h-11 w-full rounded-[10px] border-slate-200 text-sm" @change="fetchPosts">
+                    <select
+                        v-model="filters.category_id"
+                        class="min-h-11 w-full rounded-[10px] border border-slate-300 bg-white text-sm transition focus:border-violet-400 focus:ring-violet-100"
+                        @change="fetchPosts"
+                    >
                         <option value="">Tất cả</option>
                         <option v-for="category in categories" :key="category.id" :value="String(category.id)">{{ category.name }}</option>
                     </select>
@@ -135,7 +143,11 @@ onMounted(fetchPosts);
 
                 <label>
                     <span class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Nguồn tạo</span>
-                    <select v-model="filters.created_by_type" class="min-h-11 w-full rounded-[10px] border-slate-200 text-sm" @change="fetchPosts">
+                    <select
+                        v-model="filters.created_by_type"
+                        class="min-h-11 w-full rounded-[10px] border border-slate-300 bg-white text-sm transition focus:border-violet-400 focus:ring-violet-100"
+                        @change="fetchPosts"
+                    >
                         <option value="">Tất cả</option>
                         <option value="n8n">N8N</option>
                         <option value="admin">Manual</option>
@@ -144,7 +156,12 @@ onMounted(fetchPosts);
 
                 <label>
                     <span class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Ngày gửi</span>
-                    <input v-model="filters.date" type="date" class="min-h-11 w-full rounded-[10px] border-slate-200 text-sm" @change="fetchPosts" />
+                    <input
+                        v-model="filters.date"
+                        type="date"
+                        class="min-h-11 w-full rounded-[10px] border border-slate-300 bg-white text-sm transition focus:border-violet-400 focus:ring-violet-100"
+                        @change="fetchPosts"
+                    />
                 </label>
             </div>
 
@@ -154,7 +171,7 @@ onMounted(fetchPosts);
                     <input
                         v-model="filters.source"
                         type="text"
-                        class="min-h-11 w-full rounded-[10px] border-slate-200 text-sm"
+                        class="min-h-11 w-full rounded-[10px] border border-slate-300 bg-white text-sm transition focus:border-violet-400 focus:ring-violet-100"
                         placeholder="official, csgt.vn..."
                         @keyup.enter="fetchPosts"
                     />
