@@ -164,6 +164,20 @@ export type AdminLookupLog = {
     created_at: string;
 };
 
+export type AdminLookupLogResponse = {
+    logs: Paginated<AdminLookupLog>;
+    summary: {
+        total: number;
+        completed: number;
+        provider_errors: number;
+        affected_users: number;
+        anonymous_requests: number;
+        affected_anonymous_ips: number;
+        first_failure_at: string | null;
+        last_failure_at: string | null;
+    };
+};
+
 export type AdminProviderStatus = {
     name: string;
     enabled: boolean;
@@ -200,9 +214,9 @@ export const adminTrafficFineService = {
         const response = await api.get('/api/admin-api/traffic-fines/results', { params });
         return response.data.data as AdminCachedPlateResponse;
     },
-    async logs(search = ''): Promise<Paginated<AdminLookupLog>> {
-        const response = await api.get('/api/admin-api/traffic-fines/logs', { params: { search, per_page: 50 } });
-        return response.data.data as Paginated<AdminLookupLog>;
+    async logs(params: Record<string, unknown> = {}): Promise<AdminLookupLogResponse> {
+        const response = await api.get('/api/admin-api/traffic-fines/logs', { params });
+        return response.data.data as AdminLookupLogResponse;
     },
     async provider(): Promise<AdminProviderStatus> {
         const response = await api.get('/api/admin-api/traffic-fines/provider');

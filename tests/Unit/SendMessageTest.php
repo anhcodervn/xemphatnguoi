@@ -26,6 +26,7 @@ it('silently skips a Discord channel without a configured webhook', function () 
 });
 
 it('sends to Discord when the channel webhook is configured', function () {
+    app()->detectEnvironment(fn (): string => 'production');
     Http::preventStrayRequests();
     Http::fake([
         'https://discord.com/api/webhooks/test' => Http::response([], 204),
@@ -45,6 +46,7 @@ it('still rejects an unsupported Discord channel type', function () {
 });
 
 it('reports a configured Discord webhook failure without breaking the caller', function () {
+    app()->detectEnvironment(fn (): string => 'production');
     Exceptions::fake();
     Http::preventStrayRequests();
     Http::fake([
@@ -61,6 +63,7 @@ it('reports a configured Discord webhook failure without breaking the caller', f
 });
 
 it('sends domain reports to their configured webhook channels', function (string $method, string $channel, string $prefix) {
+    app()->detectEnvironment(fn (): string => 'production');
     $url = "https://discord.com/api/webhooks/{$channel}";
     Http::preventStrayRequests();
     Http::fake([$url => Http::response([], 204)]);
@@ -79,3 +82,12 @@ it('sends domain reports to their configured webhook channels', function (string
     'feedback' => ['sendFeedbackReport', 'support', 'FEEDBACK'],
     'support' => ['sendSupportReport', 'support', 'SUPPORT'],
 ]);
+
+it('never falls back to a production room outside production', function () {
+    Http::preventStrayRequests();
+    config()->set('services.discord.channels.ops', 'https://discord.com/api/webhooks/production-ops');
+
+    SendMessage::sendProviderReport('Provider failed locally');
+
+    Http::assertNothingSent();
+});

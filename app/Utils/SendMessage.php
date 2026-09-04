@@ -77,7 +77,7 @@ class SendMessage
 
         $channels = config('services.discord.channels', []);
 
-        if (! app()->isProduction() && $type !== 'staging' && filled(Arr::get($channels, 'staging'))) {
+        if (! app()->isProduction() && $type !== 'staging') {
             $channelKey = 'staging';
         }
 

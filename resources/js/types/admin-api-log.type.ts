@@ -5,7 +5,7 @@ export type AdminApiLogItem = {
     ip: string | null;
     request_data: Record<string, unknown> | null;
     service_response_data: Record<string, unknown> | null;
-    response_data: Record<string, unknown> | null;
+    response_data: Record<string, unknown> | unknown[] | string | null;
     status_code: number | null;
     response_time_ms: number | null;
     unit_price: string;
@@ -39,6 +39,12 @@ export type AdminApiLogListResponse = {
         success: number;
         client_error: number;
         server_error: number;
+        service_unavailable: number;
+        affected_users: number;
+        affected_api_keys: number;
+        average_response_time_ms: number | null;
+        first_failure_at: string | null;
+        last_failure_at: string | null;
         charged: number;
         revenue: string;
     };

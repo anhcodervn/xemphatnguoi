@@ -3,6 +3,7 @@
 namespace App\Features\TrafficFine\Controllers;
 
 use App\Features\TrafficFine\Requests\AdminCachedPlateIndexRequest;
+use App\Features\TrafficFine\Requests\AdminTrafficFineLookupLogRequest;
 use App\Features\TrafficFine\Requests\AdminTrafficFineReportRequest;
 use App\Features\TrafficFine\Requests\UpdateApiBillingSettingRequest;
 use App\Features\TrafficFine\Services\ApiLookupBillingService;
@@ -14,7 +15,6 @@ use App\Http\Controllers\Controller;
 use App\Models\TrafficFineLookupLog;
 use App\Support\SettingStore;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 class TrafficFineAdminController extends Controller
 {
@@ -48,23 +48,51 @@ class TrafficFineAdminController extends Controller
         ]);
     }
 
-    public function logs(Request $request): JsonResponse
+    public function logs(AdminTrafficFineLookupLogRequest $request): JsonResponse
     {
+        $validated = $request->validated();
         $search = trim($request->string('search')->toString());
 
-        $logs = TrafficFineLookupLog::query()
+        $query = TrafficFineLookupLog::query()
             ->with('user:id,username,email')
-            ->when($search !== '', fn ($query) => $query->where('plate', 'like', "%{$search}%"))
+            ->when($search !== '', function ($query) use ($search): void {
+                $query->where(function ($inner) use ($search): void {
+                    $inner->where('plate', 'like', "%{$search}%")
+                        ->orWhere('ip', 'like', "%{$search}%")
+                        ->orWhereHas('user', fn ($userQuery) => $userQuery
+                            ->where('username', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%"));
+                });
+            })
             ->when(
                 $request->filled('status'),
                 fn ($query) => $query->where('status', $request->string('status')->toString()),
             )
+            ->when($request->filled('from'), fn ($query) => $query->whereDate('created_at', '>=', $validated['from']))
+            ->when($request->filled('to'), fn ($query) => $query->whereDate('created_at', '<=', $validated['to']));
+
+        $logs = (clone $query)
             ->latest('created_at')
             ->paginate(min(max($request->integer('per_page', 20), 1), 100));
 
+        $summaryQuery = clone $query;
+        $failureQuery = (clone $query)->where('status', 'provider_error');
+
         return response()->json([
             'status' => true,
-            'data' => $logs,
+            'data' => [
+                'logs' => $logs,
+                'summary' => [
+                    'total' => (clone $summaryQuery)->count(),
+                    'completed' => (clone $summaryQuery)->whereIn('status', ['success', 'no_violation'])->count(),
+                    'provider_errors' => (clone $failureQuery)->count(),
+                    'affected_users' => (clone $failureQuery)->whereNotNull('user_id')->distinct()->count('user_id'),
+                    'anonymous_requests' => (clone $failureQuery)->whereNull('user_id')->count(),
+                    'affected_anonymous_ips' => (clone $failureQuery)->whereNull('user_id')->whereNotNull('ip')->distinct()->count('ip'),
+                    'first_failure_at' => (clone $failureQuery)->oldest('created_at')->value('created_at'),
+                    'last_failure_at' => (clone $failureQuery)->latest('created_at')->value('created_at'),
+                ],
+            ],
         ]);
     }
 
