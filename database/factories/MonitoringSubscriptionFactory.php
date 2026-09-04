@@ -28,6 +28,8 @@ class MonitoringSubscriptionFactory extends Factory
             'total_price' => 100000,
             'duration_days' => 30,
             'status' => 'active',
+            'auto_renew' => false,
+            'renewal_count' => 0,
             'started_at' => now(),
             'expires_at' => now()->addDays(30),
         ];

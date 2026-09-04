@@ -23,3 +23,8 @@ Schedule::command('traffic-fines:dispatch-monitoring-checks')
     ->everyMinute()
     ->withoutOverlapping()
     ->onOneServer();
+
+Schedule::command('monitoring-subscriptions:renew')
+    ->everyMinute()
+    ->withoutOverlapping()
+    ->onOneServer();

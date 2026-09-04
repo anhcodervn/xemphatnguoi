@@ -20,8 +20,12 @@ export type MonitoringSubscription = {
     enabled_vehicle_count: number;
     remaining_vehicle_count: number;
     total_price: string;
+    is_active: boolean;
+    auto_renew: boolean;
+    renewal_count: number;
     started_at: string;
     expires_at: string;
+    last_renewed_at: string | null;
 };
 
 export type MonitoringPlanPayload = {

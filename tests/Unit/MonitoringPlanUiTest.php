@@ -57,3 +57,29 @@ it('uses SweetAlert2 instead of native alerts for package actions', function ():
         ->toContain('confirmation.isConfirmed')
         ->not->toContain('window.confirm');
 });
+
+it('lets clients manage automatic package renewal', function (): void {
+    $resourceRoot = dirname(__DIR__, 2).'/resources';
+    $clientPage = file_get_contents($resourceRoot.'/js/pages/client/packages/index.vue');
+    $service = file_get_contents($resourceRoot.'/js/services/client-monitoring-plan.service.ts');
+
+    expect($clientPage)
+        ->toContain('clientMonitoringPlanService.updateAutoRenew')
+        ->toContain(':aria-checked="subscription.auto_renew"')
+        ->toContain('Đang chờ tự gia hạn')
+        ->and($service)
+        ->toContain('/api/client/monitoring-plans/subscription/auto-renew');
+});
+
+it('offers only packages with a higher vehicle limit as upgrades', function (): void {
+    $resourceRoot = dirname(__DIR__, 2).'/resources';
+    $clientPage = file_get_contents($resourceRoot.'/js/pages/client/packages/index.vue');
+    $service = file_get_contents($resourceRoot.'/js/services/client-monitoring-plan.service.ts');
+
+    expect($clientPage)
+        ->toContain('vehicleLimitFor(plan) > Number(subscription.value?.vehicle_limit ?? 0)')
+        ->toContain('Nâng cấp lên ${vehicleLimitFor(plan)} xe')
+        ->toContain('bắt đầu chu kỳ mới ngay sau khi nâng cấp')
+        ->and($service)
+        ->toContain("api.post('/api/client/monitoring-plans/upgrade'");
+});

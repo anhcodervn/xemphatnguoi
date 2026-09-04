@@ -19,4 +19,19 @@ export const clientMonitoringPlanService = {
         });
         return response.data.data.subscription as MonitoringSubscription;
     },
+
+    async upgrade(planId: number, vehicleCount?: number): Promise<MonitoringSubscription> {
+        const response = await api.post('/api/client/monitoring-plans/upgrade', {
+            plan_id: planId,
+            ...(vehicleCount === undefined ? {} : { vehicle_count: vehicleCount }),
+        });
+        return response.data.data.subscription as MonitoringSubscription;
+    },
+
+    async updateAutoRenew(autoRenew: boolean): Promise<MonitoringSubscription | null> {
+        const response = await api.patch('/api/client/monitoring-plans/subscription/auto-renew', {
+            auto_renew: autoRenew,
+        });
+        return response.data.data.subscription as MonitoringSubscription | null;
+    },
 };

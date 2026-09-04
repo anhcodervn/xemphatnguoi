@@ -5,6 +5,7 @@ use App\Models\MonitoringSubscription;
 use App\Models\User;
 use App\Models\UserVehicle;
 use App\Models\Wallet;
+use App\Models\WalletTransaction;
 use Laravel\Sanctum\Sanctum;
 
 function monitoringPlanPayload(array $overrides = []): array
@@ -132,6 +133,104 @@ it('uses fixed plan limits and prevents overlapping subscriptions or double debi
         ->and($user->wallets()->firstOrFail()->refresh()->balance)->toBe('400000.00');
 });
 
+it('allows upgrading to a higher vehicle limit and transfers automatic renewal', function (): void {
+    $user = User::factory()->create();
+    walletForMonitoring($user, 1000000);
+    $currentPlan = MonitoringPlan::factory()->create(['vehicle_limit' => 5, 'price' => 100000]);
+    $higherPlan = MonitoringPlan::factory()->create(['vehicle_limit' => 10, 'price' => 250000]);
+    $currentSubscription = MonitoringSubscription::factory()->for($user)->for($currentPlan, 'plan')->create([
+        'vehicle_limit' => 5,
+        'auto_renew' => true,
+    ]);
+    Sanctum::actingAs($user);
+
+    $this->postJson('/api/client/monitoring-plans/upgrade', ['plan_id' => $higherPlan->id])
+        ->assertCreated()
+        ->assertJsonPath('data.subscription.vehicle_limit', 10)
+        ->assertJsonPath('data.subscription.auto_renew', true)
+        ->assertJsonPath('data.payment.amount', '250000.00');
+
+    $this->postJson('/api/client/monitoring-plans/upgrade', ['plan_id' => $higherPlan->id])
+        ->assertUnprocessable();
+
+    $upgradedSubscription = MonitoringSubscription::query()
+        ->where('upgraded_from_subscription_id', $currentSubscription->id)
+        ->firstOrFail();
+
+    expect($currentSubscription->refresh()->status)->toBe(MonitoringSubscription::STATUS_UPGRADED)
+        ->and($currentSubscription->auto_renew)->toBeFalse()
+        ->and($upgradedSubscription->status)->toBe(MonitoringSubscription::STATUS_ACTIVE)
+        ->and($upgradedSubscription->auto_renew)->toBeTrue()
+        ->and($user->wallets()->firstOrFail()->refresh()->balance)->toBe('750000.00')
+        ->and(WalletTransaction::query()->where('reference_type', 'monitoring_subscription_upgrade')->count())->toBe(1);
+});
+
+it('rejects an upgrade with an equal or lower vehicle limit regardless of price', function (): void {
+    $user = User::factory()->create();
+    walletForMonitoring($user, 1000000);
+    $currentPlan = MonitoringPlan::factory()->create(['vehicle_limit' => 5]);
+    $equalPlan = MonitoringPlan::factory()->create(['vehicle_limit' => 5, 'price' => 900000]);
+    $lowerPlan = MonitoringPlan::factory()->create(['vehicle_limit' => 3, 'price' => 950000]);
+    MonitoringSubscription::factory()->for($user)->for($currentPlan, 'plan')->create(['vehicle_limit' => 5]);
+    Sanctum::actingAs($user);
+
+    $this->postJson('/api/client/monitoring-plans/upgrade', ['plan_id' => $equalPlan->id])->assertUnprocessable();
+    $this->postJson('/api/client/monitoring-plans/upgrade', ['plan_id' => $lowerPlan->id])->assertUnprocessable();
+
+    expect($user->monitoringSubscriptions()->count())->toBe(1)
+        ->and($user->wallets()->firstOrFail()->refresh()->balance)->toBe('1000000.00');
+});
+
+it('allows upgrading a custom plan by choosing a higher vehicle quantity', function (): void {
+    $user = User::factory()->create();
+    walletForMonitoring($user, 1000000);
+    $currentPlan = MonitoringPlan::factory()->create(['vehicle_limit' => 20]);
+    $customPlan = MonitoringPlan::factory()->create([
+        'is_custom' => true,
+        'vehicle_limit' => null,
+        'price' => null,
+        'unit_price' => 10000,
+        'min_vehicle_count' => 20,
+    ]);
+    MonitoringSubscription::factory()->for($user)->for($currentPlan, 'plan')->create(['vehicle_limit' => 20]);
+    Sanctum::actingAs($user);
+
+    $this->postJson('/api/client/monitoring-plans/upgrade', [
+        'plan_id' => $customPlan->id,
+        'vehicle_count' => 20,
+    ])->assertUnprocessable();
+
+    $this->postJson('/api/client/monitoring-plans/upgrade', [
+        'plan_id' => $customPlan->id,
+        'vehicle_count' => 21,
+        'total_price' => 1,
+    ])->assertCreated()
+        ->assertJsonPath('data.subscription.vehicle_limit', 21)
+        ->assertJsonPath('data.payment.amount', '210000.00');
+
+    expect($user->wallets()->firstOrFail()->refresh()->balance)->toBe('790000.00');
+});
+
+it('rolls back an upgrade when the wallet balance is insufficient', function (): void {
+    $user = User::factory()->create();
+    walletForMonitoring($user, 1000);
+    $currentPlan = MonitoringPlan::factory()->create(['vehicle_limit' => 5]);
+    $higherPlan = MonitoringPlan::factory()->create(['vehicle_limit' => 10, 'price' => 250000]);
+    $currentSubscription = MonitoringSubscription::factory()->for($user)->for($currentPlan, 'plan')->create([
+        'vehicle_limit' => 5,
+        'auto_renew' => true,
+    ]);
+    Sanctum::actingAs($user);
+
+    $this->postJson('/api/client/monitoring-plans/upgrade', ['plan_id' => $higherPlan->id])
+        ->assertUnprocessable();
+
+    expect($currentSubscription->refresh()->status)->toBe(MonitoringSubscription::STATUS_ACTIVE)
+        ->and($currentSubscription->auto_renew)->toBeTrue()
+        ->and($user->monitoringSubscriptions()->count())->toBe(1)
+        ->and($user->wallets()->firstOrFail()->refresh()->balance)->toBe('1000.00');
+});
+
 it('rolls back the subscription when wallet balance is insufficient', function (): void {
     $user = User::factory()->create();
     walletForMonitoring($user, 1000);
@@ -197,4 +296,131 @@ it('does not delete a plan that already has subscription history', function (): 
 
     $this->deleteJson("/api/admin-api/monitoring/plans/{$plan->id}")->assertUnprocessable();
     $this->assertDatabaseHas('monitoring_plans', ['id' => $plan->id]);
+});
+
+it('allows the owner to turn automatic renewal on and off', function (): void {
+    $user = User::factory()->create();
+    $plan = MonitoringPlan::factory()->create();
+    $subscription = MonitoringSubscription::factory()->for($user)->for($plan, 'plan')->create();
+    Sanctum::actingAs($user);
+
+    $this->patchJson('/api/client/monitoring-plans/subscription/auto-renew', ['auto_renew' => true])
+        ->assertOk()
+        ->assertJsonPath('data.subscription.id', $subscription->id)
+        ->assertJsonPath('data.subscription.auto_renew', true)
+        ->assertJsonPath('data.subscription.is_active', true);
+
+    $this->patchJson('/api/client/monitoring-plans/subscription/auto-renew', ['auto_renew' => false])
+        ->assertOk()
+        ->assertJsonPath('data.subscription.auto_renew', false);
+
+    $this->patchJson('/api/client/monitoring-plans/subscription/auto-renew', ['auto_renew' => 'invalid'])
+        ->assertUnprocessable();
+});
+
+it('does not allow automatic renewal to be enabled for an inactive plan', function (): void {
+    $user = User::factory()->create();
+    $plan = MonitoringPlan::factory()->create(['is_active' => false]);
+    MonitoringSubscription::factory()->for($user)->for($plan, 'plan')->create();
+    Sanctum::actingAs($user);
+
+    $this->patchJson('/api/client/monitoring-plans/subscription/auto-renew', ['auto_renew' => true])
+        ->assertUnprocessable();
+
+    expect($user->monitoringSubscriptions()->firstOrFail()->auto_renew)->toBeFalse();
+});
+
+it('keeps an expired renewal visible so the user can turn it off', function (): void {
+    $user = User::factory()->create();
+    $plan = MonitoringPlan::factory()->create();
+    $subscription = MonitoringSubscription::factory()->for($user)->for($plan, 'plan')->create([
+        'auto_renew' => true,
+        'started_at' => now()->subDays(31),
+        'expires_at' => now()->subMinute(),
+    ]);
+    Sanctum::actingAs($user);
+
+    $this->getJson('/api/client/monitoring-plans')
+        ->assertOk()
+        ->assertJsonPath('data.subscription.id', $subscription->id)
+        ->assertJsonPath('data.subscription.is_active', false)
+        ->assertJsonPath('data.subscription.auto_renew', true);
+
+    $this->patchJson('/api/client/monitoring-plans/subscription/auto-renew', ['auto_renew' => false])
+        ->assertOk()
+        ->assertJsonPath('data.subscription', null);
+});
+
+it('automatically renews an expired package once and debits the wallet once', function (): void {
+    $user = User::factory()->create();
+    walletForMonitoring($user, 500000);
+    $plan = MonitoringPlan::factory()->create(['price' => 100000]);
+    $subscription = MonitoringSubscription::factory()->for($user)->for($plan, 'plan')->create([
+        'auto_renew' => true,
+        'total_price' => 100000,
+        'started_at' => now()->subDays(31),
+        'expires_at' => now()->subMinute(),
+    ]);
+
+    $this->artisan('monitoring-subscriptions:renew')->assertSuccessful();
+    $this->artisan('monitoring-subscriptions:renew')->assertSuccessful();
+
+    $renewedSubscription = MonitoringSubscription::query()
+        ->where('renewed_from_subscription_id', $subscription->id)
+        ->firstOrFail();
+
+    expect($user->monitoringSubscriptions()->count())->toBe(2)
+        ->and($subscription->refresh()->status)->toBe(MonitoringSubscription::STATUS_RENEWED)
+        ->and($subscription->auto_renew)->toBeFalse()
+        ->and($renewedSubscription->auto_renew)->toBeTrue()
+        ->and($renewedSubscription->renewal_count)->toBe(1)
+        ->and($renewedSubscription->expires_at?->isFuture())->toBeTrue()
+        ->and($user->wallets()->firstOrFail()->refresh()->balance)->toBe('400000.00')
+        ->and(WalletTransaction::query()->where('reference_type', 'monitoring_subscription_renewal')->count())->toBe(1);
+});
+
+it('waits for enough wallet balance before automatically renewing', function (): void {
+    $user = User::factory()->create();
+    $wallet = walletForMonitoring($user, 1000);
+    $plan = MonitoringPlan::factory()->create(['price' => 100000]);
+    $subscription = MonitoringSubscription::factory()->for($user)->for($plan, 'plan')->create([
+        'auto_renew' => true,
+        'total_price' => 100000,
+        'started_at' => now()->subDays(31),
+        'expires_at' => now()->subMinute(),
+    ]);
+
+    $this->artisan('monitoring-subscriptions:renew')->assertSuccessful();
+
+    expect($subscription->refresh()->auto_renew)->toBeTrue()
+        ->and($subscription->status)->toBe(MonitoringSubscription::STATUS_ACTIVE)
+        ->and($user->monitoringSubscriptions()->count())->toBe(1)
+        ->and($wallet->refresh()->balance)->toBe('1000.00');
+
+    $wallet->update(['balance' => 200000]);
+    $this->artisan('monitoring-subscriptions:renew')->assertSuccessful();
+
+    expect($user->monitoringSubscriptions()->count())->toBe(2)
+        ->and($wallet->refresh()->balance)->toBe('100000.00');
+});
+
+it('does not renew when automatic renewal is off or the plan is inactive', function (): void {
+    $user = User::factory()->create();
+    walletForMonitoring($user, 500000);
+    $inactivePlan = MonitoringPlan::factory()->create(['is_active' => false]);
+    MonitoringSubscription::factory()->for($user)->for($inactivePlan, 'plan')->create([
+        'auto_renew' => true,
+        'started_at' => now()->subDays(31),
+        'expires_at' => now()->subMinute(),
+    ]);
+    MonitoringSubscription::factory()->for(User::factory())->create([
+        'auto_renew' => false,
+        'started_at' => now()->subDays(31),
+        'expires_at' => now()->subMinute(),
+    ]);
+
+    $this->artisan('monitoring-subscriptions:renew')->assertSuccessful();
+
+    expect(MonitoringSubscription::query()->whereNotNull('renewed_from_subscription_id')->count())->toBe(0)
+        ->and($user->wallets()->firstOrFail()->refresh()->balance)->toBe('500000.00');
 });
