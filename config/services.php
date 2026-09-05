@@ -57,13 +57,12 @@ return [
             'support' => env('DISCORD_WEBHOOK_SUPPORT')
                 ?: env('DISCORD_WEBHOOK_FEEDBACK')
                 ?: env('DISCORD_WEBHOOK_INFO'),
-            'staging' => env('DISCORD_WEBHOOK_STAGING'),
         ],
         'rooms' => [
             'ops' => [
                 'name' => '#xpn-ops',
                 'env' => 'DISCORD_WEBHOOK_OPS',
-                'receives' => 'Heartbeat production, queue thất bại, lỗi nguồn tra cứu, cảnh báo bảo mật và phục hồi hệ thống.',
+                'receives' => 'Queue thất bại, lỗi nguồn tra cứu, cảnh báo bảo mật và phục hồi hệ thống.',
             ],
             'activity' => [
                 'name' => '#xpn-activity',
@@ -79,11 +78,6 @@ return [
                 'name' => '#xpn-support',
                 'env' => 'DISCORD_WEBHOOK_SUPPORT',
                 'receives' => 'Tin nhắn hỗ trợ mới và góp ý từ biểu mẫu liên hệ.',
-            ],
-            'staging' => [
-                'name' => '#xpn-staging',
-                'env' => 'DISCORD_WEBHOOK_STAGING',
-                'receives' => 'Toàn bộ báo cáo từ local, testing và staging để không lẫn với production.',
             ],
         ],
         'context' => [

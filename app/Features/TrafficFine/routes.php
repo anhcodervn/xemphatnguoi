@@ -46,6 +46,12 @@ Route::prefix('admin-api/traffic-fines')
         Route::get('/results', [TrafficFineAdminController::class, 'results'])->name('results');
         Route::get('/logs', [TrafficFineAdminController::class, 'logs'])->name('logs');
         Route::get('/provider', [TrafficFineAdminController::class, 'provider'])->name('provider');
+        Route::post('/provider', [TrafficFineAdminController::class, 'storeProvider'])->name('provider.store');
+        Route::get('/provider/{provider}/balance', [TrafficFineAdminController::class, 'providerBalance'])
+            ->middleware('throttle:10,1')
+            ->name('provider.balance');
+        Route::patch('/provider/{provider}', [TrafficFineAdminController::class, 'updateProvider'])->name('provider.update');
+        Route::delete('/provider/{provider}', [TrafficFineAdminController::class, 'destroyProvider'])->name('provider.destroy');
         Route::get('/billing', [TrafficFineAdminController::class, 'billing'])->name('billing');
         Route::put('/billing', [TrafficFineAdminController::class, 'updateBilling'])->name('billing.update');
         Route::apiResource('ad-slots', AdSlotController::class);

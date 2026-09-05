@@ -9,7 +9,6 @@ uses(TestCase::class);
 
 beforeEach(function () {
     app()->detectEnvironment(fn (): string => 'local');
-    config()->set('services.discord.channels.staging', '');
 });
 
 afterEach(function () {

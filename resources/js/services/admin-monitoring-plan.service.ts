@@ -1,5 +1,5 @@
 import api from '@/config/axios';
-import type { MonitoringPlan, MonitoringPlanPayload } from '@/types/monitoring-plan.type';
+import type { MonitoringPlan, MonitoringPlanPayload, MonitoringSubscriptionList } from '@/types/monitoring-plan.type';
 
 export const adminMonitoringPlanService = {
     async index(): Promise<MonitoringPlan[]> {
@@ -19,5 +19,16 @@ export const adminMonitoringPlanService = {
 
     async remove(id: number): Promise<void> {
         await api.delete(`/api/admin-api/monitoring/plans/${id}`);
+    },
+
+    async subscriptions(params: {
+        page?: number;
+        per_page?: number;
+        search?: string;
+        status?: string;
+        auto_renew?: boolean;
+    }): Promise<MonitoringSubscriptionList> {
+        const response = await api.get('/api/admin-api/monitoring/subscriptions', { params });
+        return response.data.data as MonitoringSubscriptionList;
     },
 };

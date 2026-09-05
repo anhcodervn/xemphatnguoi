@@ -115,12 +115,12 @@ class TrafficFineLookupService
                         [
                             'plate' => $normalizedPlate,
                             'vehicle_type' => $resolvedVehicleType->value,
+                            'provider' => $sourceName,
                         ],
                         [
                             'status' => $data->status,
                             'violation_count' => $data->violationCount,
                             'response_json' => $data->toArray(),
-                            'provider' => $sourceName,
                             'checked_at' => $data->checkedAt,
                             'expires_at' => $expiresAt,
                         ],

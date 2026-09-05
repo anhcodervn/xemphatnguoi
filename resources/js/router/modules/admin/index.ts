@@ -8,7 +8,11 @@ export default {
         { path: 'traffic-fine-results', name: 'admin.traffic-fine-results', component: () => import('@/pages/admin/traffic-fines/ResultsPage.vue') },
         { path: 'providers', name: 'admin.providers', component: () => import('@/pages/admin/traffic-fines/ProviderPage.vue') },
         { path: 'packages', redirect: { name: 'admin.monitoring' } },
-        { path: 'subscriptions', redirect: { name: 'admin.api-billing' } },
+        {
+            path: 'subscriptions',
+            name: 'admin.monitoring-subscriptions',
+            component: () => import('@/pages/admin/monitoring-subscriptions/index.vue'),
+        },
         { path: 'api-billing', name: 'admin.api-billing', component: () => import('@/pages/admin/traffic-fines/BillingPage.vue') },
         {
             path: 'monitoring',

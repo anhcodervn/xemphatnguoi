@@ -5,16 +5,20 @@ namespace App\Features\TrafficFine\Controllers;
 use App\Features\TrafficFine\Requests\AdminCachedPlateIndexRequest;
 use App\Features\TrafficFine\Requests\AdminTrafficFineLookupLogRequest;
 use App\Features\TrafficFine\Requests\AdminTrafficFineReportRequest;
+use App\Features\TrafficFine\Requests\StoreTrafficFineProviderRequest;
 use App\Features\TrafficFine\Requests\UpdateApiBillingSettingRequest;
+use App\Features\TrafficFine\Requests\UpdateTrafficFineProviderRequest;
 use App\Features\TrafficFine\Services\ApiLookupBillingService;
 use App\Features\TrafficFine\Services\ApiUsageStatisticsService;
 use App\Features\TrafficFine\Services\CachedPlateService;
-use App\Features\TrafficFine\Services\Source\TrafficFineSourceRegistry;
+use App\Features\TrafficFine\Services\TrafficFineProviderBalanceService;
+use App\Features\TrafficFine\Services\TrafficFineProviderSettingsService;
 use App\Features\TrafficFine\Services\TrafficFineStatisticsService;
 use App\Http\Controllers\Controller;
 use App\Models\TrafficFineLookupLog;
 use App\Support\SettingStore;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Carbon;
 
 class TrafficFineAdminController extends Controller
 {
@@ -96,27 +100,108 @@ class TrafficFineAdminController extends Controller
         ]);
     }
 
-    public function provider(TrafficFineSourceRegistry $sourceRegistry): JsonResponse
+    public function provider(TrafficFineProviderSettingsService $providerSettings): JsonResponse
     {
-        $providerName = $sourceRegistry->activeName();
-        $providerConfig = $sourceRegistry->activeConfig();
-        $lastError = TrafficFineLookupLog::query()
+        $lastErrors = TrafficFineLookupLog::query()
             ->where('status', 'provider_error')
-            ->latest('created_at')
-            ->first(['created_at']);
+            ->whereNotNull('provider')
+            ->selectRaw('provider, MAX(created_at) as last_error_at')
+            ->groupBy('provider')
+            ->pluck('last_error_at', 'provider');
+
+        $providers = collect($providerSettings->providerNames())
+            ->map(function (string $provider) use ($providerSettings, $lastErrors): array {
+                $configuration = $providerSettings->adminConfiguration($provider);
+                $lastError = $lastErrors->get($provider);
+                $configuration['last_error'] = filled($lastError)
+                    ? Carbon::parse((string) $lastError)->toISOString()
+                    : null;
+
+                return $configuration;
+            })
+            ->values();
+
+        $activeProvider = $providerSettings->activeName();
+        $activeConfiguration = $providers->firstWhere('name', $activeProvider);
 
         return response()->json([
             'status' => true,
             'data' => [
-                'name' => $providerName,
-                'enabled' => filled($providerConfig['url'] ?? null),
-                'priority' => (int) ($providerConfig['priority'] ?? 1),
-                'timeout' => (int) ($providerConfig['timeout'] ?? 10),
-                'status' => filled($providerConfig['url'] ?? null) ? 'configured' : 'not_configured',
-                'url_configured' => filled($providerConfig['url'] ?? null),
-                'credential_configured' => filled($providerConfig['token'] ?? null),
-                'last_error' => $lastError?->created_at?->toISOString(),
+                'active_provider' => $activeProvider !== '' ? $activeProvider : null,
+                'drivers' => $providerSettings->driverNames(),
+                'providers' => $providers->all(),
+                ...($activeConfiguration ?? [
+                    'name' => '',
+                    'enabled' => false,
+                    'status' => 'disabled',
+                ]),
             ],
+        ]);
+    }
+
+    public function storeProvider(
+        StoreTrafficFineProviderRequest $request,
+        TrafficFineProviderSettingsService $providerSettings,
+    ): JsonResponse {
+        $provider = $providerSettings->create($request->validated());
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Đã thêm nguồn dữ liệu.',
+            'data' => $providerSettings->adminConfiguration($provider->name),
+        ], 201);
+    }
+
+    public function updateProvider(
+        UpdateTrafficFineProviderRequest $request,
+        string $provider,
+        TrafficFineProviderSettingsService $providerSettings,
+    ): JsonResponse {
+        abort_unless(in_array($provider, $providerSettings->providerNames(), true), 404);
+
+        $providerSettings->update($provider, $request->validated());
+
+        return response()->json([
+            'status' => true,
+            'message' => $request->boolean('enabled')
+                ? 'Đã bật provider. Các provider khác đã được tắt.'
+                : 'Đã cập nhật và tắt provider.',
+            'data' => [
+                'active_provider' => $providerSettings->activeName() ?: null,
+                'provider' => $providerSettings->adminConfiguration($provider),
+            ],
+        ]);
+    }
+
+    public function destroyProvider(
+        string $provider,
+        TrafficFineProviderSettingsService $providerSettings,
+    ): JsonResponse {
+        abort_unless($providerSettings->exists($provider), 404);
+
+        if (! $providerSettings->delete($provider)) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Nguồn hệ thống không thể xoá, bạn có thể tắt nguồn này.',
+            ], 422);
+        }
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Đã xoá nguồn dữ liệu.',
+        ]);
+    }
+
+    public function providerBalance(
+        string $provider,
+        TrafficFineProviderSettingsService $providerSettings,
+        TrafficFineProviderBalanceService $balanceService,
+    ): JsonResponse {
+        abort_unless($providerSettings->exists($provider), 404);
+
+        return response()->json([
+            'status' => true,
+            'data' => $balanceService->get($provider, request()->boolean('refresh')),
         ]);
     }
 

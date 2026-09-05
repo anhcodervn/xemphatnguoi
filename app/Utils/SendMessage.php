@@ -21,7 +21,6 @@ class SendMessage
         'security' => 'ops',
         'alerts' => 'ops',
         'recovered' => 'ops',
-        'staging' => 'staging',
         'sales' => 'sales',
         'provider' => 'ops',
         'feedback' => 'support',
@@ -66,20 +65,16 @@ class SendMessage
 
     public static function sendDiscord(string $message, string $type): void
     {
-        if (app()->environment('testing')) {
-            return;
-        }
-
         $channelKey = self::DISCORD_CHANNELS[$type] ?? null;
         if ($channelKey === null) {
             throw new InvalidArgumentException(sprintf('Unsupported Discord channel type [%s].', $type));
         }
 
-        $channels = config('services.discord.channels', []);
-
-        if (! app()->isProduction() && $type !== 'staging') {
-            $channelKey = 'staging';
+        if (! app()->isProduction()) {
+            return;
         }
+
+        $channels = config('services.discord.channels', []);
 
         $url = Arr::get($channels, $channelKey);
 
@@ -167,17 +162,6 @@ class SendMessage
         self::safeSendDiscord(
             self::formatDiscordReport('RECOVERED', $title, $details),
             'recovered',
-        );
-    }
-
-    /**
-     * @param  array<string, mixed>  $details
-     */
-    public static function sendStagingReport(string $title, array $details = []): void
-    {
-        self::safeSendDiscord(
-            self::formatDiscordReport('STAGING', $title, $details),
-            'staging',
         );
     }
 

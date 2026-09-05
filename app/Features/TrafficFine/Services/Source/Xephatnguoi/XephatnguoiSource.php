@@ -7,6 +7,7 @@ use App\Features\TrafficFine\Enums\VehicleType;
 use App\Features\TrafficFine\Exceptions\TrafficFineConfigurationException;
 use App\Features\TrafficFine\Exceptions\TrafficFineProviderException;
 use App\Features\TrafficFine\Services\Source\TrafficFineSourceInterface;
+use App\Features\TrafficFine\Services\TrafficFineProviderSettingsService;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
@@ -18,18 +19,22 @@ final class XephatnguoiSource implements TrafficFineSourceInterface
 
     private const ALLOWED_PATH = '/v1/search';
 
-    public function __construct(private readonly XephatnguoiResponseMapper $responseMapper) {}
+    public function __construct(
+        private readonly XephatnguoiResponseMapper $responseMapper,
+        private readonly TrafficFineProviderSettingsService $providerSettings,
+    ) {}
 
     public function name(): string
     {
-        return 'xephatnguoi';
+        return $this->providerSettings->activeName();
     }
 
     public function lookup(string $normalizedPlate, VehicleType $vehicleType): TrafficFineLookupResultDataDto
     {
-        $url = trim((string) config('traffic-fines.sources.xephatnguoi.url'));
-        $token = trim((string) config('traffic-fines.sources.xephatnguoi.token'));
-        $sourceVehicleType = config("traffic-fines.sources.xephatnguoi.vehicle_types.{$vehicleType->value}");
+        $configuration = $this->providerSettings->configuration($this->name());
+        $url = trim((string) ($configuration['url'] ?? ''));
+        $token = trim((string) ($configuration['token'] ?? ''));
+        $sourceVehicleType = $configuration['vehicle_types'][$vehicleType->value] ?? null;
 
         if (! $this->isAllowedUrl($url) || $token === '') {
             throw new TrafficFineConfigurationException('Nguồn tra cứu chưa được cấu hình hợp lệ.');
@@ -43,11 +48,11 @@ final class XephatnguoiSource implements TrafficFineSourceInterface
             $response = Http::acceptJson()
                 ->withToken($token)
                 ->withOptions(['allow_redirects' => false])
-                ->connectTimeout($this->configurationInteger('connect_timeout', 3, 1, 5))
-                ->timeout($this->configurationInteger('timeout', 10, 1, 15))
+                ->connectTimeout($this->configurationInteger($configuration, 'connect_timeout', 3, 1, 5))
+                ->timeout($this->configurationInteger($configuration, 'timeout', 10, 1, 15))
                 ->retry(
-                    times: $this->configurationInteger('retry_times', 2, 1, 2),
-                    sleepMilliseconds: $this->configurationInteger('retry_sleep_ms', 200, 0, 2000),
+                    times: $this->configurationInteger($configuration, 'retry_times', 2, 1, 2),
+                    sleepMilliseconds: $this->configurationInteger($configuration, 'retry_sleep_ms', 200, 0, 2000),
                     when: static function (Throwable $exception): bool {
                         return $exception instanceof ConnectionException
                             || ($exception instanceof RequestException
@@ -84,9 +89,10 @@ final class XephatnguoiSource implements TrafficFineSourceInterface
         }
     }
 
-    private function configurationInteger(string $key, int $default, int $minimum, int $maximum): int
+    /** @param array<string, mixed> $configuration */
+    private function configurationInteger(array $configuration, string $key, int $default, int $minimum, int $maximum): int
     {
-        $value = (int) config("traffic-fines.sources.xephatnguoi.{$key}", $default);
+        $value = (int) ($configuration[$key] ?? $default);
 
         return min($maximum, max($minimum, $value));
     }

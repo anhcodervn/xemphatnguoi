@@ -110,8 +110,8 @@ onMounted(load);
         <header class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
                 <p class="text-sm font-bold text-sky-700">Monitoring</p>
-                <h1 class="mt-1 text-2xl font-black text-slate-950">Gói theo dõi xe</h1>
-                <p class="mt-2 text-sm text-slate-500">Gói cố định giới hạn sẵn số xe; gói tùy chỉnh tính theo đơn giá mỗi xe, tối thiểu 20 xe.</p>
+                <h1 class="mt-1 text-2xl font-black text-slate-950">Quản lý gói</h1>
+                <p class="mt-2 text-sm text-slate-500">Cấu hình gói, giá bán, hạn mức xe và thời hạn cung cấp cho khách hàng.</p>
             </div>
             <button
                 type="button"

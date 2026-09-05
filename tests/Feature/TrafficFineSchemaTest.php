@@ -49,6 +49,20 @@ it('creates the vehicle, lookup history, lookup log, and 24-hour result cache sc
             'expires_at',
             'created_at',
             'updated_at',
+        ]))->toBeTrue()
+        ->and(Schema::hasColumns('traffic_fine_providers', [
+            'id',
+            'name',
+            'label',
+            'driver',
+            'api_url',
+            'api_token',
+            'timeout',
+            'connect_timeout',
+            'retry_times',
+            'retry_sleep_ms',
+            'created_at',
+            'updated_at',
         ]))->toBeTrue();
 });
 

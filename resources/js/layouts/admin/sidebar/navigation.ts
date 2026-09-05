@@ -3,6 +3,7 @@ import {
     Database,
     LayoutDashboard,
     MessageCircleMore,
+    PackageOpen,
     Settings,
     SlidersHorizontal,
     UserRound,
@@ -25,7 +26,15 @@ export const adminMenuGroups: AdminMenuGroup[] = [
             { label: 'Nhật ký tra cứu', href: '/admin/lookup-logs' },
             { label: 'Cache biển số', href: '/admin/traffic-fine-results' },
             { label: 'Nguồn dữ liệu', href: '/admin/providers' },
-            { label: 'Gói theo dõi xe', href: '/admin/monitoring' },
+        ],
+    },
+    {
+        key: 'monitoring-packages',
+        label: 'Quản lý gói',
+        icon: PackageOpen,
+        children: [
+            { label: 'Quản lý gói', href: '/admin/monitoring' },
+            { label: 'Gói đã cho thuê', href: '/admin/subscriptions' },
         ],
     },
     {

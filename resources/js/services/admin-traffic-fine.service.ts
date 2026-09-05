@@ -180,13 +180,45 @@ export type AdminLookupLogResponse = {
 
 export type AdminProviderStatus = {
     name: string;
+    label: string;
+    driver: string;
+    deletable: boolean;
     enabled: boolean;
     priority: number;
+    url: string;
     timeout: number;
+    connect_timeout: number;
+    retry_times: number;
+    retry_sleep_ms: number;
     status: string;
     url_configured: boolean;
     credential_configured: boolean;
     last_error: string | null;
+    token?: string;
+};
+
+export type AdminProviderOverview = {
+    active_provider: string | null;
+    drivers: string[];
+    providers: AdminProviderStatus[];
+};
+
+export type AdminProviderUpdate = Pick<AdminProviderStatus, 'enabled' | 'url' | 'timeout' | 'connect_timeout' | 'retry_times' | 'retry_sleep_ms'> & {
+    label?: string;
+    token?: string;
+};
+
+export type AdminProviderStore = AdminProviderUpdate & {
+    label: string;
+    code: string;
+    driver: string;
+    token: string;
+};
+
+export type AdminProviderBalance = {
+    balance: string;
+    currency: string;
+    fetched_at: string;
 };
 
 export type AdminAdSlot = {
@@ -218,9 +250,25 @@ export const adminTrafficFineService = {
         const response = await api.get('/api/admin-api/traffic-fines/logs', { params });
         return response.data.data as AdminLookupLogResponse;
     },
-    async provider(): Promise<AdminProviderStatus> {
+    async provider(): Promise<AdminProviderOverview> {
         const response = await api.get('/api/admin-api/traffic-fines/provider');
+        return response.data.data as AdminProviderOverview;
+    },
+    async updateProvider(provider: string, payload: AdminProviderUpdate): Promise<void> {
+        await api.patch(`/api/admin-api/traffic-fines/provider/${encodeURIComponent(provider)}`, payload);
+    },
+    async createProvider(payload: AdminProviderStore): Promise<AdminProviderStatus> {
+        const response = await api.post('/api/admin-api/traffic-fines/provider', payload);
         return response.data.data as AdminProviderStatus;
+    },
+    async deleteProvider(provider: string): Promise<void> {
+        await api.delete(`/api/admin-api/traffic-fines/provider/${encodeURIComponent(provider)}`);
+    },
+    async providerBalance(provider: string, refresh = false): Promise<AdminProviderBalance> {
+        const response = await api.get(`/api/admin-api/traffic-fines/provider/${encodeURIComponent(provider)}/balance`, {
+            params: { refresh: refresh ? 1 : 0 },
+        });
+        return response.data.data as AdminProviderBalance;
     },
     async billing(): Promise<AdminApiBilling> {
         const response = await api.get('/api/admin-api/traffic-fines/billing');

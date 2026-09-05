@@ -1,18 +1,16 @@
 # Discord webhook
 
-Hệ thống dùng đúng 5 room Discord. Mỗi room tạo một webhook riêng và cấu hình URL trong `.env` của server. URL webhook không được lưu trong database hoặc nhập trên giao diện admin.
+Hệ thống dùng đúng 4 room Discord ở production. Mỗi room tạo một webhook riêng và cấu hình URL trong `.env` của server. URL webhook không được lưu trong database hoặc nhập trên giao diện admin.
 
 ## Room cần tạo
 
 | Room Discord | Biến `.env` | Báo cáo nhận được |
 |---|---|---|
-| `#xpn-ops` | `DISCORD_WEBHOOK_OPS` | Heartbeat production, queue thất bại, lỗi nguồn tra cứu, cảnh báo bảo mật và phục hồi hệ thống |
+| `#xpn-ops` | `DISCORD_WEBHOOK_OPS` | Queue thất bại, lỗi nguồn tra cứu, cảnh báo bảo mật và phục hồi hệ thống |
 | `#xpn-activity` | `DISCORD_WEBHOOK_ACTIVITY` | Tài khoản đăng ký mới và sự kiện vòng đời tài khoản |
 | `#xpn-sales` | `DISCORD_WEBHOOK_SALES` | Nạp tiền thành công, giao dịch ví và sự kiện doanh thu |
 | `#xpn-support` | `DISCORD_WEBHOOK_SUPPORT` | Tin nhắn hỗ trợ mới và góp ý từ biểu mẫu liên hệ |
-| `#xpn-staging` | `DISCORD_WEBHOOK_STAGING` | Toàn bộ báo cáo phát sinh ở local, testing và staging |
-
-Production không gửi vào `#xpn-staging`. Khi `DISCORD_WEBHOOK_STAGING` được cấu hình, mọi báo cáo ngoài production tự động chuyển vào room này để không làm nhiễu các room production.
+Các môi trường ngoài production không gửi thông báo Discord. Việc theo dõi server do hệ thống monitor riêng đảm nhiệm.
 
 ## Cấu hình production
 
@@ -21,7 +19,6 @@ DISCORD_WEBHOOK_OPS=https://discord.com/api/webhooks/...
 DISCORD_WEBHOOK_ACTIVITY=https://discord.com/api/webhooks/...
 DISCORD_WEBHOOK_SALES=https://discord.com/api/webhooks/...
 DISCORD_WEBHOOK_SUPPORT=https://discord.com/api/webhooks/...
-DISCORD_WEBHOOK_STAGING=https://discord.com/api/webhooks/...
 
 DISCORD_BOT_NAME="XemPhatNguoi Monitor"
 DISCORD_BOT_AVATAR_URL=
@@ -35,10 +32,7 @@ Sau khi thay đổi `.env`:
 
 ```bash
 php artisan config:clear
-php artisan monitor:discord-heartbeat --channel=ops --title="Heartbeat production"
 ```
-
-Scheduler tự gửi heartbeat mỗi 10 phút vào `#xpn-ops` ở production và `#xpn-staging` ở môi trường khác.
 
 ## Quy tắc gửi báo cáo
 
@@ -51,7 +45,7 @@ Scheduler tự gửi heartbeat mỗi 10 phút vào `#xpn-ops` ở production và
 
 ## Biến tương thích cũ
 
-Các biến dưới đây chỉ là alias tương thích cho deployment cũ. Cấu hình 5 biến canonical ở trên được ưu tiên:
+Các biến dưới đây chỉ là alias tương thích cho deployment cũ. Cấu hình 4 biến canonical ở trên được ưu tiên:
 
 ```env
 DISCORD_WEBHOOK_QUEUE=

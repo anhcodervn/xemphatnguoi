@@ -11,8 +11,29 @@ it('exposes monitoring package pages in client and admin navigation', function (
         ->and($clientRoutes)->toContain('@/pages/client/packages/index.vue')
         ->and($adminRoutes)->toContain('@/pages/admin/monitoring-plans/index.vue')
         ->and($adminRoutes)->toContain("path: 'packages', redirect: { name: 'admin.monitoring' }")
+        ->and($adminRoutes)->toContain("name: 'admin.monitoring-subscriptions'")
+        ->and($adminRoutes)->toContain('@/pages/admin/monitoring-subscriptions/index.vue')
         ->and($clientSidebar)->toContain('Gói dịch vụ')
-        ->and($adminSidebar)->toContain('Gói theo dõi xe');
+        ->and($adminSidebar)->toContain("key: 'lookup-data'")
+        ->and($adminSidebar)->toContain("key: 'monitoring-packages'")
+        ->and($adminSidebar)->toContain('icon: PackageOpen')
+        ->and($adminSidebar)->toContain('Quản lý gói')
+        ->and($adminSidebar)->toContain('Gói đã cho thuê');
+});
+
+it('lists rented packages with server side filters and pagination', function (): void {
+    $resourceRoot = dirname(__DIR__, 2).'/resources';
+    $page = file_get_contents($resourceRoot.'/js/pages/admin/monitoring-subscriptions/index.vue');
+    $service = file_get_contents($resourceRoot.'/js/services/admin-monitoring-plan.service.ts');
+
+    expect($page)
+        ->toContain('@/components/shared/DataTable/index.vue')
+        ->toContain('Khách hàng hoặc tên gói')
+        ->toContain('Tất cả trạng thái')
+        ->toContain(':go-to-page="load"')
+        ->and($service)
+        ->toContain('/api/admin-api/monitoring/subscriptions')
+        ->toContain('auto_renew?: boolean');
 });
 
 it('keeps custom quantity pricing server controlled and without a maximum field', function (): void {

@@ -8,13 +8,6 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-$heartbeatChannel = app()->environment('production') ? 'ops' : 'staging';
-
-Schedule::command(sprintf('monitor:discord-heartbeat --channel=%s', $heartbeatChannel))
-    ->everyTenMinutes()
-    ->withoutOverlapping()
-    ->when(static fn (): bool => filled(config(sprintf('services.discord.channels.%s', $heartbeatChannel))));
-
 Schedule::command('api:prune-logs')
     ->daily()
     ->withoutOverlapping();

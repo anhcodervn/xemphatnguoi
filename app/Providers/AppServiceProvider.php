@@ -27,7 +27,7 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->app->singleton(
+        $this->app->scoped(
             TrafficFineSourceInterface::class,
             fn (): TrafficFineSourceInterface => $this->app->make(TrafficFineSourceRegistry::class)->resolve(),
         );

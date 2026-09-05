@@ -7,9 +7,13 @@ return [
 
     'sources' => [
         'xephatnguoi' => [
+            'label' => 'XePhatNguoi API',
             'driver' => XephatnguoiSource::class,
             'priority' => 1,
             'url' => env('XEPHATNGUOI_API_URL', env('TRAFFIC_FINE_API_URL')),
+            'allowed_urls' => ['https://api.xephatnguoi.com/v1/search'],
+            'balance_url' => 'https://api.xephatnguoi.com/v1/balance',
+            'allowed_balance_urls' => ['https://api.xephatnguoi.com/v1/balance'],
             'token' => env('XEPHATNGUOI_API_TOKEN', env('TRAFFIC_FINE_API_TOKEN')),
             'timeout' => (int) env('XEPHATNGUOI_TIMEOUT', env('TRAFFIC_FINE_TIMEOUT', 10)),
             'connect_timeout' => (int) env('XEPHATNGUOI_CONNECT_TIMEOUT', env('TRAFFIC_FINE_CONNECT_TIMEOUT', 3)),

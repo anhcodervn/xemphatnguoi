@@ -3,17 +3,17 @@
 use App\Models\User;
 use App\Utils\SendMessage;
 use Illuminate\Http\Client\Request;
+use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Http;
 use Laravel\Sanctum\Sanctum;
 
-test('admin sees the five canonical Discord rooms without webhook secrets', function (): void {
+test('admin sees the four canonical Discord rooms without webhook secrets', function (): void {
     Sanctum::actingAs(User::factory()->create(['role' => 'admin']));
     config([
         'services.discord.channels.ops' => 'https://discord.com/api/webhooks/1/ops-secret',
         'services.discord.channels.activity' => '',
         'services.discord.channels.sales' => 'https://discord.com/api/webhooks/2/sales-secret',
         'services.discord.channels.support' => '',
-        'services.discord.channels.staging' => '',
     ]);
 
     $response = $this->getJson('/api/admin-api/settings/monitoring')->assertOk();
@@ -23,7 +23,6 @@ test('admin sees the five canonical Discord rooms without webhook secrets', func
         '#xpn-activity',
         '#xpn-sales',
         '#xpn-support',
-        '#xpn-staging',
     ]);
 
     $response
@@ -47,7 +46,6 @@ test('domain reports route to their canonical production rooms', function (): vo
         'services.discord.channels.activity' => 'https://discord.test/activity',
         'services.discord.channels.sales' => 'https://discord.test/sales',
         'services.discord.channels.support' => 'https://discord.test/support',
-        'services.discord.channels.staging' => '',
     ]);
 
     SendMessage::sendQueueReport('Queue failed');
@@ -63,19 +61,19 @@ test('domain reports route to their canonical production rooms', function (): vo
     Http::assertSent(fn (Request $request): bool => $request->url() === 'https://discord.test/support');
 });
 
-test('non production reports are isolated in the staging room', function (): void {
+test('non production reports do not use Discord webhooks', function (): void {
     app()->detectEnvironment(fn (): string => 'local');
+    Exceptions::fake();
     Http::preventStrayRequests();
-    Http::fake(['https://discord.test/staging' => Http::response([], 204)]);
+    Http::fake(['https://discord.test/ops' => Http::response([], 204)]);
     config([
         'services.discord.channels.ops' => 'https://discord.test/ops',
-        'services.discord.channels.staging' => 'https://discord.test/staging',
     ]);
 
     SendMessage::sendProviderReport('Provider failed locally');
 
-    Http::assertSentCount(1);
-    Http::assertSent(fn (Request $request): bool => $request->url() === 'https://discord.test/staging');
+    Http::assertNothingSent();
+    Exceptions::assertNothingReported();
 });
 
 test('runtime report call sites use the expected canonical rooms', function (): void {
@@ -100,6 +98,6 @@ test('admin UI explains the canonical Discord room mapping', function (): void {
         ->toContain('#xpn-activity')
         ->toContain('#xpn-sales')
         ->toContain('#xpn-support')
-        ->toContain('#xpn-staging')
+        ->not->toContain('#xpn-staging')
         ->not->toContain('discord_webhooks');
 });

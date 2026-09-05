@@ -861,7 +861,7 @@ onMounted(async () => {
 
                         <section class="border-t border-slate-200 pt-6">
                             <div>
-                                <h3 class="text-sm font-semibold text-slate-900">5 room Discord cần tạo</h3>
+                                <h3 class="text-sm font-semibold text-slate-900">4 room Discord cần tạo</h3>
                                 <p class="mt-1 text-sm leading-6 text-slate-500">
                                     Mỗi room tạo một webhook riêng rồi gắn URL vào biến môi trường tương ứng. URL webhook không được lưu trong
                                     database hoặc trả về trình duyệt.
@@ -897,7 +897,7 @@ onMounted(async () => {
                         <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Cách cấu hình</p>
                         <ol class="mt-3 grid gap-3 text-sm leading-6 text-slate-600">
                             <li class="rounded-[10px] border border-slate-200 bg-white p-3">
-                                <strong class="text-slate-900">1.</strong> Tạo 5 channel theo đúng tên bên trái.
+                                <strong class="text-slate-900">1.</strong> Tạo 4 channel theo đúng tên bên trái.
                             </li>
                             <li class="rounded-[10px] border border-slate-200 bg-white p-3">
                                 <strong class="text-slate-900">2.</strong> Vào Integrations → Webhooks và tạo webhook cho từng channel.
@@ -907,8 +907,8 @@ onMounted(async () => {
                             </li>
                         </ol>
                         <div class="mt-4 rounded-[10px] border border-sky-200 bg-sky-50 p-3 text-xs leading-5 text-sky-800">
-                            Production dùng #xpn-ops, #xpn-activity, #xpn-sales và #xpn-support. Local, test và staging tự động chuyển toàn bộ báo cáo
-                            vào #xpn-staging nếu room này đã cấu hình.
+                            Discord webhook chỉ gửi ở production qua #xpn-ops, #xpn-activity, #xpn-sales và #xpn-support. Các môi trường ngoài
+                            production không gửi thông báo Discord.
                         </div>
                     </aside>
                 </div>
