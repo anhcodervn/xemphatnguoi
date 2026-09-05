@@ -1,10 +1,10 @@
 import {
     BookOpen,
+    Code2,
     Database,
     LayoutDashboard,
     MessageCircleMore,
     PackageOpen,
-    Settings,
     SlidersHorizontal,
     UserRound,
     Users,
@@ -29,6 +29,15 @@ export const adminMenuGroups: AdminMenuGroup[] = [
         ],
     },
     {
+        key: 'partner-api',
+        label: 'API đối tác',
+        icon: Code2,
+        children: [
+            { label: 'Cấu hình giá API', href: '/admin/api-billing' },
+            { label: 'Nhật ký API', href: '/admin/api-usage' },
+        ],
+    },
+    {
         key: 'monitoring-packages',
         label: 'Quản lý gói',
         icon: PackageOpen,
@@ -43,7 +52,6 @@ export const adminMenuGroups: AdminMenuGroup[] = [
         icon: Users,
         children: [
             { label: 'Người dùng', href: '/admin/users' },
-            { label: 'Thanh toán API', href: '/admin/api-billing' },
             { label: 'Giao dịch ví', href: '/admin/transactions' },
             { label: 'Cấu hình nạp tiền', href: '/admin/recharge/config' },
             { label: 'Lịch sử nạp tiền', href: '/admin/recharge/history' },
@@ -62,21 +70,13 @@ export const adminMenuGroups: AdminMenuGroup[] = [
         ],
     },
     {
-        key: 'system-operations',
-        label: 'Hệ thống & vận hành',
-        icon: Settings,
-        children: [
-            { label: 'Lượt dùng API', href: '/admin/api-usage' },
-            { label: 'Queue & nhật ký', href: '/admin/logs' },
-        ],
-    },
-    {
         key: 'system-settings',
-        label: 'Cấu hình hệ thống',
+        label: 'Hệ thống',
         icon: SlidersHorizontal,
         children: [
             { label: 'Cấu hình chung', href: '/admin/settings/general' },
             { label: 'Cấu hình nội dung', href: '/admin/settings/content' },
+            { label: 'Queue & nhật ký', href: '/admin/logs' },
         ],
     },
     { key: 'profile', label: 'Tài khoản admin', icon: UserRound, href: '/dashboard/account' },

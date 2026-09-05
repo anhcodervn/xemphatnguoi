@@ -21,6 +21,9 @@ class UpdateApiBillingSettingRequest extends FormRequest
     {
         return [
             'api_request_price' => ['required', 'integer', 'min:1', 'max:1000000'],
+            'api_v2_request_price' => ['required', 'integer', 'min:1', 'max:1000000'],
+            'api_v1_description' => ['sometimes', 'required', 'string', 'max:300'],
+            'api_v2_description' => ['sometimes', 'required', 'string', 'max:300'],
         ];
     }
 
@@ -31,6 +34,14 @@ class UpdateApiBillingSettingRequest extends FormRequest
             'api_request_price.integer' => 'Giá mỗi lượt tra cứu API phải là số nguyên.',
             'api_request_price.min' => 'Giá mỗi lượt tra cứu API phải ít nhất 1 đồng.',
             'api_request_price.max' => 'Giá mỗi lượt tra cứu API không được vượt quá 1.000.000 đồng.',
+            'api_v2_request_price.required' => 'Vui lòng nhập giá mỗi lượt tra cứu API v2.',
+            'api_v2_request_price.integer' => 'Giá mỗi lượt tra cứu API v2 phải là số nguyên.',
+            'api_v2_request_price.min' => 'Giá mỗi lượt tra cứu API v2 phải ít nhất 1 đồng.',
+            'api_v2_request_price.max' => 'Giá mỗi lượt tra cứu API v2 không được vượt quá 1.000.000 đồng.',
+            'api_v1_description.required' => 'Vui lòng nhập mô tả API v1.',
+            'api_v1_description.max' => 'Mô tả API v1 không được vượt quá 300 ký tự.',
+            'api_v2_description.required' => 'Vui lòng nhập mô tả API v2.',
+            'api_v2_description.max' => 'Mô tả API v2 không được vượt quá 300 ký tự.',
         ];
     }
 
@@ -38,6 +49,9 @@ class UpdateApiBillingSettingRequest extends FormRequest
     {
         return [
             'api_request_price' => 'giá mỗi lượt tra cứu API',
+            'api_v2_request_price' => 'giá mỗi lượt tra cứu API v2',
+            'api_v1_description' => 'mô tả API v1',
+            'api_v2_description' => 'mô tả API v2',
         ];
     }
 

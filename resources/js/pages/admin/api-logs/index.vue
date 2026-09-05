@@ -16,7 +16,7 @@ const rows = ref<AdminApiLogItem[]>([]);
 const loading = ref(true);
 const errorMessage = ref('');
 const expandedLogId = ref<number | null>(null);
-const filters = reactive({ search: '', method: '', status_group: '', status_code: '', from: localDate(), to: localDate() });
+const filters = reactive({ search: '', api_version: '', method: '', status_group: '', status_code: '', from: localDate(), to: localDate() });
 const meta = reactive({ current_page: 1, last_page: 1, total: 0 });
 const summary = reactive({
     total: 0,
@@ -78,6 +78,7 @@ const load = async (page = 1): Promise<void> => {
         const response = await adminApiLogService.list({
             page,
             search: filters.search || undefined,
+            api_version: filters.api_version || undefined,
             method: filters.method || undefined,
             status_group: filters.status_group || undefined,
             status_code: filters.status_code || undefined,
@@ -142,7 +143,7 @@ onMounted(() => load());
         </section>
 
         <form
-            class="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-2 xl:grid-cols-[minmax(220px,1fr)_120px_160px_110px_150px_150px_auto]"
+            class="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-2 xl:grid-cols-[minmax(200px,1fr)_120px_120px_150px_110px_145px_145px_auto]"
             @submit.prevent="load(1)"
         >
             <input
@@ -151,6 +152,11 @@ onMounted(() => load());
                 placeholder="Endpoint, IP, user hoặc API key"
                 class="app-focus h-11 rounded-lg border border-slate-300 px-3 text-sm"
             />
+            <select v-model="filters.api_version" class="app-focus h-11 rounded-lg border border-slate-300 bg-white px-3 text-sm">
+                <option value="">Mọi phiên bản</option>
+                <option value="v1">API v1</option>
+                <option value="v2">API v2</option>
+            </select>
             <select v-model="filters.method" class="app-focus h-11 rounded-lg border border-slate-300 bg-white px-3 text-sm">
                 <option value="">Mọi method</option>
                 <option v-for="method in ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']" :key="method" :value="method">{{ method }}</option>
@@ -207,8 +213,15 @@ onMounted(() => load());
                                     {{ row.created_at ? new Date(row.created_at).toLocaleString('vi-VN') : '—' }}
                                 </td>
                                 <td class="px-4 py-4">
-                                    <span class="mr-2 rounded bg-slate-100 px-2 py-1 font-mono text-xs font-bold">{{ row.method }}</span
-                                    ><span class="font-mono text-xs text-slate-700">{{ row.endpoint }}</span>
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <span
+                                            class="rounded-full px-2.5 py-1 text-xs font-black uppercase"
+                                            :class="row.api_version === 'v2' ? 'bg-violet-50 text-violet-700' : 'bg-sky-50 text-sky-700'"
+                                            >API {{ row.api_version }}</span
+                                        >
+                                        <span class="rounded bg-slate-100 px-2 py-1 font-mono text-xs font-bold">{{ row.method }}</span>
+                                    </div>
+                                    <p class="mt-2 font-mono text-xs text-slate-700">{{ row.endpoint }}</p>
                                 </td>
                                 <td class="px-4 py-4">
                                     <p class="font-medium text-slate-900">{{ row.user?.username ?? 'Không xác định' }}</p>

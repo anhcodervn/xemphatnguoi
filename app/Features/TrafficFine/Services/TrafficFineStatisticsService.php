@@ -46,6 +46,7 @@ class TrafficFineStatisticsService
                 : null,
             'users' => User::query()->count(),
             'api_request_price' => $this->billingService->pricePerRequest(),
+            'api_v2_request_price' => $this->billingService->v2PricePerRequest(),
             'api_requests_today' => $apiUsage['requests_today'],
             'api_requests_month' => $apiUsage['requests_month'],
             'api_revenue_today' => $apiUsage['amount_today'],

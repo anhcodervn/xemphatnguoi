@@ -35,6 +35,11 @@ class ApiLogController extends Controller
                 });
             })
             ->when($request->filled('method'), fn ($builder) => $builder->where('method', strtoupper((string) $request->string('method')->toString())))
+            ->when($request->filled('api_version'), fn ($builder) => $builder->where(
+                'endpoint',
+                'like',
+                'api/'.$validated['api_version'].'/%',
+            ))
             ->when($request->filled('status_code'), fn ($builder) => $builder->where('status_code', (int) $request->integer('status_code')))
             ->when(($validated['status_group'] ?? null) === 'success', fn ($builder) => $builder->whereBetween('status_code', [200, 299]))
             ->when(($validated['status_group'] ?? null) === 'client_error', fn ($builder) => $builder->whereBetween('status_code', [400, 499]))

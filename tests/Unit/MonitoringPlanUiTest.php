@@ -18,7 +18,8 @@ it('exposes monitoring package pages in client and admin navigation', function (
         ->and($adminSidebar)->toContain("key: 'monitoring-packages'")
         ->and($adminSidebar)->toContain('icon: PackageOpen')
         ->and($adminSidebar)->toContain('Quản lý gói')
-        ->and($adminSidebar)->toContain('Gói đã cho thuê');
+        ->and($adminSidebar)->toContain('Gói đã cho thuê')
+        ->and($adminSidebar)->toContain("{ label: 'Cấu hình giá API', href: '/admin/api-billing' }");
 });
 
 it('lists rented packages with server side filters and pagination', function (): void {

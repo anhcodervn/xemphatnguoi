@@ -76,6 +76,7 @@ export type ApiUsageDaily = {
 export type ApiUsageLog = {
     id: number;
     api_key_name: string | null;
+    api_version: 'v1' | 'v2' | 'unknown';
     plate: string | null;
     vehicle_type: VehicleType | null;
     method: 'GET';

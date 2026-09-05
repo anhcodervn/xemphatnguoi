@@ -21,11 +21,12 @@ class ApiPermissionCatalog
             [
                 'key' => 'traffic-fines.lookup',
                 'group' => 'traffic-fines',
-                'version' => 'v1',
+                'version' => 'v1, v2',
                 'label' => 'Tra cứu phạt nguội',
                 'description' => 'Tra cứu phạt nguội theo biển số và loại phương tiện.',
                 'endpoints' => [
                     'GET /api/v1/lookup',
+                    'GET /api/v2/lookup',
                 ],
                 'self_service' => true,
             ],

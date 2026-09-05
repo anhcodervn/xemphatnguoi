@@ -42,6 +42,28 @@ test('admin api log filters reject invalid dates and status groups', function ()
 
     $this->getJson('/api/admin-api/api-logs?from=not-a-date')->assertUnprocessable();
     $this->getJson('/api/admin-api/api-logs?status_group=broken')->assertUnprocessable();
+    $this->getJson('/api/admin-api/api-logs?api_version=v3')->assertUnprocessable();
+});
+
+test('admin api log identifies and filters api v1 and v2 clearly', function (): void {
+    Sanctum::actingAs(User::factory()->create(['role' => 'admin']));
+    $customer = User::factory()->create();
+    $apiKey = createApiKeyForLogTest($customer, 'version-key');
+
+    createApiLogForObservabilityTest($customer, $apiKey, 200, 40, now(), 'api/v1/lookup');
+    createApiLogForObservabilityTest($customer, $apiKey, 200, 50, now(), 'api/v2/lookup');
+
+    $this->getJson('/api/admin-api/api-logs?api_version=v2')
+        ->assertOk()
+        ->assertJsonPath('data.summary.total', 1)
+        ->assertJsonCount(1, 'data.api_logs.data')
+        ->assertJsonPath('data.api_logs.data.0.endpoint', 'api/v2/lookup')
+        ->assertJsonPath('data.api_logs.data.0.api_version', 'v2');
+
+    $this->getJson('/api/admin-api/api-logs?api_version=v1')
+        ->assertOk()
+        ->assertJsonPath('data.summary.total', 1)
+        ->assertJsonPath('data.api_logs.data.0.api_version', 'v1');
 });
 
 function createApiKeyForLogTest(User $user, string $name): ApiKey
@@ -57,12 +79,18 @@ function createApiKeyForLogTest(User $user, string $name): ApiKey
     ]);
 }
 
-function createApiLogForObservabilityTest(User $user, ApiKey $apiKey, int $statusCode, int $responseTime, mixed $createdAt): ApiLog
-{
+function createApiLogForObservabilityTest(
+    User $user,
+    ApiKey $apiKey,
+    int $statusCode,
+    int $responseTime,
+    mixed $createdAt,
+    string $endpoint = 'api/v1/lookup',
+): ApiLog {
     return ApiLog::query()->create([
         'user_id' => $user->id,
         'api_key_id' => $apiKey->id,
-        'endpoint' => 'api/v1/lookup',
+        'endpoint' => $endpoint,
         'method' => 'GET',
         'ip' => '127.0.0.1',
         'request_data' => ['query' => ['plate' => '30A12345']],

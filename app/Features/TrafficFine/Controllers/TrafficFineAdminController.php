@@ -8,6 +8,7 @@ use App\Features\TrafficFine\Requests\AdminTrafficFineReportRequest;
 use App\Features\TrafficFine\Requests\StoreTrafficFineProviderRequest;
 use App\Features\TrafficFine\Requests\UpdateApiBillingSettingRequest;
 use App\Features\TrafficFine\Requests\UpdateTrafficFineProviderRequest;
+use App\Features\TrafficFine\Services\ApiDocumentationSettingsService;
 use App\Features\TrafficFine\Services\ApiLookupBillingService;
 use App\Features\TrafficFine\Services\ApiUsageStatisticsService;
 use App\Features\TrafficFine\Services\CachedPlateService;
@@ -207,12 +208,16 @@ class TrafficFineAdminController extends Controller
 
     public function billing(
         ApiLookupBillingService $billingService,
+        ApiDocumentationSettingsService $documentationSettings,
         ApiUsageStatisticsService $statistics,
     ): JsonResponse {
         return response()->json([
             'status' => true,
             'data' => [
                 'api_request_price' => $billingService->pricePerRequest(),
+                'api_v2_request_price' => $billingService->v2PricePerRequest(),
+                'api_v1_description' => $documentationSettings->v1Description(),
+                'api_v2_description' => $documentationSettings->v2Description(),
                 'summary' => $statistics->summary(),
                 'chart' => $statistics->daily(days: 30),
             ],
@@ -223,18 +228,29 @@ class TrafficFineAdminController extends Controller
         UpdateApiBillingSettingRequest $request,
         SettingStore $settingStore,
         ApiLookupBillingService $billingService,
+        ApiDocumentationSettingsService $documentationSettings,
         ApiUsageStatisticsService $statistics,
     ): JsonResponse {
+        $validated = $request->validated();
+
         $settingStore->putString(
             ApiLookupBillingService::PRICE_SETTING_KEY,
             (string) $request->integer('api_request_price'),
         );
+        $settingStore->putString(
+            ApiLookupBillingService::V2_PRICE_SETTING_KEY,
+            (string) $request->integer('api_v2_request_price'),
+        );
+        $documentationSettings->update($validated);
 
         return response()->json([
             'status' => true,
-            'message' => 'Đã cập nhật giá tra cứu API.',
+            'message' => 'Đã cập nhật giá và mô tả API.',
             'data' => [
                 'api_request_price' => $billingService->pricePerRequest(),
+                'api_v2_request_price' => $billingService->v2PricePerRequest(),
+                'api_v1_description' => $documentationSettings->v1Description(),
+                'api_v2_description' => $documentationSettings->v2Description(),
                 'summary' => $statistics->summary(),
                 'chart' => $statistics->daily(days: 30),
             ],

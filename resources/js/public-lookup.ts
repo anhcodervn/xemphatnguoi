@@ -1,3 +1,5 @@
+import Swal from 'sweetalert2';
+
 type ResolutionStatus = 'processed' | 'unprocessed' | 'unknown';
 
 type LookupViolation = {
@@ -451,7 +453,7 @@ const violationCard = (violation: LookupViolation, index: number, displayPlate: 
     return card;
 };
 
-const renderResult = (container: HTMLElement, data: LookupData, resultUrlTemplate: string): void => {
+const renderResult = (container: HTMLElement, data: LookupData, resultUrlTemplate: string, apiVersion: 'v1' | 'v2'): void => {
     detachResultAdvertisement();
     setResultShell(container);
     const hasViolations = data.violation_count > 0;
@@ -504,7 +506,11 @@ const renderResult = (container: HTMLElement, data: LookupData, resultUrlTemplat
         'site-focus inline-flex min-h-11 items-center font-bold text-slate-600 underline decoration-slate-200 underline-offset-4 hover:text-slate-900',
         'Mở trang đầy đủ',
     );
-    permalink.href = `${resultUrlTemplate.replace('__PLATE__', encodeURIComponent(data.plate))}?vehicle_type=${encodeURIComponent(data.vehicle_type)}`;
+    const resultQuery = new URLSearchParams({ vehicle_type: data.vehicle_type });
+    if (apiVersion === 'v2') {
+        resultQuery.set('api_version', 'v2');
+    }
+    permalink.href = `${resultUrlTemplate.replace('__PLATE__', encodeURIComponent(data.plate))}?${resultQuery.toString()}`;
     updatedRow.append(updatedAt, lookupAgain, permalink);
     header.append(updatedRow, element('p', 'mt-1 text-xs font-semibold text-slate-500', `${data.display_plate} · ${vehicleLabel}`));
 
@@ -576,7 +582,10 @@ document.querySelectorAll<HTMLFormElement>('[data-lookup-form]').forEach((form) 
         const result = document.querySelector<HTMLElement>('[data-lookup-result]');
         const button = form.querySelector<HTMLButtonElement>('button[type="submit"]');
         const submitLabel = form.querySelector<HTMLElement>('[data-submit-label]');
-        const endpoint = form.dataset.endpoint ?? '/api/lookup';
+        const versionInput = form.elements.namedItem('lookup_version');
+        const apiVersion = versionInput instanceof RadioNodeList && versionInput.value === 'v2' ? 'v2' : 'v1';
+        const endpoint =
+            apiVersion === 'v2' ? (form.dataset.v2Endpoint ?? '/api/client/traffic-fines/lookup-v2') : (form.dataset.v1Endpoint ?? '/api/lookup');
         const resultUrl = form.dataset.resultUrl ?? '/tra-cuu/__PLATE__';
         const plateInput = form.elements.namedItem('plate') as HTMLInputElement | null;
         const vehicleInput = form.elements.namedItem('vehicle_type');
@@ -593,6 +602,26 @@ document.querySelectorAll<HTMLFormElement>('[data-lookup-form]').forEach((form) 
             !(vehicleInput instanceof RadioNodeList || vehicleInput instanceof HTMLSelectElement) ||
             button.disabled
         ) {
+            return;
+        }
+
+        if (apiVersion === 'v2' && form.dataset.authenticated !== 'true') {
+            const formattedPrice = new Intl.NumberFormat('vi-VN').format(Number(form.dataset.v2Price ?? 0));
+            const confirmation = await Swal.fire({
+                icon: 'info',
+                title: 'Đăng nhập để tra cứu V2',
+                text: `Tra cứu V2 tính phí ${formattedPrice}đ cho mỗi lượt thành công và được trừ trực tiếp từ số dư ví.`,
+                confirmButtonText: 'Đăng nhập để tiếp tục',
+                cancelButtonText: 'Để sau',
+                showCancelButton: true,
+                reverseButtons: true,
+                confirmButtonColor: '#0875be',
+            });
+
+            if (confirmation.isConfirmed) {
+                window.location.assign(form.dataset.loginUrl ?? '/auth/login');
+            }
+
             return;
         }
 
@@ -649,11 +678,13 @@ document.querySelectorAll<HTMLFormElement>('[data-lookup-form]').forEach((form) 
                           ? 'Cần xác minh bảo mật'
                           : null;
                 const title =
-                    payload.status === 'rate_limited'
-                        ? 'Bạn đã tra cứu quá nhanh'
-                        : payload.status === 'invalid_plate'
-                          ? 'Biển số chưa hợp lệ'
-                          : 'Chưa thể trả kết quả';
+                    response.status === 402
+                        ? 'Số dư ví không đủ'
+                        : payload.status === 'rate_limited'
+                          ? 'Bạn đã tra cứu quá nhanh'
+                          : payload.status === 'invalid_plate'
+                            ? 'Biển số chưa hợp lệ'
+                            : 'Chưa thể trả kết quả';
                 renderMessage(
                     result,
                     captchaTitle ?? title,
@@ -676,7 +707,7 @@ document.querySelectorAll<HTMLFormElement>('[data-lookup-form]').forEach((form) 
                 return;
             }
 
-            renderResult(result, payload.data, resultUrl);
+            renderResult(result, payload.data, resultUrl, apiVersion);
             result.focus({ preventScroll: true });
 
             try {

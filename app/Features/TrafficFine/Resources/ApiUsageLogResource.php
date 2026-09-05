@@ -17,6 +17,7 @@ class ApiUsageLogResource extends JsonResource
         return [
             'id' => $this->id,
             'api_key_name' => $this->whenLoaded('apiKey', fn (): ?string => $this->apiKey?->name),
+            'api_version' => $this->api_version,
             'plate' => is_array($query) ? ($query['plate'] ?? null) : null,
             'vehicle_type' => is_array($query) ? ($query['vehicle_type'] ?? null) : null,
             'method' => $this->method,

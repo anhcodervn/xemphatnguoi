@@ -1,4 +1,4 @@
-@props(['vehicleTypes' => [], 'plate' => '', 'vehicleType' => 'car', 'turnstile' => []])
+@props(['vehicleTypes' => [], 'plate' => '', 'vehicleType' => 'car', 'turnstile' => [], 'v2LookupPrice' => 150, 'isAuthenticated' => false])
 
 @php
     $turnstileRequired = (bool) ($turnstile['required'] ?? false);
@@ -10,9 +10,30 @@
     {{ $attributes->merge(['class' => 'grid gap-3']) }}
     data-lookup-form
     data-endpoint="{{ url('/api/lookup') }}"
+    data-v1-endpoint="{{ url('/api/lookup') }}"
+    data-v2-endpoint="{{ url('/api/client/traffic-fines/lookup-v2') }}"
+    data-authenticated="{{ $isAuthenticated ? 'true' : 'false' }}"
+    data-login-url="{{ route('auth.login') }}"
+    data-v2-price="{{ (int) $v2LookupPrice }}"
     data-result-url="{{ url('/tra-cuu') }}/__PLATE__"
     data-turnstile-required="{{ $turnstileRequired ? 'true' : 'false' }}"
 >
+    <fieldset>
+        <legend class="mb-1.5 block text-xs font-bold text-navy">Nguồn tra cứu</legend>
+        <div class="grid grid-cols-2 gap-1 rounded-lg border border-slate-200 bg-slate-50 p-1">
+            <label class="site-focus cursor-pointer rounded-md px-2 py-2 text-left transition-colors hover:bg-white has-[:checked]:bg-white has-[:checked]:shadow-sm has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand has-[:focus-visible]:ring-offset-2">
+                <input type="radio" name="lookup_version" value="v1" class="sr-only" checked>
+                <span class="block text-xs font-extrabold text-navy">Tra cứu V1</span>
+                <span class="mt-0.5 block text-[10px] font-semibold text-emerald-700">Miễn phí</span>
+            </label>
+            <label class="site-focus cursor-pointer rounded-md px-2 py-2 text-left transition-colors hover:bg-white has-[:checked]:bg-white has-[:checked]:shadow-sm has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand has-[:focus-visible]:ring-offset-2">
+                <input type="radio" name="lookup_version" value="v2" class="sr-only">
+                <span class="block text-xs font-extrabold text-navy">Tra cứu V2</span>
+                <span class="mt-0.5 block text-[10px] font-semibold text-amber-700">{{ number_format((int) $v2LookupPrice, 0, ',', '.') }}đ/lượt · {{ $isAuthenticated ? 'Trừ từ ví' : 'Cần đăng nhập' }}</span>
+            </label>
+        </div>
+    </fieldset>
+
     <fieldset>
         <legend class="sr-only">Loại phương tiện</legend>
         <div class="grid grid-cols-3 gap-1 rounded-lg border border-slate-200 bg-slate-50 p-1">

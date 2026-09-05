@@ -89,6 +89,7 @@ onMounted(() => load());
                         <thead class="bg-slate-50 text-xs uppercase text-slate-500">
                             <tr>
                                 <th class="px-5 py-4">Thời gian</th>
+                                <th class="px-5 py-4">Phiên bản</th>
                                 <th class="px-5 py-4">Biển số</th>
                                 <th class="px-5 py-4">Trạng thái</th>
                                 <th class="px-5 py-4">Phí</th>
@@ -98,6 +99,13 @@ onMounted(() => load());
                         <tbody class="divide-y divide-slate-200">
                             <tr v-for="row in usage.logs.data" :key="row.id">
                                 <td class="whitespace-nowrap px-5 py-4 text-slate-600">{{ new Date(row.created_at).toLocaleString('vi-VN') }}</td>
+                                <td class="px-5 py-4">
+                                    <span
+                                        class="rounded-full px-2.5 py-1 text-xs font-black uppercase"
+                                        :class="row.api_version === 'v2' ? 'bg-violet-50 text-violet-700' : 'bg-sky-50 text-sky-700'"
+                                        >API {{ row.api_version }}</span
+                                    >
+                                </td>
                                 <td class="px-5 py-4">
                                     <p class="font-bold text-slate-950">{{ row.plate ?? '—' }}</p>
                                     <p class="mt-1 text-xs text-slate-500">{{ row.api_key_name ?? 'API key' }}</p>

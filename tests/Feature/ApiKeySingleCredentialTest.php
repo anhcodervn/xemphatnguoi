@@ -15,7 +15,10 @@ function apiKeyPayload(): array
 
 it('publishes only the traffic fine permission', function (): void {
     expect(ApiPermissionCatalog::keys())->toBe(['traffic-fines.lookup'])
-        ->and(ApiPermissionCatalog::keyed()['traffic-fines.lookup']['endpoints'])->toBe(['GET /api/v1/lookup']);
+        ->and(ApiPermissionCatalog::keyed()['traffic-fines.lookup']['endpoints'])->toBe([
+            'GET /api/v1/lookup',
+            'GET /api/v2/lookup',
+        ]);
 });
 
 it('allows each user to create only one API credential pair', function () {

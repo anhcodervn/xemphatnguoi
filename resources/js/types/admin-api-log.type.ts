@@ -1,6 +1,7 @@
 export type AdminApiLogItem = {
     id: number;
     endpoint: string;
+    api_version: 'v1' | 'v2' | 'unknown';
     method: string;
     ip: string | null;
     request_data: Record<string, unknown> | null;

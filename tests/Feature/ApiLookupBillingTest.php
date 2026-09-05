@@ -202,9 +202,13 @@ it('lets an admin change the price for new requests while preserving old log pri
 
     $admin = User::factory()->create(['role' => 'admin']);
     Sanctum::actingAs($admin);
-    $this->putJson('/api/admin-api/traffic-fines/billing', ['api_request_price' => 35])
+    $this->putJson('/api/admin-api/traffic-fines/billing', [
+        'api_request_price' => 35,
+        'api_v2_request_price' => 150,
+    ])
         ->assertOk()
-        ->assertJsonPath('data.api_request_price', 35);
+        ->assertJsonPath('data.api_request_price', 35)
+        ->assertJsonPath('data.api_v2_request_price', 150);
 
     $this->withHeaders($account['headers'])->getJson(billingLookupUrl('30A99999'))->assertOk();
 
@@ -227,6 +231,7 @@ it('shows a user only allowlisted fields from their own API request logs', funct
         ->assertOk()
         ->assertJsonCount(1, 'data.logs.data')
         ->assertJsonPath('data.logs.data.0.plate', '30A12345')
+        ->assertJsonPath('data.logs.data.0.api_version', 'v1')
         ->assertJsonMissingPath('data.logs.data.0.request_data')
         ->assertJsonMissingPath('data.logs.data.0.response_data')
         ->assertJsonMissingPath('data.logs.data.0.api_key_id');

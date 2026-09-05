@@ -27,6 +27,10 @@ return [
         ],
     ],
 
+    'api_v2' => [
+        'url' => env('XEPHATNGUOI_API_V2_URL', 'https://api.xephatnguoi.com/v2/search'),
+    ],
+
     'cache' => [
         'store' => env('TRAFFIC_FINE_CACHE_STORE', 'redis'),
         'ttl' => (int) env('TRAFFIC_FINE_CACHE_TTL', 86400),
@@ -41,6 +45,12 @@ return [
 
     'billing' => [
         'api_request_price' => (int) env('TRAFFIC_FINE_API_REQUEST_PRICE', 20),
+        'api_v2_request_price' => (int) env('TRAFFIC_FINE_API_V2_REQUEST_PRICE', 150),
+    ],
+
+    'public_api' => [
+        'v1_description' => 'Phiên bản ổn định, phù hợp với các hệ thống đang tích hợp.',
+        'v2_description' => 'Phiên bản mới, tối ưu cho các kết nối và ứng dụng mới.',
     ],
 
     'monitoring' => [

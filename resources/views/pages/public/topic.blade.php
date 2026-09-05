@@ -14,7 +14,7 @@
             <section class="mt-6 max-w-2xl rounded-lg border border-slate-200 bg-page p-4" aria-labelledby="topic-lookup-title">
                 <h2 id="topic-lookup-title" class="text-base font-bold text-navy">Kiểm tra biển số ngay</h2>
                 <div class="mt-3">
-                    <x-lookup-form :vehicle-types="$vehicleTypes" :vehicle-type="$topic['vehicle_type']" :turnstile="$turnstile" />
+                    <x-lookup-form :vehicle-types="$vehicleTypes" :vehicle-type="$topic['vehicle_type']" :turnstile="$turnstile" :v2-lookup-price="$v2LookupPrice" :is-authenticated="$isAuthenticated" />
                 </div>
             </section>
         @endif

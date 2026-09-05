@@ -110,3 +110,18 @@ it('uses one compact density scale across public Blade surfaces', function (): v
         ->and($violations)
         ->not->toContain('min-h-[205px]');
 });
+
+it('confirms the v2 fee before sending a guest to login', function (): void {
+    $script = file_get_contents(dirname(__DIR__, 2).'/resources/js/public-lookup.ts');
+    $form = file_get_contents(dirname(__DIR__, 2).'/resources/views/components/lookup-form.blade.php');
+
+    expect($script)
+        ->toContain("import Swal from 'sweetalert2'")
+        ->toContain("title: 'Đăng nhập để tra cứu V2'")
+        ->toContain("confirmButtonText: 'Đăng nhập để tiếp tục'")
+        ->toContain('showCancelButton: true')
+        ->toContain('if (confirmation.isConfirmed)')
+        ->toContain("window.location.assign(form.dataset.loginUrl ?? '/auth/login')")
+        ->and($form)
+        ->toContain('data-v2-price="{{ (int) $v2LookupPrice }}"');
+});

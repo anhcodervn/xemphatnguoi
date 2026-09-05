@@ -1,6 +1,6 @@
 @php
     $faqs = [
-        ['question' => 'Tra cứu phạt nguội có mất phí không?', 'answer' => 'Biểu mẫu tra cứu công khai trên trang này không yêu cầu đăng nhập. Các dịch vụ mở rộng cho lịch sử, API hoặc quản lý nhiều xe có thể áp dụng chính sách riêng khi được công bố.'],
+        ['question' => 'Tra cứu phạt nguội có mất phí không?', 'answer' => 'Tra cứu V1 được sử dụng miễn phí và không cần đăng nhập. Tra cứu V2 yêu cầu đăng nhập, đồng thời tính phí theo mỗi lượt thành công từ số dư ví.'],
         ['question' => 'Bao lâu dữ liệu phạt nguội được cập nhật?', 'answer' => 'Không có một khoảng thời gian cố định cho mọi trường hợp. Thời điểm dữ liệu xuất hiện phụ thuộc thời gian ghi nhận, quy trình xác minh, khả năng đồng bộ và đơn vị xử lý.'],
         ['question' => 'Xe máy có tra cứu phạt nguội được không?', 'answer' => 'Có thể chọn xe máy hoặc xe máy điện trên biểu mẫu. Phạm vi kết quả phụ thuộc dữ liệu mà nguồn tra cứu cung cấp tại từng thời điểm.'],
         ['question' => 'Không tìm thấy vi phạm có nghĩa là không bị phạt không?', 'answer' => 'Không. Thông báo chưa ghi nhận chỉ phản ánh dữ liệu hiện có tại thời điểm tra cứu. Dữ liệu có thể được bổ sung sau quá trình xác minh và cập nhật.'],
@@ -20,7 +20,7 @@
 @extends('layouts.public')
 
 @section('content')
-    <x-home.hero :vehicle-types="$vehicleTypes" :lookup-mode="$lookupMode" :turnstile="$turnstile" />
+    <x-home.hero :vehicle-types="$vehicleTypes" :lookup-mode="$lookupMode" :turnstile="$turnstile" :v2-lookup-price="$v2LookupPrice" :is-authenticated="$isAuthenticated" />
 
     <section id="ket-qua" class="scroll-mt-24 border-b border-slate-200 bg-white" aria-labelledby="lookup-result-title">
         <div class="site-container py-7 sm:py-8">

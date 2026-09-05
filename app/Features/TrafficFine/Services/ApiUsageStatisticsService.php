@@ -34,7 +34,7 @@ class ApiUsageStatisticsService
             'charged_requests' => (int) ($metrics?->charged_requests ?? 0),
             'failed_requests' => (int) ($metrics?->failed_requests ?? 0),
             'total_amount' => (string) WalletTransaction::query()
-                ->where('reference_type', 'traffic_fine_api_request')
+                ->whereIn('reference_type', ['traffic_fine_api_request', 'traffic_fine_api_v2_request'])
                 ->where('status', 'success')
                 ->when($user instanceof User, fn (Builder $query) => $query->whereHas(
                     'wallet',
@@ -82,7 +82,7 @@ class ApiUsageStatisticsService
     private function query(?User $user = null): Builder
     {
         return ApiLog::query()
-            ->where('endpoint', 'api/v1/lookup')
+            ->whereIn('endpoint', ['api/v1/lookup', 'api/v2/lookup'])
             ->where('method', 'GET')
             ->when($user instanceof User, fn (Builder $query) => $query->whereBelongsTo($user));
     }

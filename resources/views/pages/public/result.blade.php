@@ -19,7 +19,7 @@
                 <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-100 text-sky-700" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-4 w-4"><circle cx="11" cy="11" r="7"/><path d="m16 16 4 4"/></svg></span>
                 <div><p class="text-[10px] font-bold uppercase tracking-[0.12em] text-sky-700">Kiểm tra phương tiện khác</p><h2 class="mt-0.5 text-base font-black text-slate-950">Tra cứu biển số mới</h2></div>
             </div>
-            <div class="mt-3"><x-lookup-form :vehicle-types="$vehicleTypes" :plate="$displayPlate" :vehicle-type="$vehicleType->value" :turnstile="$turnstile" /></div>
+            <div class="mt-3"><x-lookup-form :vehicle-types="$vehicleTypes" :plate="$displayPlate" :vehicle-type="$vehicleType->value" :turnstile="$turnstile" :v2-lookup-price="$v2LookupPrice" :is-authenticated="$isAuthenticated" /></div>
         </section>
     </div>
 @endsection

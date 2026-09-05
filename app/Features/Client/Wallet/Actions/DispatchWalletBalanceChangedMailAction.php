@@ -13,7 +13,7 @@ class DispatchWalletBalanceChangedMailAction
 
     public function handle(WalletTransaction $walletTransaction): void
     {
-        if ($walletTransaction->reference_type === 'traffic_fine_api_request') {
+        if (in_array($walletTransaction->reference_type, ['traffic_fine_api_request', 'traffic_fine_api_v2_request'], true)) {
             return;
         }
 

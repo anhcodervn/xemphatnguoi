@@ -14,6 +14,9 @@ import type { WalletType } from '@/types/wallet.type';
 export type TrafficFineDashboard = {
     wallet: WalletType;
     api_request_price: number;
+    api_v2_request_price: number;
+    api_v1_description: string;
+    api_v2_description: string;
     api_usage: ApiUsageSummary;
     api_chart: ApiUsageDaily[];
     lookup_count: number;
@@ -24,6 +27,7 @@ export type TrafficFineDashboard = {
 
 export type ApiUsageDashboard = {
     api_request_price: number;
+    api_v2_request_price: number;
     summary: ApiUsageSummary;
     chart: ApiUsageDaily[];
     logs: PaginatedResponse<ApiUsageLog>;

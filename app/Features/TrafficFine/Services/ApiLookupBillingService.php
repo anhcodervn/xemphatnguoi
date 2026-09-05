@@ -7,6 +7,7 @@ use App\Features\Client\Wallet\Services\WalletService;
 use App\Models\ApiKey;
 use App\Models\ApiLog;
 use App\Models\User;
+use App\Models\WalletTransaction;
 use App\Support\SettingStore;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -14,6 +15,8 @@ use Illuminate\Support\Facades\DB;
 class ApiLookupBillingService
 {
     public const PRICE_SETTING_KEY = 'traffic_fine_api_request_price';
+
+    public const V2_PRICE_SETTING_KEY = 'traffic_fine_api_v2_request_price';
 
     public const ATTRIBUTE_UNIT_PRICE = 'api_billing_unit_price';
 
@@ -33,8 +36,21 @@ class ApiLookupBillingService
     public function pricePerRequest(): int
     {
         $defaultPrice = max(1, (int) config('traffic-fines.billing.api_request_price', 20));
+
+        return $this->configuredPrice(self::PRICE_SETTING_KEY, $defaultPrice);
+    }
+
+    public function v2PricePerRequest(): int
+    {
+        $defaultPrice = max(1, (int) config('traffic-fines.billing.api_v2_request_price', 150));
+
+        return $this->configuredPrice(self::V2_PRICE_SETTING_KEY, $defaultPrice);
+    }
+
+    private function configuredPrice(string $settingKey, int $defaultPrice): int
+    {
         $configuredPrice = filter_var(
-            $this->settingStore->getString(self::PRICE_SETTING_KEY, (string) $defaultPrice),
+            $this->settingStore->getString($settingKey, (string) $defaultPrice),
             FILTER_VALIDATE_INT,
             ['options' => ['min_range' => 1, 'max_range' => 1_000_000]],
         );
@@ -42,9 +58,9 @@ class ApiLookupBillingService
         return $configuredPrice === false ? $defaultPrice : $configuredPrice;
     }
 
-    public function ensureSufficientBalance(Request $request, User $user): void
+    public function ensureSufficientBalance(Request $request, User $user, ?int $price = null): void
     {
-        $price = $this->pricePerRequest();
+        $price ??= $this->pricePerRequest();
         $wallet = $this->walletService->getWallet($user);
 
         $this->setAttribute($request, self::ATTRIBUTE_UNIT_PRICE, $price);
@@ -65,16 +81,20 @@ class ApiLookupBillingService
     public function charge(Request $request, User $user, ApiKey $apiKey): void
     {
         $price = (int) $request->attributes->get(self::ATTRIBUTE_UNIT_PRICE, $this->pricePerRequest());
+        $isV2 = $request->routeIs('v2.traffic-fines.lookup');
+        $referenceType = $isV2 ? 'traffic_fine_api_v2_request' : 'traffic_fine_api_request';
+        $descriptionVersion = $isV2 ? ' API v2' : ' API';
 
         try {
-            [$transaction, $apiLog] = DB::transaction(function () use ($request, $user, $apiKey, $price): array {
+            [$transaction, $apiLog] = DB::transaction(function () use ($request, $user, $apiKey, $price, $referenceType, $descriptionVersion): array {
                 $transaction = $this->walletService->debitWithTransaction(
                     user: $user,
                     amount: $price,
-                    referenceType: 'traffic_fine_api_request',
+                    referenceType: $referenceType,
                     referenceId: $apiKey->id,
                     description: sprintf(
-                        'Phí tra cứu API biển số %s',
+                        'Phí tra cứu%s biển số %s',
+                        $descriptionVersion,
                         mb_strtoupper($request->string('plate')->toString()),
                     ),
                 );
@@ -119,6 +139,37 @@ class ApiLookupBillingService
         $this->setAttribute($request, self::ATTRIBUTE_LOG_ID, $apiLog->id);
         $this->setAttribute($request, self::ATTRIBUTE_CHARGED_AMOUNT, $price);
         $this->setAttribute($request, self::ATTRIBUTE_STATUS, 'charged');
+    }
+
+    public function chargeWebV2(Request $request, User $user): WalletTransaction
+    {
+        $price = (int) $request->attributes->get(self::ATTRIBUTE_UNIT_PRICE, $this->v2PricePerRequest());
+
+        try {
+            $transaction = $this->walletService->debitWithTransaction(
+                user: $user,
+                amount: $price,
+                referenceType: 'traffic_fine_web_v2_request',
+                referenceId: $user->id,
+                description: sprintf(
+                    'Phí tra cứu nâng cao biển số %s',
+                    mb_strtoupper($request->string('plate')->toString()),
+                ),
+            );
+        } catch (ApiException) {
+            $this->setAttribute($request, self::ATTRIBUTE_STATUS, 'insufficient_balance');
+
+            throw new ApiException('Số dư ví không đủ để thực hiện tra cứu nâng cao.', 402, [
+                'code' => 'insufficient_balance',
+                'required_amount' => $price,
+            ]);
+        }
+
+        $this->setAttribute($request, self::ATTRIBUTE_TRANSACTION_ID, $transaction->id);
+        $this->setAttribute($request, self::ATTRIBUTE_CHARGED_AMOUNT, $price);
+        $this->setAttribute($request, self::ATTRIBUTE_STATUS, 'charged');
+
+        return $transaction;
     }
 
     private function setAttribute(Request $request, string $key, mixed $value): void

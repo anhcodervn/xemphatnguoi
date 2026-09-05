@@ -5,12 +5,17 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Str;
 
 class ApiLog extends Model
 {
     use HasFactory;
 
     public $timestamps = false;
+
+    protected $appends = [
+        'api_version',
+    ];
 
     protected $fillable = [
         'user_id',
@@ -57,5 +62,14 @@ class ApiLog extends Model
     public function walletTransaction(): BelongsTo
     {
         return $this->belongsTo(WalletTransaction::class);
+    }
+
+    public function getApiVersionAttribute(): string
+    {
+        return match (true) {
+            Str::startsWith((string) $this->endpoint, 'api/v1/') => 'v1',
+            Str::startsWith((string) $this->endpoint, 'api/v2/') => 'v2',
+            default => 'unknown',
+        };
     }
 }

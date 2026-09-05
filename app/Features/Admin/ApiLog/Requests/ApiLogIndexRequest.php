@@ -22,6 +22,7 @@ class ApiLogIndexRequest extends FormRequest
         return [
             'search' => ['nullable', 'string', 'max:100'],
             'method' => ['nullable', 'string', 'in:GET,POST,PUT,PATCH,DELETE'],
+            'api_version' => ['nullable', 'string', 'in:v1,v2'],
             'status_code' => ['nullable', 'integer', 'between:100,599'],
             'status_group' => ['nullable', 'string', 'in:success,client_error,server_error'],
             'from' => ['nullable', 'date_format:Y-m-d'],

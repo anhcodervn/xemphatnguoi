@@ -9,12 +9,14 @@ use App\Features\TrafficFine\Services\ApiLookupBillingService;
 use App\Features\TrafficFine\Services\CloudflareTurnstileService;
 use App\Features\TrafficFine\Services\TrafficFineLookupService;
 use App\Features\TrafficFine\Services\TrafficFineTurnstileSettingsService;
+use App\Features\TrafficFine\Services\TrafficFineV2LookupService;
 use App\Http\Controllers\Controller;
 use App\Models\SeoPost;
 use App\Models\User;
 use App\Support\EditorContentRenderer;
 use App\Support\SettingStore;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
@@ -23,6 +25,7 @@ class PublicTrafficFineController extends Controller
     public function __construct(
         private readonly EditorContentRenderer $contentRenderer,
         private readonly TrafficFineTurnstileSettingsService $turnstileSettings,
+        private readonly ApiLookupBillingService $billingService,
     ) {}
 
     public function home(Request $request, SettingStore $settingStore): View
@@ -59,9 +62,20 @@ class PublicTrafficFineController extends Controller
         Request $request,
         SettingStore $settingStore,
         TrafficFineLookupService $lookupService,
+        TrafficFineV2LookupService $v2LookupService,
         CloudflareTurnstileService $turnstile,
-    ): View {
+    ): View|RedirectResponse {
         $vehicleType = $request->string('vehicle_type', VehicleType::Car->value)->toString();
+        $apiVersion = $request->string('api_version', 'v1')->toString();
+
+        if ($apiVersion === 'v2' && ! $request->user() instanceof User) {
+            return redirect()->guest(route('auth.login'));
+        }
+
+        if (! in_array($apiVersion, ['v1', 'v2'], true)) {
+            abort(404);
+        }
+
         $lookup = null;
         $errorMessage = null;
 
@@ -69,7 +83,9 @@ class PublicTrafficFineController extends Controller
             if (! $turnstile->mayViewResult($request, $plate, $vehicleType)) {
                 $errorMessage = 'Vui lòng hoàn tất xác minh bảo mật và tra cứu lại biển số này.';
             } else {
-                $lookup = $lookupService->findCachedResult($plate, $vehicleType);
+                $lookup = $apiVersion === 'v2'
+                    ? $v2LookupService->findCachedResult($plate, $vehicleType)
+                    : $lookupService->findCachedResult($plate, $vehicleType);
 
                 if ($lookup === null) {
                     $errorMessage = 'Chưa có kết quả gần đây cho biển số này. Vui lòng tra cứu lại.';
@@ -202,6 +218,8 @@ class PublicTrafficFineController extends Controller
                 ->mapWithKeys(fn (VehicleType $type): array => [$type->value => $type->label()])
                 ->all(),
             'turnstile' => $this->turnstileSettings->publicConfiguration($request->user() instanceof User ? $request->user() : null),
+            'v2LookupPrice' => $this->billingService->v2PricePerRequest(),
+            'isAuthenticated' => $request->user() instanceof User,
         ];
     }
 

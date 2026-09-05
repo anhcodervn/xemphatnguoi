@@ -10,6 +10,7 @@ export type AdminTrafficFineMetrics = {
     average_provider_latency_ms: number | null;
     users: number;
     api_request_price: number;
+    api_v2_request_price: number;
     api_requests_today: number;
     api_requests_month: number;
     api_revenue_today: string;
@@ -79,6 +80,9 @@ export type AdminApiUsageDaily = {
 
 export type AdminApiBilling = {
     api_request_price: number;
+    api_v2_request_price: number;
+    api_v1_description: string;
+    api_v2_description: string;
     summary: {
         total_requests: number;
         charged_requests: number;
@@ -274,8 +278,18 @@ export const adminTrafficFineService = {
         const response = await api.get('/api/admin-api/traffic-fines/billing');
         return response.data.data as AdminApiBilling;
     },
-    async updateBilling(apiRequestPrice: number): Promise<AdminApiBilling> {
-        const response = await api.put('/api/admin-api/traffic-fines/billing', { api_request_price: apiRequestPrice });
+    async updateBilling(
+        apiRequestPrice: number,
+        apiV2RequestPrice: number,
+        apiV1Description: string,
+        apiV2Description: string,
+    ): Promise<AdminApiBilling> {
+        const response = await api.put('/api/admin-api/traffic-fines/billing', {
+            api_request_price: apiRequestPrice,
+            api_v2_request_price: apiV2RequestPrice,
+            api_v1_description: apiV1Description,
+            api_v2_description: apiV2Description,
+        });
         return response.data.data as AdminApiBilling;
     },
     async adSlots(): Promise<AdminAdSlot[]> {

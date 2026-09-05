@@ -4,6 +4,8 @@ use App\Features\TrafficFine\Controllers\AdSlotController;
 use App\Features\TrafficFine\Controllers\TrafficFineAdminController;
 use App\Features\TrafficFine\Controllers\TrafficFineDashboardController;
 use App\Features\TrafficFine\Controllers\TrafficFineLookupController;
+use App\Features\TrafficFine\Controllers\TrafficFineLookupV2Controller;
+use App\Features\TrafficFine\Controllers\TrafficFineWebLookupV2Controller;
 use App\Features\TrafficFine\Controllers\UserVehicleController;
 use App\Features\TrafficFine\Controllers\VehicleMonitoringController;
 use Illuminate\Support\Facades\Route;
@@ -18,6 +20,12 @@ Route::prefix('v1')
         Route::get('/lookup', TrafficFineLookupController::class)->name('v1.traffic-fines.lookup');
     });
 
+Route::prefix('v2')
+    ->middleware(['api-key.auth', 'api-key.permission:traffic-fines.lookup', 'api-key.log', 'throttle:traffic-fine-lookup'])
+    ->group(function (): void {
+        Route::get('/lookup', TrafficFineLookupV2Controller::class)->name('v2.traffic-fines.lookup');
+    });
+
 Route::prefix('client/traffic-fines')
     ->name('client.traffic-fines.')
     ->middleware('auth:sanctum')
@@ -29,6 +37,9 @@ Route::prefix('client/traffic-fines')
         Route::post('/lookup', TrafficFineLookupController::class)
             ->middleware('throttle:traffic-fine-lookup')
             ->name('lookup');
+        Route::post('/lookup-v2', TrafficFineWebLookupV2Controller::class)
+            ->middleware('throttle:traffic-fine-lookup')
+            ->name('lookup-v2');
         Route::post('/vehicles/{vehicle}/lookup', [UserVehicleController::class, 'lookup'])
             ->middleware('throttle:traffic-fine-lookup')
             ->name('vehicles.lookup');
