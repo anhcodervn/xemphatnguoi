@@ -169,6 +169,8 @@ it('shows both lookup versions on the home page without exposing provider detail
         ->assertSee('Tra cứu V2')
         ->assertSee('175đ/lượt')
         ->assertSee('Cần đăng nhập')
+        ->assertSee('V1 sử dụng nguồn dữ liệu cũ nên kết quả có thể chưa chính xác.')
+        ->assertSee('V2 sử dụng nguồn dữ liệu mới được lấy trực tiếp từ VNeTraffic.')
         ->assertSee('data-v2-endpoint', false)
         ->assertSee('data-v2-price="175"', false);
 

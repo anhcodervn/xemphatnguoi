@@ -25,9 +25,9 @@
         <div data-mobile-priority-lookup class="relative mx-auto mt-4 w-full max-w-[720px] overflow-hidden rounded-xl border border-slate-200 bg-white p-3 text-left shadow-[0_18px_42px_-34px_rgba(7,26,51,0.38)] sm:p-4">
             <span aria-hidden="true" class="absolute inset-x-0 top-0 h-1 bg-brand"></span>
             <x-lookup-form :vehicle-types="$vehicleTypes" :turnstile="$turnstile" :v2-lookup-price="$v2LookupPrice" :is-authenticated="$isAuthenticated" />
-            <p class="mt-2 flex items-center justify-center gap-1.5 text-center text-[11px] leading-5 text-slate-500">
-                <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" class="h-4 w-4 shrink-0 text-success"><path d="M10 2.5 16 5v4.5c0 3.7-2.5 6.5-6 8-3.5-1.5-6-4.3-6-8V5l6-2.5Z"/><path d="m7 10 2 2 4-4"/></svg>
-                V1 miễn phí không cần đăng nhập · V2 tính phí theo lượt
+            <p class="mt-2 flex items-start justify-center gap-1.5 text-center text-[11px] leading-5 text-slate-500">
+                <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" class="mt-0.5 h-4 w-4 shrink-0 text-sky-600"><circle cx="10" cy="10" r="7"/><path d="M10 9v4m0-7h.01"/></svg>
+                <span>V1 sử dụng nguồn dữ liệu cũ nên kết quả có thể chưa chính xác. V2 sử dụng nguồn dữ liệu mới được lấy trực tiếp từ VNeTraffic.</span>
             </p>
         </div>
 
