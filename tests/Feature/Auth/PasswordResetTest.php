@@ -17,7 +17,11 @@ test('reset password link can be requested', function () {
 
     $this->post('/forgot-password', ['email' => $user->email]);
 
-    Notification::assertSentTo($user, QueuedResetPasswordNotification::class);
+    Notification::assertSentTo(
+        $user,
+        QueuedResetPasswordNotification::class,
+        fn (QueuedResetPasswordNotification $notification): bool => $notification->toMail($user)->subject === 'Hệ thống Xem Phạt Nguội',
+    );
 });
 
 test('reset password screen can be rendered', function () {

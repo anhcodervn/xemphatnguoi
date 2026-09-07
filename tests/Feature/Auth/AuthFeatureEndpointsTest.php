@@ -144,7 +144,7 @@ test('users receive email when logging in from a new ip address', function () {
 
     Queue::assertPushed(SendSystemMailJob::class, function (SendSystemMailJob $job) use ($user): bool {
         return $job->to === $user->email
-            && $job->subjectText === 'Hệ thống Auto Cron'
+            && $job->subjectText === 'Hệ thống Xem Phạt Nguội'
             && $job->title === 'Phát hiện đăng nhập từ IP mới'
             && collect($job->messageLines)->contains(fn (string $line): bool => str_contains($line, '2.2.2.2'))
             && collect($job->messageLines)->contains(fn (string $line): bool => str_contains($line, '1.1.1.1'));
@@ -214,5 +214,5 @@ test('users can register through the auth web submit endpoint', function () {
         ->and($response->json('user.wallet.balance'))->toBe('0.00');
 
     Queue::assertPushed(SaveUserLogJob::class, fn (SaveUserLogJob $job): bool => $job->userId === $user?->id && $job->action === 'register');
-    Queue::assertPushed(SendSystemMailJob::class, fn (SendSystemMailJob $job): bool => $job->to === 'blade@example.com' && $job->subjectText === 'Hệ thống Auto Cron');
+    Queue::assertPushed(SendSystemMailJob::class, fn (SendSystemMailJob $job): bool => $job->to === 'blade@example.com' && $job->subjectText === 'Hệ thống Xem Phạt Nguội');
 });

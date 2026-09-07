@@ -6,7 +6,7 @@ use App\Jobs\SendSystemMailJob;
 
 class MailQueue
 {
-    public const DEFAULT_SUBJECT = 'Hệ thống Auto Cron';
+    public const DEFAULT_SUBJECT = 'Hệ thống Xem Phạt Nguội';
 
     /**
      * @param  array<int, string>  $messageLines

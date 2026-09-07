@@ -34,7 +34,7 @@ class QueuedResetPasswordNotification extends Notification implements ShouldQueu
         ], false);
 
         return (new MailMessage)
-            ->subject('Hệ thống Auto Cron')
+            ->subject('Hệ thống Xem Phạt Nguội')
             ->view('emails.reset-password', [
                 'name' => $notifiable->name ?? $notifiable->username ?? 'bạn',
                 'resetUrl' => $resetUrl,

@@ -82,7 +82,7 @@ test('authenticated user can update password and record user log', function () {
 
     Queue::assertPushed(SendSystemMailJob::class, function (SendSystemMailJob $job) use ($user): bool {
         return $job->to === $user->email
-            && $job->subjectText === 'Hệ thống Auto Cron'
+            && $job->subjectText === 'Hệ thống Xem Phạt Nguội'
             && $job->title === 'Mật khẩu tài khoản đã được thay đổi';
     });
 });
