@@ -416,7 +416,15 @@ onBeforeUnmount(() => {
                             <tr v-for="item in items" :key="item.id" class="align-top hover:bg-slate-50/80">
                                 <td class="whitespace-nowrap px-5 py-4">
                                     <p class="font-black tracking-wide text-slate-950">{{ item.plate }}</p>
-                                    <p class="mt-1 text-xs text-slate-500">{{ vehicleLabel(item.vehicle_type) }}</p>
+                                    <div class="mt-1 flex items-center gap-2">
+                                        <p class="text-xs text-slate-500">{{ vehicleLabel(item.vehicle_type) }}</p>
+                                        <span
+                                            class="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase"
+                                            :class="item.api_version === 'v2' ? 'bg-violet-50 text-violet-700' : 'bg-sky-50 text-sky-700'"
+                                        >
+                                            {{ item.api_version }}
+                                        </span>
+                                    </div>
                                 </td>
                                 <td class="whitespace-nowrap px-5 py-4">
                                     <span

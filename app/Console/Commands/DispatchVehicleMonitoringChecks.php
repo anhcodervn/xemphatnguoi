@@ -68,7 +68,7 @@ class DispatchVehicleMonitoringChecks extends Command
                 return false;
             }
 
-            CheckVehicleMonitoringJob::dispatch($monitoring->id);
+            CheckVehicleMonitoringJob::dispatch($monitoring->id)->afterCommit();
             $monitoring->update(['last_dispatched_at' => now()]);
 
             return true;

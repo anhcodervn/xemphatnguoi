@@ -43,6 +43,7 @@ class VehicleMonitoringChangedMail extends Mailable implements ShouldQueue
                 'lookupUrl' => route('traffic-fines.result', [
                     'plate' => $this->plate,
                     'vehicle_type' => $this->vehicleType,
+                    'api_version' => 'v2',
                 ]),
             ],
         );

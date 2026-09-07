@@ -36,6 +36,7 @@ export type LookupHistory = {
     id: number;
     plate: string;
     vehicle_type: VehicleType;
+    api_version: 'v1' | 'v2';
     violation_count: number;
     created_at: string;
 };

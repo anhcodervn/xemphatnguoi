@@ -9,7 +9,7 @@ test('admin lookup logs summarize authenticated and anonymous users affected by 
     Sanctum::actingAs(User::factory()->create(['role' => 'admin']));
     $customer = User::factory()->create(['username' => 'affected-customer']);
 
-    TrafficFineLookupLog::factory()->create(['user_id' => $customer->id, 'status' => 'provider_error', 'created_at' => now()->subHours(2)]);
+    TrafficFineLookupLog::factory()->create(['user_id' => $customer->id, 'api_version' => 'v2', 'status' => 'provider_error', 'created_at' => now()->subHours(2)]);
     TrafficFineLookupLog::factory()->create(['user_id' => null, 'ip' => '203.0.113.10', 'status' => 'provider_error', 'created_at' => now()->subHour()]);
     TrafficFineLookupLog::factory()->create(['user_id' => null, 'ip' => '203.0.113.10', 'status' => 'provider_error', 'created_at' => now()]);
     TrafficFineLookupLog::factory()->create(['user_id' => $customer->id, 'status' => 'success', 'created_at' => now()]);
@@ -24,6 +24,7 @@ test('admin lookup logs summarize authenticated and anonymous users affected by 
         ->assertJsonPath('data.summary.affected_users', 1)
         ->assertJsonPath('data.summary.anonymous_requests', 2)
         ->assertJsonPath('data.summary.affected_anonymous_ips', 1)
+        ->assertJsonPath('data.logs.data.3.api_version', 'v2')
         ->assertJsonCount(4, 'data.logs.data');
 
     expect(collect($response->json('data.logs.data'))->pluck('user.username')->filter()->all())
@@ -44,4 +45,20 @@ test('admin lookup logs can filter provider errors and validate the date range',
 
     $this->getJson('/api/admin-api/traffic-fines/logs?from=2026-09-05&to=2026-09-04')
         ->assertUnprocessable();
+
+    $this->getJson('/api/admin-api/traffic-fines/logs?api_version=v3')
+        ->assertUnprocessable();
+});
+
+test('admin lookup logs can filter api versions', function (): void {
+    Sanctum::actingAs(User::factory()->create(['role' => 'admin']));
+
+    TrafficFineLookupLog::factory()->create(['api_version' => 'v1']);
+    TrafficFineLookupLog::factory()->create(['api_version' => 'v2']);
+
+    $this->getJson('/api/admin-api/traffic-fines/logs?api_version=v2')
+        ->assertOk()
+        ->assertJsonPath('data.summary.total', 1)
+        ->assertJsonPath('data.logs.data.0.api_version', 'v2')
+        ->assertJsonCount(1, 'data.logs.data');
 });

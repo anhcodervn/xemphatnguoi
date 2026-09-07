@@ -4,22 +4,27 @@ use App\Features\TrafficFine\Actions\CheckVehicleMonitoringAction;
 use App\Features\TrafficFine\DTOs\TrafficFineLookupResponseDto;
 use App\Features\TrafficFine\DTOs\TrafficFineLookupResultDataDto;
 use App\Features\TrafficFine\Exceptions\TrafficFineProviderException;
-use App\Features\TrafficFine\Services\TrafficFineLookupService;
+use App\Features\TrafficFine\Services\TrafficFineV2LookupService;
 use App\Jobs\CheckVehicleMonitoringJob;
 use App\Mail\VehicleMonitoringChangedMail;
 use App\Models\MonitoringPlan;
 use App\Models\MonitoringSubscription;
+use App\Models\TrafficFineResult;
 use App\Models\User;
 use App\Models\UserVehicle;
 use App\Models\VehicleMonitoring;
+use App\Models\WalletTransaction;
 use Carbon\CarbonImmutable;
+use Illuminate\Http\Client\Request as ClientRequest;
 use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Laravel\Sanctum\Sanctum;
 
 function fakeMonitoringLookup(string $plate, string $vehicleType, int $violationCount): void
 {
-    $lookupService = Mockery::mock(TrafficFineLookupService::class);
+    $lookupService = Mockery::mock(TrafficFineV2LookupService::class);
     $lookupService->shouldReceive('lookup')
         ->once()
         ->with($plate, $vehicleType, null, null, true)
@@ -36,7 +41,7 @@ function fakeMonitoringLookup(string $plate, string $vehicleType, int $violation
             cached: false,
         ));
 
-    app()->instance(TrafficFineLookupService::class, $lookupService);
+    app()->instance(TrafficFineV2LookupService::class, $lookupService);
 }
 
 function grantMonitoringPackage(User $user, int $vehicleLimit = 10): void
@@ -137,12 +142,57 @@ it('queues an email when the daily violation count changes', function (): void {
     app(CheckVehicleMonitoringAction::class)->handle($monitoring->id);
 
     expect($monitoring->refresh()->last_violation_count)->toBe(1)
-        ->and($monitoring->last_checked_at?->toDateTimeString())->toBe('2026-09-04 07:00:00');
+        ->and($monitoring->last_checked_at?->toDateTimeString())->toBe('2026-09-04 07:00:00')
+        ->and(WalletTransaction::query()->exists())->toBeFalse();
     Mail::assertQueued(VehicleMonitoringChangedMail::class, function (VehicleMonitoringChangedMail $mail): bool {
         return $mail->hasTo('driver@example.com')
             && $mail->previousViolationCount === 2
             && $mail->currentViolationCount === 1;
     });
+});
+
+it('uses the v2 provider for scheduled package checks without charging the user wallet', function (): void {
+    config([
+        'traffic-fines.api_v2.url' => 'https://api.xephatnguoi.com/v2/search',
+        'traffic-fines.sources.xephatnguoi.token' => 'monitoring-v2-token',
+        'traffic-fines.cache.store' => 'array',
+    ]);
+    Cache::store('array')->flush();
+    Http::preventStrayRequests();
+    Http::fake([
+        'https://api.xephatnguoi.com/v2/search*' => Http::response([
+            'status' => 'success',
+            'plate' => '30K12345',
+            'type' => 1,
+            'data' => [],
+            'total' => 0,
+            'timestamp' => '2026-09-06 08:00:00',
+        ]),
+    ]);
+    Mail::fake();
+
+    $user = User::factory()->create();
+    grantMonitoringPackage($user);
+    $vehicle = UserVehicle::factory()->for($user)->create([
+        'plate' => '30K12345',
+        'vehicle_type' => 'car',
+    ]);
+    $monitoring = VehicleMonitoring::factory()->for($user)->for($vehicle, 'vehicle')->create([
+        'enabled' => true,
+        'email_notifications' => false,
+    ]);
+
+    app(CheckVehicleMonitoringAction::class)->handle($monitoring->id);
+
+    Http::assertSent(function (ClientRequest $request): bool {
+        parse_str((string) parse_url($request->url(), PHP_URL_QUERY), $query);
+
+        return parse_url($request->url(), PHP_URL_PATH) === '/v2/search'
+            && $query === ['plate' => '30K12345', 'type' => '1']
+            && $request->hasHeader('Authorization', 'Bearer monitoring-v2-token');
+    });
+    expect(TrafficFineResult::query()->where('provider', 'xephatnguoi_v2')->exists())->toBeTrue()
+        ->and(WalletTransaction::query()->exists())->toBeFalse();
 });
 
 it('does not email when the daily violation count is unchanged', function (): void {
@@ -215,9 +265,9 @@ it('preserves the previous baseline when the provider lookup fails', function ()
         'last_checked_at' => CarbonImmutable::parse('2026-09-03 07:00:00'),
         'last_violation_count' => 2,
     ]);
-    $lookupService = Mockery::mock(TrafficFineLookupService::class);
+    $lookupService = Mockery::mock(TrafficFineV2LookupService::class);
     $lookupService->shouldReceive('lookup')->once()->andThrow(new TrafficFineProviderException('Provider unavailable.'));
-    app()->instance(TrafficFineLookupService::class, $lookupService);
+    app()->instance(TrafficFineV2LookupService::class, $lookupService);
 
     expect(fn () => app(CheckVehicleMonitoringAction::class)->handle($monitoring->id))
         ->toThrow(TrafficFineProviderException::class);
@@ -236,7 +286,7 @@ it('dispatches checks only for enabled monitorings', function (): void {
     Bus::fake();
 
     $this->artisan('traffic-fines:dispatch-monitoring-checks')
-        ->expectsOutput('Đã đưa 1 biển số đến hạn vào hàng đợi (chu kỳ 6 giờ).')
+        ->expectsOutput('Đã đưa 1 biển số đến hạn vào hàng đợi (chu kỳ 24 giờ).')
         ->assertSuccessful();
 
     Bus::assertDispatched(CheckVehicleMonitoringJob::class, fn (CheckVehicleMonitoringJob $job): bool => $job->monitoringId === $enabledMonitoring->id);
@@ -256,5 +306,5 @@ it('renders the monitoring change email with the comparison and result link', fu
         ->toContain('Dữ liệu phạt nguội đã thay đổi')
         ->toContain('Số lỗi đã thay đổi từ')
         ->toContain('30A12345')
-        ->toContain('/tra-cuu/30A12345?vehicle_type=car');
+        ->toContain('/tra-cuu/30A12345?vehicle_type=car&amp;api_version=v2');
 });

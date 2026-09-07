@@ -13,7 +13,7 @@ const localDate = (): string => {
 const items = ref<AdminLookupLog[]>([]);
 const loading = ref(false);
 const errorMessage = ref('');
-const filters = reactive({ search: '', status: '', from: localDate(), to: localDate() });
+const filters = reactive({ search: '', api_version: '', status: '', from: localDate(), to: localDate() });
 const meta = reactive({ current_page: 1, last_page: 1, total: 0 });
 const summary = reactive({
     total: 0,
@@ -41,6 +41,7 @@ const load = async (page = 1): Promise<void> => {
             page,
             per_page: 50,
             search: filters.search || undefined,
+            api_version: filters.api_version || undefined,
             status: filters.status || undefined,
             from: filters.from || undefined,
             to: filters.to || undefined,
@@ -129,7 +130,7 @@ onMounted(() => load());
         </section>
 
         <form
-            class="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-2 xl:grid-cols-[minmax(240px,1fr)_190px_160px_160px_auto]"
+            class="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-2 xl:grid-cols-[minmax(220px,1fr)_130px_180px_150px_150px_auto]"
             @submit.prevent="load(1)"
         >
             <input
@@ -138,6 +139,11 @@ onMounted(() => load());
                 placeholder="Biển số, IP, username hoặc email"
                 class="app-focus h-11 rounded-lg border border-slate-300 px-4 text-sm"
             />
+            <select v-model="filters.api_version" class="app-focus h-11 rounded-lg border border-slate-300 bg-white px-3 text-sm">
+                <option value="">Mọi phiên bản</option>
+                <option value="v1">V1</option>
+                <option value="v2">V2</option>
+            </select>
             <select v-model="filters.status" class="app-focus h-11 rounded-lg border border-slate-300 bg-white px-3 text-sm">
                 <option value="">Mọi trạng thái</option>
                 <option value="success">Thành công</option>
@@ -170,6 +176,7 @@ onMounted(() => load());
                             <th class="px-4 py-4">Thời gian</th>
                             <th class="px-4 py-4">Khách</th>
                             <th class="px-4 py-4">Biển số</th>
+                            <th class="px-4 py-4">Phiên bản</th>
                             <th class="px-4 py-4">Nguồn</th>
                             <th class="px-4 py-4">Cache</th>
                             <th class="px-4 py-4">Trạng thái</th>
@@ -185,6 +192,14 @@ onMounted(() => load());
                                 <p v-if="item.user?.email" class="mt-1 text-xs text-slate-500">{{ item.user.email }}</p>
                             </td>
                             <td class="whitespace-nowrap px-4 py-4 font-bold">{{ item.plate }}</td>
+                            <td class="px-4 py-4">
+                                <span
+                                    class="rounded-full px-2.5 py-1 text-xs font-bold uppercase"
+                                    :class="item.api_version === 'v2' ? 'bg-violet-50 text-violet-700' : 'bg-sky-50 text-sky-700'"
+                                >
+                                    {{ item.api_version }}
+                                </span>
+                            </td>
                             <td class="px-4 py-4">{{ item.source }}</td>
                             <td class="px-4 py-4">{{ item.cache_hit ? 'Hit' : 'Miss' }}</td>
                             <td class="px-4 py-4">
@@ -198,7 +213,7 @@ onMounted(() => load());
                             <td class="px-4 py-4 font-mono text-xs">{{ item.ip ?? '—' }}</td>
                         </tr>
                         <tr v-if="!items.length">
-                            <td colspan="8" class="p-8 text-center text-slate-500">Không có request trong khoảng thời gian đã chọn.</td>
+                            <td colspan="9" class="p-8 text-center text-slate-500">Không có request trong khoảng thời gian đã chọn.</td>
                         </tr>
                     </tbody>
                 </table>

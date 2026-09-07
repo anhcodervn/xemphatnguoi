@@ -25,6 +25,7 @@ class TrafficFineLookupService
         private readonly LicensePlateNormalizer $normalizer,
         private readonly TrafficFineSourceInterface $source,
         private readonly CacheFactory $cache,
+        private readonly string $apiVersion = 'v1',
     ) {}
 
     public function lookup(
@@ -116,6 +117,7 @@ class TrafficFineLookupService
                             'plate' => $normalizedPlate,
                             'vehicle_type' => $resolvedVehicleType->value,
                             'provider' => $sourceName,
+                            'api_version' => $this->apiVersion,
                         ],
                         [
                             'status' => $data->status,
@@ -253,12 +255,12 @@ class TrafficFineLookupService
 
     private function cacheKey(string $sourceName, VehicleType $vehicleType, string $plate): string
     {
-        return "traffic_fine:{$sourceName}:{$vehicleType->value}:{$plate}";
+        return "traffic_fine:{$this->apiVersion}:{$sourceName}:{$vehicleType->value}:{$plate}";
     }
 
     private function errorCacheKey(string $sourceName, VehicleType $vehicleType, string $plate): string
     {
-        return "traffic_fine_error:{$sourceName}:{$vehicleType->value}:{$plate}";
+        return "traffic_fine_error:{$this->apiVersion}:{$sourceName}:{$vehicleType->value}:{$plate}";
     }
 
     private function freshDatabaseResult(
@@ -270,6 +272,7 @@ class TrafficFineLookupService
             ->where('plate', $plate)
             ->where('vehicle_type', $vehicleType->value)
             ->where('provider', $sourceName)
+            ->where('api_version', $this->apiVersion)
             ->where('expires_at', '>', now())
             ->first();
     }
@@ -371,6 +374,7 @@ class TrafficFineLookupService
                 'user_id' => $user?->id,
                 'plate' => $plate,
                 'vehicle_type' => $vehicleType->value,
+                'api_version' => $this->apiVersion,
                 'source' => $source,
                 'cache_hit' => $cacheHit,
                 'provider' => $this->source->name(),
@@ -386,6 +390,7 @@ class TrafficFineLookupService
                     'traffic_fine_result_id' => $resultId,
                     'plate' => $plate,
                     'vehicle_type' => $vehicleType->value,
+                    'api_version' => $this->apiVersion,
                     'violation_count' => $violationCount,
                     'created_at' => Carbon::now(),
                 ]);

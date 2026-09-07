@@ -13,11 +13,11 @@ class VehicleMonitoringSettingsService
     public function intervalHours(): int
     {
         $configuredDefault = filter_var(
-            config('traffic-fines.monitoring.interval_hours', 6),
+            config('traffic-fines.monitoring.interval_hours', 24),
             FILTER_VALIDATE_INT,
             ['options' => ['min_range' => 1, 'max_range' => 720]],
         );
-        $default = $configuredDefault === false ? 6 : $configuredDefault;
+        $default = $configuredDefault === false ? 24 : $configuredDefault;
         $stored = filter_var(
             $this->settingStore->get(self::INTERVAL_HOURS_KEY, $default),
             FILTER_VALIDATE_INT,

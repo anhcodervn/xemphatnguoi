@@ -19,6 +19,7 @@ class LookupHistory extends Model
         'traffic_fine_result_id',
         'plate',
         'vehicle_type',
+        'api_version',
         'violation_count',
         'created_at',
     ];

@@ -96,6 +96,7 @@ test('traffic fine detailed report returns operational breakdowns for the select
         ->assertJsonPath('data.summary.average_provider_latency_ms', 500)
         ->assertJsonCount(7, 'data.daily')
         ->assertJsonCount(2, 'data.recent_errors')
+        ->assertJsonPath('data.recent_errors.0.api_version', 'v1')
         ->assertJsonPath('data.recent_errors.0.source', 'negative_cache')
         ->assertJsonPath('data.recent_errors.0.plate', '29B10003');
 

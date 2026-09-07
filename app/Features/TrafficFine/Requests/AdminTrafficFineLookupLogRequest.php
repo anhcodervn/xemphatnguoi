@@ -21,6 +21,7 @@ class AdminTrafficFineLookupLogRequest extends FormRequest
     {
         return [
             'search' => ['nullable', 'string', 'max:100'],
+            'api_version' => ['nullable', 'string', 'in:v1,v2'],
             'status' => ['nullable', 'string', 'in:success,no_violation,provider_error'],
             'from' => ['nullable', 'date_format:Y-m-d'],
             'to' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:from'],

@@ -18,6 +18,7 @@ class TrafficFineLookupLog extends Model
         'user_id',
         'plate',
         'vehicle_type',
+        'api_version',
         'source',
         'cache_hit',
         'provider',

@@ -59,7 +59,7 @@ class CachedPlateService
     private function cachedPlateQuery(CarbonInterface $periodStart): Builder
     {
         $lookupStatistics = TrafficFineLookupLog::query()
-            ->select(['plate', 'vehicle_type'])
+            ->select(['plate', 'vehicle_type', 'api_version'])
             ->selectRaw(
                 "COUNT(*) AS lookup_count,
                 SUM(CASE WHEN source IN ('redis', 'database') THEN 1 ELSE 0 END) AS positive_cache_hits,
@@ -68,18 +68,20 @@ class CachedPlateService
                 MAX(created_at) AS last_lookup_at",
             )
             ->where('created_at', '>=', $periodStart)
-            ->groupBy('plate', 'vehicle_type');
+            ->groupBy('plate', 'vehicle_type', 'api_version');
 
         return TrafficFineResult::query()
             ->leftJoinSub($lookupStatistics, 'lookup_statistics', function (JoinClause $join): void {
                 $join
                     ->on('lookup_statistics.plate', '=', 'traffic_fine_results.plate')
-                    ->on('lookup_statistics.vehicle_type', '=', 'traffic_fine_results.vehicle_type');
+                    ->on('lookup_statistics.vehicle_type', '=', 'traffic_fine_results.vehicle_type')
+                    ->on('lookup_statistics.api_version', '=', 'traffic_fine_results.api_version');
             })
             ->select([
                 'traffic_fine_results.id',
                 'traffic_fine_results.plate',
                 'traffic_fine_results.vehicle_type',
+                'traffic_fine_results.api_version',
                 'traffic_fine_results.status',
                 'traffic_fine_results.violation_count',
                 'traffic_fine_results.provider',
@@ -170,6 +172,7 @@ class CachedPlateService
             'id' => $result->id,
             'plate' => $result->plate,
             'vehicle_type' => $result->vehicle_type,
+            'api_version' => $result->api_version,
             'status' => $result->status,
             'violation_count' => $result->violation_count,
             'provider' => $result->provider,

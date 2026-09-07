@@ -183,12 +183,14 @@ it('stores the normalized result returned by the active source', function (): vo
     $this->assertDatabaseHas('traffic_fine_results', [
         'plate' => '30A12345',
         'vehicle_type' => 'car',
+        'api_version' => 'v1',
         'violation_count' => 1,
         'provider' => 'fake_source',
     ]);
     $this->assertDatabaseHas('traffic_fine_lookup_logs', [
         'plate' => '30A12345',
         'vehicle_type' => 'car',
+        'api_version' => 'v1',
         'source' => 'provider',
         'cache_hit' => false,
         'status' => 'success',
@@ -227,8 +229,13 @@ it('stores lookup history only for an authenticated user', function (): void {
         'user_id' => $user->id,
         'plate' => '30A12345',
         'vehicle_type' => 'car',
+        'api_version' => 'v1',
         'violation_count' => 0,
     ]);
+
+    $this->getJson('/api/client/traffic-fines/histories')
+        ->assertOk()
+        ->assertJsonPath('data.data.0.api_version', 'v1');
 });
 
 it('protects the v1 lookup with api credentials and the traffic fine permission', function (): void {
@@ -256,6 +263,7 @@ it('protects the v1 lookup with api credentials and the traffic fine permission'
     $this->assertDatabaseHas('lookup_histories', [
         'user_id' => $user->id,
         'plate' => '30A12345',
+        'api_version' => 'v1',
     ]);
 
     $this->postJson('/api/v1/lookup', $payload)->assertMethodNotAllowed();
@@ -290,8 +298,8 @@ it('isolates cached and stored results by active source', function (): void {
 
     expect($firstSource->calls)->toBe(1)
         ->and($secondSource->calls)->toBe(1)
-        ->and(Cache::store('array')->has('traffic_fine:source_a:car:30A12345'))->toBeTrue()
-        ->and(Cache::store('array')->has('traffic_fine:source_b:car:30A12345'))->toBeTrue();
+        ->and(Cache::store('array')->has('traffic_fine:v1:source_a:car:30A12345'))->toBeTrue()
+        ->and(Cache::store('array')->has('traffic_fine:v1:source_b:car:30A12345'))->toBeTrue();
 
     $this->assertDatabaseHas('traffic_fine_results', [
         'plate' => '30A12345',
@@ -315,7 +323,7 @@ it('restores redis from a fresh database result without calling the provider', f
         ->assertJsonMissingPath('source');
 
     expect($source->calls)->toBe(0)
-        ->and(Cache::store('array')->has('traffic_fine:fake_source:car:30A12345'))->toBeTrue();
+        ->and(Cache::store('array')->has('traffic_fine:v1:fake_source:car:30A12345'))->toBeTrue();
 });
 
 it('adds null defaults when restoring the previous normalized violation shape', function (): void {
@@ -393,7 +401,7 @@ it('negative-caches provider failures', function (): void {
         ->assertJsonPath('status', 'provider_error');
 
     expect($source->calls)->toBe(1)
-        ->and(Cache::store('array')->has('traffic_fine_error:fake_source:car:30A12345'))->toBeTrue();
+        ->and(Cache::store('array')->has('traffic_fine_error:v1:fake_source:car:30A12345'))->toBeTrue();
 });
 
 it('returns a validation state without calling the provider', function (): void {
@@ -555,7 +563,7 @@ it('normalizes upstream data without exposing provider details or credentials', 
         JSON_THROW_ON_ERROR,
     );
     $cachedPayload = json_encode(
-        Cache::store('array')->get('traffic_fine:xephatnguoi:car:30K12345'),
+        Cache::store('array')->get('traffic_fine:v1:xephatnguoi:car:30K12345'),
         JSON_THROW_ON_ERROR,
     );
 

@@ -143,11 +143,12 @@ class TrafficFineStatisticsService
                 ->where('status', 'provider_error')
                 ->latest('created_at')
                 ->limit(8)
-                ->get(['id', 'plate', 'vehicle_type', 'source', 'provider', 'provider_latency_ms', 'created_at'])
+                ->get(['id', 'plate', 'vehicle_type', 'api_version', 'source', 'provider', 'provider_latency_ms', 'created_at'])
                 ->map(fn (TrafficFineLookupLog $log): array => [
                     'id' => $log->id,
                     'plate' => $log->plate,
                     'vehicle_type' => $log->vehicle_type,
+                    'api_version' => $log->api_version,
                     'provider' => $log->provider,
                     'source' => $log->source,
                     'provider_latency_ms' => $log->provider_latency_ms,

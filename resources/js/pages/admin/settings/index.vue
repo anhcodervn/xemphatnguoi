@@ -100,7 +100,7 @@ const seoForm = ref<SeoSettingType>({
 });
 
 const monitoringRooms = ref<DiscordRoomStatusType[]>([]);
-const monitoringForm = ref<Pick<MonitoringSettingType, 'interval_hours'>>({ interval_hours: 6 });
+const monitoringForm = ref<Pick<MonitoringSettingType, 'interval_hours'>>({ interval_hours: 24 });
 
 const turnstileForm = ref<TurnstileSettingType>({
     enabled: false,
@@ -140,7 +140,7 @@ const loadData = async (): Promise<void> => {
             secret_configured: Boolean(turnstile.settings.secret_configured),
         };
         monitoringRooms.value = Array.isArray(monitoring.settings.rooms) ? monitoring.settings.rooms : [];
-        monitoringForm.value.interval_hours = Number(monitoring.settings.interval_hours ?? 6);
+        monitoringForm.value.interval_hours = Number(monitoring.settings.interval_hours ?? 24);
     } catch (error) {
         handleErrorResponse(error);
     } finally {
@@ -855,7 +855,7 @@ onMounted(async () => {
                                     step="1"
                                     class="mt-1 min-h-11 w-full rounded-[10px] border border-slate-200 px-3 text-sm outline-none focus:border-indigo-400"
                                 />
-                                <span class="mt-1 block text-xs text-slate-500">Mặc định 6 giờ. Cho phép từ 1 đến 720 giờ.</span>
+                                <span class="mt-1 block text-xs text-slate-500">Mặc định 24 giờ (mỗi ngày). Cho phép từ 1 đến 720 giờ.</span>
                             </label>
                         </section>
 

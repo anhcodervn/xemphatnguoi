@@ -70,6 +70,10 @@ class TrafficFineAdminController extends Controller
                 });
             })
             ->when(
+                $request->filled('api_version'),
+                fn ($query) => $query->where('api_version', $request->string('api_version')->toString()),
+            )
+            ->when(
                 $request->filled('status'),
                 fn ($query) => $query->where('status', $request->string('status')->toString()),
             )

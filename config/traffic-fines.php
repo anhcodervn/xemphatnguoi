@@ -54,7 +54,7 @@ return [
     ],
 
     'monitoring' => [
-        'interval_hours' => (int) env('TRAFFIC_FINE_MONITORING_INTERVAL_HOURS', 6),
+        'interval_hours' => (int) env('TRAFFIC_FINE_MONITORING_INTERVAL_HOURS', 24),
     ],
 
     'plate_pattern' => env('TRAFFIC_FINE_PLATE_PATTERN', '/^\d{2}[A-ZĐ]{1,2}\d{4,6}$/u'),

@@ -64,6 +64,7 @@ export type AdminTrafficFineReport = {
         id: number;
         plate: string;
         vehicle_type: string;
+        api_version: 'v1' | 'v2';
         provider: string | null;
         source: string;
         provider_latency_ms: number | null;
@@ -100,6 +101,7 @@ export type AdminCachedPlate = {
     id: number;
     plate: string;
     vehicle_type: string;
+    api_version: 'v1' | 'v2';
     status: string;
     violation_count: number;
     provider: string;
@@ -159,6 +161,7 @@ export type AdminLookupLog = {
     user: { username: string; email: string | null } | null;
     plate: string;
     vehicle_type: string;
+    api_version: 'v1' | 'v2';
     source: string;
     cache_hit: boolean;
     provider: string | null;

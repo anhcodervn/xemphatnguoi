@@ -27,18 +27,18 @@ function grantScheduledMonitoringPackage(User $user): void
     MonitoringSubscription::factory()->for($user)->for($plan, 'plan')->create();
 }
 
-it('uses six hours by default and falls back safely for an invalid stored setting', function (): void {
-    config(['traffic-fines.monitoring.interval_hours' => 6]);
+it('uses twenty four hours by default and falls back safely for an invalid stored setting', function (): void {
+    config(['traffic-fines.monitoring.interval_hours' => 24]);
     $settings = app(VehicleMonitoringSettingsService::class);
 
-    expect($settings->intervalHours())->toBe(6);
+    expect($settings->intervalHours())->toBe(24);
 
     app(SettingStore::class)->putString(VehicleMonitoringSettingsService::INTERVAL_HOURS_KEY, 'invalid');
 
-    expect($settings->intervalHours())->toBe(6);
+    expect($settings->intervalHours())->toBe(24);
 
     config(['traffic-fines.monitoring.interval_hours' => 0]);
-    expect($settings->intervalHours())->toBe(6);
+    expect($settings->intervalHours())->toBe(24);
 });
 
 it('allows admins to update the monitoring interval', function (): void {
@@ -72,12 +72,12 @@ it('dispatches each vehicle only when its configured interval is due', function 
     $user = User::factory()->create();
     grantScheduledMonitoringPackage($user);
     $neverDispatched = createScheduledMonitoring($user, null);
-    $due = createScheduledMonitoring($user, '2026-09-04 06:00:00');
-    $notDue = createScheduledMonitoring($user, '2026-09-04 06:01:00');
+    $due = createScheduledMonitoring($user, '2026-09-03 12:00:00');
+    $notDue = createScheduledMonitoring($user, '2026-09-03 12:01:00');
     Bus::fake();
 
     $this->artisan('traffic-fines:dispatch-monitoring-checks')
-        ->expectsOutput('Đã đưa 2 biển số đến hạn vào hàng đợi (chu kỳ 6 giờ).')
+        ->expectsOutput('Đã đưa 2 biển số đến hạn vào hàng đợi (chu kỳ 24 giờ).')
         ->assertSuccessful();
 
     Bus::assertDispatched(CheckVehicleMonitoringJob::class, 2);
@@ -87,7 +87,7 @@ it('dispatches each vehicle only when its configured interval is due', function 
     expect($neverDispatched->refresh()->last_dispatched_at?->toDateTimeString())->toBe('2026-09-04 12:00:00');
 
     $this->artisan('traffic-fines:dispatch-monitoring-checks')
-        ->expectsOutput('Đã đưa 0 biển số đến hạn vào hàng đợi (chu kỳ 6 giờ).')
+        ->expectsOutput('Đã đưa 0 biển số đến hạn vào hàng đợi (chu kỳ 24 giờ).')
         ->assertSuccessful();
     Bus::assertDispatched(CheckVehicleMonitoringJob::class, 2);
 });

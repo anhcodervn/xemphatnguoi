@@ -3,7 +3,7 @@
 namespace App\Features\TrafficFine\Actions;
 
 use App\Features\TrafficFine\Services\MonitoringEntitlementService;
-use App\Features\TrafficFine\Services\TrafficFineLookupService;
+use App\Features\TrafficFine\Services\TrafficFineV2LookupService;
 use App\Mail\VehicleMonitoringChangedMail;
 use App\Models\User;
 use App\Models\UserVehicle;
@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Mail;
 class CheckVehicleMonitoringAction
 {
     public function __construct(
-        private readonly TrafficFineLookupService $lookupService,
+        private readonly TrafficFineV2LookupService $lookupService,
         private readonly MonitoringEntitlementService $entitlements,
     ) {}
 

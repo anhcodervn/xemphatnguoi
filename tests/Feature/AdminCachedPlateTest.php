@@ -105,6 +105,7 @@ test('cached plate management returns ttl and lookup intensity without sensitive
         ->assertJsonPath('data.items.0.cache_duration_seconds', 86400)
         ->assertJsonPath('data.items.0.lookup_count', 4)
         ->assertJsonPath('data.items.0.positive_cache_hits', 2)
+        ->assertJsonPath('data.items.0.api_version', 'v1')
         ->assertJsonPath('data.items.0.provider_requests', 1)
         ->assertJsonPath('data.items.0.provider_errors', 1)
         ->assertJsonPath('data.items.0.cache_hit_rate', 50)

@@ -16,7 +16,7 @@ class TrafficFineV2LookupService
         XephatnguoiV2Source $source,
         CacheFactory $cache,
     ) {
-        $this->lookupService = new TrafficFineLookupService($normalizer, $source, $cache);
+        $this->lookupService = new TrafficFineLookupService($normalizer, $source, $cache, 'v2');
     }
 
     public function lookup(
@@ -24,12 +24,14 @@ class TrafficFineV2LookupService
         string $vehicleType,
         ?User $user = null,
         ?string $ip = null,
+        bool $forceRefresh = false,
     ): TrafficFineLookupResponseDto {
         return $this->lookupService->lookup(
             plate: $plate,
             vehicleType: $vehicleType,
             user: $user,
             ip: $ip,
+            forceRefresh: $forceRefresh,
         );
     }
 

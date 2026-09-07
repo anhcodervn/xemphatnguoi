@@ -35,6 +35,7 @@ class TrafficFineResultFactory extends Factory
                 'checked_at' => $checkedAt->toISOString(),
             ],
             'provider' => 'test_provider',
+            'api_version' => 'v1',
             'checked_at' => $checkedAt,
             'expires_at' => $checkedAt->copy()->addDay(),
         ];

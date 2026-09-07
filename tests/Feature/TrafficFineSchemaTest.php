@@ -21,6 +21,7 @@ it('creates the vehicle, lookup history, lookup log, and 24-hour result cache sc
             'traffic_fine_result_id',
             'plate',
             'vehicle_type',
+            'api_version',
             'violation_count',
             'created_at',
         ]))->toBeTrue()
@@ -29,6 +30,7 @@ it('creates the vehicle, lookup history, lookup log, and 24-hour result cache sc
             'user_id',
             'plate',
             'vehicle_type',
+            'api_version',
             'source',
             'cache_hit',
             'provider',
@@ -45,6 +47,7 @@ it('creates the vehicle, lookup history, lookup log, and 24-hour result cache sc
             'violation_count',
             'response_json',
             'provider',
+            'api_version',
             'checked_at',
             'expires_at',
             'created_at',

@@ -3,6 +3,7 @@
 use App\Features\TrafficFine\Services\TrafficFineProviderSettingsService;
 use App\Models\ApiKey;
 use App\Models\ApiLog;
+use App\Models\LookupHistory;
 use App\Models\TrafficFineLookupLog;
 use App\Models\TrafficFineResult;
 use App\Models\User;
@@ -106,14 +107,59 @@ it('uses only xephatnguoi v2 and charges 150 dong for each successful request', 
     expect((float) $account['user']->wallet()->firstOrFail()->balance)->toBe(200.0)
         ->and(WalletTransaction::query()->where('reference_type', 'traffic_fine_api_v2_request')->count())->toBe(2)
         ->and(ApiLog::query()->where('endpoint', 'api/v2/lookup')->where('unit_price', 150)->count())->toBe(2)
-        ->and(TrafficFineResult::query()->where('provider', 'xephatnguoi_v2')->count())->toBe(1)
-        ->and(TrafficFineLookupLog::query()->where('provider', 'xephatnguoi_v2')->count())->toBe(2);
+        ->and(TrafficFineResult::query()->where('provider', 'xephatnguoi_v2')->where('api_version', 'v2')->count())->toBe(1)
+        ->and(TrafficFineLookupLog::query()->where('provider', 'xephatnguoi_v2')->where('api_version', 'v2')->count())->toBe(2)
+        ->and(LookupHistory::query()->whereBelongsTo($account['user'])->where('api_version', 'v2')->count())->toBe(2)
+        ->and(Cache::store('array')->has('traffic_fine:v2:xephatnguoi_v2:car:30K12345'))->toBeTrue();
 
     Sanctum::actingAs($account['user']);
     $this->getJson('/api/client/traffic-fines/api-usage')
         ->assertOk()
         ->assertJsonPath('data.logs.data.0.api_version', 'v2')
         ->assertJsonPath('data.logs.data.1.api_version', 'v2');
+
+    $this->getJson('/api/client/traffic-fines/histories')
+        ->assertOk()
+        ->assertJsonPath('data.data.0.api_version', 'v2')
+        ->assertJsonPath('data.data.1.api_version', 'v2');
+});
+
+it('fetches and caches v2 even when the same plate already has a fresh v1 result', function (): void {
+    $v1CheckedAt = now()->subMinute();
+    $v1Result = TrafficFineResult::factory()->create([
+        'plate' => '30K12345',
+        'vehicle_type' => 'car',
+        'provider' => 'xephatnguoi_v2',
+        'api_version' => 'v1',
+        'violation_count' => 3,
+        'checked_at' => $v1CheckedAt,
+        'expires_at' => $v1CheckedAt->copy()->addDay(),
+    ]);
+    Cache::store('array')->put('traffic_fine:v1:xephatnguoi_v2:car:30K12345', [
+        'data' => [
+            'plate' => '30K12345',
+            'display_plate' => '30K-123.45',
+            'vehicle_type' => 'car',
+            'status' => 'success',
+            'violation_count' => 3,
+            'violations' => [],
+            'checked_at' => $v1CheckedAt->toISOString(),
+        ],
+        'result_id' => $v1Result->id,
+    ], 86400);
+    fakeSuccessfulTrafficFineV2Response();
+    $account = trafficFineV2Account();
+
+    $this->withHeaders($account['headers'])
+        ->getJson('/api/v2/lookup?plate=30K12345&vehicle_type=car')
+        ->assertOk()
+        ->assertJsonPath('cached', false)
+        ->assertJsonPath('data.violation_count', 0);
+
+    Http::assertSentCount(1);
+    expect(TrafficFineResult::query()->where('plate', '30K12345')->count())->toBe(2)
+        ->and(Cache::store('array')->has('traffic_fine:v1:xephatnguoi_v2:car:30K12345'))->toBeTrue()
+        ->and(Cache::store('array')->has('traffic_fine:v2:xephatnguoi_v2:car:30K12345'))->toBeTrue();
 });
 
 it('rejects insufficient v2 balance before calling or charging the provider', function (): void {

@@ -22,6 +22,7 @@ class TrafficFineLookupLogFactory extends Factory
             'user_id' => fake()->boolean(60) ? User::factory() : null,
             'plate' => '30A'.fake()->numerify('#####'),
             'vehicle_type' => 'car',
+            'api_version' => 'v1',
             'source' => 'provider',
             'cache_hit' => false,
             'provider' => 'test_provider',

@@ -39,6 +39,7 @@ onMounted(() => load());
                         <tr>
                             <th class="px-5 py-4">Biển số</th>
                             <th class="px-5 py-4">Loại xe</th>
+                            <th class="px-5 py-4">Phiên bản</th>
                             <th class="px-5 py-4">Số lỗi</th>
                             <th class="px-5 py-4">Thời gian</th>
                         </tr>
@@ -47,6 +48,14 @@ onMounted(() => load());
                         <tr v-for="item in histories.data" :key="item.id">
                             <td class="px-5 py-4 font-bold text-slate-950">{{ item.plate }}</td>
                             <td class="px-5 py-4 text-slate-600">{{ label(item.vehicle_type) }}</td>
+                            <td class="px-5 py-4">
+                                <span
+                                    class="rounded-full px-2.5 py-1 text-xs font-bold uppercase"
+                                    :class="item.api_version === 'v2' ? 'bg-violet-50 text-violet-700' : 'bg-sky-50 text-sky-700'"
+                                >
+                                    {{ item.api_version }}
+                                </span>
+                            </td>
                             <td class="px-5 py-4">
                                 <span
                                     class="rounded-full px-2.5 py-1 text-xs font-bold"

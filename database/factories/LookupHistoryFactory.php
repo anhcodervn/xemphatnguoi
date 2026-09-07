@@ -24,6 +24,7 @@ class LookupHistoryFactory extends Factory
             'traffic_fine_result_id' => TrafficFineResult::factory(),
             'plate' => '30A'.fake()->numerify('#####'),
             'vehicle_type' => 'car',
+            'api_version' => 'v1',
             'violation_count' => fake()->numberBetween(0, 3),
             'created_at' => now(),
         ];

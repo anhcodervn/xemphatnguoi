@@ -366,6 +366,7 @@ onMounted(load);
                                 <th scope="col" class="px-5 py-3 font-semibold">Thời gian</th>
                                 <th scope="col" class="px-5 py-3 font-semibold">Biển số</th>
                                 <th scope="col" class="px-5 py-3 font-semibold">Loại xe</th>
+                                <th scope="col" class="px-5 py-3 font-semibold">Phiên bản</th>
                                 <th scope="col" class="px-5 py-3 font-semibold">Nguồn</th>
                                 <th scope="col" class="px-5 py-3 text-right font-semibold">Độ trễ</th>
                             </tr>
@@ -375,6 +376,7 @@ onMounted(load);
                                 <td class="whitespace-nowrap px-5 py-3 text-slate-500">{{ formatDateTime(item.created_at) }}</td>
                                 <td class="whitespace-nowrap px-5 py-3 font-bold text-slate-950">{{ item.plate }}</td>
                                 <td class="whitespace-nowrap px-5 py-3 text-slate-600">{{ item.vehicle_type }}</td>
+                                <td class="whitespace-nowrap px-5 py-3 font-bold uppercase text-slate-600">{{ item.api_version }}</td>
                                 <td class="whitespace-nowrap px-5 py-3">
                                     <span class="inline-flex rounded-full bg-rose-50 px-2 py-1 text-xs font-semibold text-rose-700">{{
                                         item.source
@@ -385,7 +387,7 @@ onMounted(load);
                                 </td>
                             </tr>
                             <tr v-if="report.recent_errors.length === 0">
-                                <td colspan="5" class="px-5 py-10 text-center text-sm text-slate-500">Không có lỗi provider trong khoảng đã chọn.</td>
+                                <td colspan="6" class="px-5 py-10 text-center text-sm text-slate-500">Không có lỗi provider trong khoảng đã chọn.</td>
                             </tr>
                         </tbody>
                     </table>

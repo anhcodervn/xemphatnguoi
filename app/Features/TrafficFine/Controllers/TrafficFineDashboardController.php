@@ -44,7 +44,7 @@ class TrafficFineDashboardController extends Controller
                 'recent_lookups' => $user->lookupHistories()
                     ->latest('created_at')
                     ->limit(5)
-                    ->get(['id', 'plate', 'vehicle_type', 'violation_count', 'created_at']),
+                    ->get(['id', 'plate', 'vehicle_type', 'api_version', 'violation_count', 'created_at']),
             ],
         ]);
     }

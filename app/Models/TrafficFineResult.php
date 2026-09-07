@@ -18,6 +18,7 @@ class TrafficFineResult extends Model
         'violation_count',
         'response_json',
         'provider',
+        'api_version',
         'checked_at',
         'expires_at',
     ];

@@ -132,7 +132,15 @@ onMounted(loadDashboard);
                         class="flex items-center justify-between gap-4 py-4 first:pt-0 last:pb-0"
                     >
                         <div>
-                            <p class="font-bold text-slate-950">{{ item.plate }}</p>
+                            <div class="flex items-center gap-2">
+                                <p class="font-bold text-slate-950">{{ item.plate }}</p>
+                                <span
+                                    class="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase"
+                                    :class="item.api_version === 'v2' ? 'bg-violet-50 text-violet-700' : 'bg-sky-50 text-sky-700'"
+                                >
+                                    {{ item.api_version }}
+                                </span>
+                            </div>
                             <p class="mt-1 text-xs text-slate-500">{{ new Date(item.created_at).toLocaleString('vi-VN') }}</p>
                         </div>
                         <span
