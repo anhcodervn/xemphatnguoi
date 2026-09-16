@@ -46,6 +46,8 @@ return [
     'billing' => [
         'api_request_price' => (int) env('TRAFFIC_FINE_API_REQUEST_PRICE', 20),
         'api_v2_request_price' => (int) env('TRAFFIC_FINE_API_V2_REQUEST_PRICE', 150),
+        'api_request_cost' => (int) env('TRAFFIC_FINE_API_REQUEST_COST', 0),
+        'api_v2_request_cost' => (int) env('TRAFFIC_FINE_API_V2_REQUEST_COST', 0),
     ],
 
     'public_api' => [

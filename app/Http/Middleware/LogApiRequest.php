@@ -67,6 +67,7 @@ class LogApiRequest
             'wallet_transaction_id' => $request->attributes->get(ApiLookupBillingService::ATTRIBUTE_TRANSACTION_ID),
             'unit_price' => $request->attributes->get(ApiLookupBillingService::ATTRIBUTE_UNIT_PRICE, 0),
             'charged_amount' => $request->attributes->get(ApiLookupBillingService::ATTRIBUTE_CHARGED_AMOUNT, 0),
+            'provider_cost' => $request->attributes->get(ApiLookupBillingService::ATTRIBUTE_PROVIDER_COST, 0),
             'billing_status' => $request->attributes->get(ApiLookupBillingService::ATTRIBUTE_STATUS, 'not_billable'),
             'created_at' => now(),
         ]);
@@ -106,6 +107,7 @@ class LogApiRequest
             'wallet_transaction_id' => $request->attributes->get(ApiLookupBillingService::ATTRIBUTE_TRANSACTION_ID),
             'unit_price' => $request->attributes->get(ApiLookupBillingService::ATTRIBUTE_UNIT_PRICE, 0),
             'charged_amount' => $request->attributes->get(ApiLookupBillingService::ATTRIBUTE_CHARGED_AMOUNT, 0),
+            'provider_cost' => $request->attributes->get(ApiLookupBillingService::ATTRIBUTE_PROVIDER_COST, 0),
             'billing_status' => $request->attributes->get(ApiLookupBillingService::ATTRIBUTE_STATUS, 'not_billable'),
             'created_at' => now(),
         ]);

@@ -220,6 +220,8 @@ class TrafficFineAdminController extends Controller
             'data' => [
                 'api_request_price' => $billingService->pricePerRequest(),
                 'api_v2_request_price' => $billingService->v2PricePerRequest(),
+                'api_request_cost' => $billingService->costPerRequest(),
+                'api_v2_request_cost' => $billingService->v2CostPerRequest(),
                 'api_v1_description' => $documentationSettings->v1Description(),
                 'api_v2_description' => $documentationSettings->v2Description(),
                 'summary' => $statistics->summary(),
@@ -245,14 +247,24 @@ class TrafficFineAdminController extends Controller
             ApiLookupBillingService::V2_PRICE_SETTING_KEY,
             (string) $request->integer('api_v2_request_price'),
         );
+        $settingStore->putString(
+            ApiLookupBillingService::COST_SETTING_KEY,
+            (string) $request->integer('api_request_cost'),
+        );
+        $settingStore->putString(
+            ApiLookupBillingService::V2_COST_SETTING_KEY,
+            (string) $request->integer('api_v2_request_cost'),
+        );
         $documentationSettings->update($validated);
 
         return response()->json([
             'status' => true,
-            'message' => 'Đã cập nhật giá và mô tả API.',
+            'message' => 'Đã cập nhật giá bán, giá cost và mô tả API.',
             'data' => [
                 'api_request_price' => $billingService->pricePerRequest(),
                 'api_v2_request_price' => $billingService->v2PricePerRequest(),
+                'api_request_cost' => $billingService->costPerRequest(),
+                'api_v2_request_cost' => $billingService->v2CostPerRequest(),
                 'api_v1_description' => $documentationSettings->v1Description(),
                 'api_v2_description' => $documentationSettings->v2Description(),
                 'summary' => $statistics->summary(),

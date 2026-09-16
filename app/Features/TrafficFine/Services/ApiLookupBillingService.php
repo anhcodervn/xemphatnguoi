@@ -18,9 +18,15 @@ class ApiLookupBillingService
 
     public const V2_PRICE_SETTING_KEY = 'traffic_fine_api_v2_request_price';
 
+    public const COST_SETTING_KEY = 'traffic_fine_api_request_cost';
+
+    public const V2_COST_SETTING_KEY = 'traffic_fine_api_v2_request_cost';
+
     public const ATTRIBUTE_UNIT_PRICE = 'api_billing_unit_price';
 
     public const ATTRIBUTE_CHARGED_AMOUNT = 'api_billing_charged_amount';
+
+    public const ATTRIBUTE_PROVIDER_COST = 'api_billing_provider_cost';
 
     public const ATTRIBUTE_STATUS = 'api_billing_status';
 
@@ -47,6 +53,20 @@ class ApiLookupBillingService
         return $this->configuredPrice(self::V2_PRICE_SETTING_KEY, $defaultPrice);
     }
 
+    public function costPerRequest(): int
+    {
+        $defaultCost = max(0, (int) config('traffic-fines.billing.api_request_cost', 0));
+
+        return $this->configuredCost(self::COST_SETTING_KEY, $defaultCost);
+    }
+
+    public function v2CostPerRequest(): int
+    {
+        $defaultCost = max(0, (int) config('traffic-fines.billing.api_v2_request_cost', 0));
+
+        return $this->configuredCost(self::V2_COST_SETTING_KEY, $defaultCost);
+    }
+
     private function configuredPrice(string $settingKey, int $defaultPrice): int
     {
         $configuredPrice = filter_var(
@@ -56,6 +76,17 @@ class ApiLookupBillingService
         );
 
         return $configuredPrice === false ? $defaultPrice : $configuredPrice;
+    }
+
+    private function configuredCost(string $settingKey, int $defaultCost): int
+    {
+        $configuredCost = filter_var(
+            $this->settingStore->getString($settingKey, (string) $defaultCost),
+            FILTER_VALIDATE_INT,
+            ['options' => ['min_range' => 0, 'max_range' => 1_000_000]],
+        );
+
+        return $configuredCost === false ? $defaultCost : $configuredCost;
     }
 
     public function ensureSufficientBalance(Request $request, User $user, ?int $price = null): void
@@ -82,11 +113,12 @@ class ApiLookupBillingService
     {
         $price = (int) $request->attributes->get(self::ATTRIBUTE_UNIT_PRICE, $this->pricePerRequest());
         $isV2 = $request->routeIs('v2.traffic-fines.lookup');
+        $cost = $isV2 ? $this->v2CostPerRequest() : $this->costPerRequest();
         $referenceType = $isV2 ? 'traffic_fine_api_v2_request' : 'traffic_fine_api_request';
         $descriptionVersion = $isV2 ? ' API v2' : ' API';
 
         try {
-            [$transaction, $apiLog] = DB::transaction(function () use ($request, $user, $apiKey, $price, $referenceType, $descriptionVersion): array {
+            [$transaction, $apiLog] = DB::transaction(function () use ($request, $user, $apiKey, $price, $cost, $referenceType, $descriptionVersion): array {
                 $transaction = $this->walletService->debitWithTransaction(
                     user: $user,
                     amount: $price,
@@ -120,6 +152,7 @@ class ApiLookupBillingService
                     'response_time_ms' => 0,
                     'unit_price' => $price,
                     'charged_amount' => $price,
+                    'provider_cost' => $cost,
                     'billing_status' => 'charged',
                     'created_at' => now(),
                 ]);
@@ -138,6 +171,7 @@ class ApiLookupBillingService
         $this->setAttribute($request, self::ATTRIBUTE_TRANSACTION_ID, $transaction->id);
         $this->setAttribute($request, self::ATTRIBUTE_LOG_ID, $apiLog->id);
         $this->setAttribute($request, self::ATTRIBUTE_CHARGED_AMOUNT, $price);
+        $this->setAttribute($request, self::ATTRIBUTE_PROVIDER_COST, $cost);
         $this->setAttribute($request, self::ATTRIBUTE_STATUS, 'charged');
     }
 

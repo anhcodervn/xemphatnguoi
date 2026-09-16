@@ -21,6 +21,7 @@ beforeEach(function (): void {
         'traffic-fines.cache.ttl' => 86400,
         'traffic-fines.cache.error_ttl' => 60,
         'traffic-fines.billing.api_request_price' => 20,
+        'traffic-fines.billing.api_request_cost' => 7,
     ]);
 
     Cache::store('array')->flush();
@@ -130,6 +131,7 @@ it('charges the configured price atomically for a successful GET API lookup', fu
         ->and($log->wallet_transaction_id)->toBe($transaction->id)
         ->and((float) $log->unit_price)->toBe(20.0)
         ->and((float) $log->charged_amount)->toBe(20.0)
+        ->and((float) $log->provider_cost)->toBe(7.0)
         ->and($log->billing_status)->toBe('charged');
 });
 
@@ -205,17 +207,51 @@ it('lets an admin change the price for new requests while preserving old log pri
     $this->putJson('/api/admin-api/traffic-fines/billing', [
         'api_request_price' => 35,
         'api_v2_request_price' => 150,
+        'api_request_cost' => 12,
+        'api_v2_request_cost' => 90,
     ])
         ->assertOk()
         ->assertJsonPath('data.api_request_price', 35)
-        ->assertJsonPath('data.api_v2_request_price', 150);
+        ->assertJsonPath('data.api_v2_request_price', 150)
+        ->assertJsonPath('data.api_request_cost', 12)
+        ->assertJsonPath('data.api_v2_request_cost', 90);
 
     $this->withHeaders($account['headers'])->getJson(billingLookupUrl('30A99999'))->assertOk();
 
     $prices = ApiLog::query()->orderBy('id')->pluck('unit_price')->map(fn (string $price): float => (float) $price)->all();
+    $costs = ApiLog::query()->orderBy('id')->pluck('provider_cost')->map(fn (string $cost): float => (float) $cost)->all();
 
     expect($prices)->toBe([20.0, 35.0])
+        ->and($costs)->toBe([7.0, 12.0])
         ->and((float) $account['user']->wallet()->firstOrFail()->balance)->toBe(45.0);
+
+    Sanctum::actingAs($admin);
+    $this->getJson('/api/admin-api/traffic-fines/billing')
+        ->assertOk()
+        ->assertJsonPath('data.summary.total_cost', '19')
+        ->assertJsonPath('data.summary.total_profit', '36');
+
+    $this->getJson('/api/admin-api/traffic-fines/overview')
+        ->assertOk()
+        ->assertJsonPath('data.metrics.api_paid_requests_total', 2)
+        ->assertJsonPath('data.metrics.api_revenue_total', '55')
+        ->assertJsonPath('data.metrics.api_cost_total', '19')
+        ->assertJsonPath('data.metrics.api_profit_total', '36')
+        ->assertJsonPath('data.metrics.api_chart.13.requests', 2)
+        ->assertJsonPath('data.metrics.api_chart.13.amount', '55')
+        ->assertJsonPath('data.metrics.api_chart.13.cost', '19')
+        ->assertJsonPath('data.metrics.api_chart.13.profit', '36');
+});
+
+it('rejects invalid API costs', function (): void {
+    Sanctum::actingAs(User::factory()->create(['role' => 'admin']));
+
+    $this->putJson('/api/admin-api/traffic-fines/billing', [
+        'api_request_price' => 20,
+        'api_v2_request_price' => 150,
+        'api_request_cost' => -1,
+        'api_v2_request_cost' => 90,
+    ])->assertUnprocessable();
 });
 
 it('shows a user only allowlisted fields from their own API request logs', function (): void {

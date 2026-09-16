@@ -4,7 +4,6 @@ namespace App\Features\TrafficFine\Services;
 
 use App\Models\ApiLog;
 use App\Models\User;
-use App\Models\WalletTransaction;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -23,33 +22,38 @@ class ApiUsageStatisticsService
             ->selectRaw("SUM(CASE WHEN billing_status = 'charged' THEN 1 ELSE 0 END) as charged_requests")
             ->selectRaw('SUM(CASE WHEN status_code >= 400 THEN 1 ELSE 0 END) as failed_requests')
             ->selectRaw("SUM(CASE WHEN billing_status = 'charged' THEN charged_amount ELSE 0 END) as total_amount")
+            ->selectRaw("SUM(CASE WHEN billing_status = 'charged' THEN provider_cost ELSE 0 END) as total_cost")
+            ->selectRaw("SUM(CASE WHEN billing_status = 'charged' THEN charged_amount - provider_cost ELSE 0 END) as total_profit")
             ->selectRaw("SUM(CASE WHEN created_at >= ? AND billing_status = 'charged' THEN 1 ELSE 0 END) as requests_today", [$today])
             ->selectRaw("SUM(CASE WHEN created_at >= ? AND billing_status = 'charged' THEN charged_amount ELSE 0 END) as amount_today", [$today])
+            ->selectRaw("SUM(CASE WHEN created_at >= ? AND billing_status = 'charged' THEN provider_cost ELSE 0 END) as cost_today", [$today])
+            ->selectRaw("SUM(CASE WHEN created_at >= ? AND billing_status = 'charged' THEN charged_amount - provider_cost ELSE 0 END) as profit_today", [$today])
             ->selectRaw("SUM(CASE WHEN created_at >= ? AND billing_status = 'charged' THEN 1 ELSE 0 END) as requests_month", [$month])
             ->selectRaw("SUM(CASE WHEN created_at >= ? AND billing_status = 'charged' THEN charged_amount ELSE 0 END) as amount_month", [$month])
+            ->selectRaw("SUM(CASE WHEN created_at >= ? AND billing_status = 'charged' THEN provider_cost ELSE 0 END) as cost_month", [$month])
+            ->selectRaw("SUM(CASE WHEN created_at >= ? AND billing_status = 'charged' THEN charged_amount - provider_cost ELSE 0 END) as profit_month", [$month])
             ->first();
 
         return [
             'total_requests' => (int) ($metrics?->total_requests ?? 0),
             'charged_requests' => (int) ($metrics?->charged_requests ?? 0),
             'failed_requests' => (int) ($metrics?->failed_requests ?? 0),
-            'total_amount' => (string) WalletTransaction::query()
-                ->whereIn('reference_type', ['traffic_fine_api_request', 'traffic_fine_api_v2_request'])
-                ->where('status', 'success')
-                ->when($user instanceof User, fn (Builder $query) => $query->whereHas(
-                    'wallet',
-                    fn (Builder $walletQuery) => $walletQuery->whereBelongsTo($user),
-                ))
-                ->sum('amount'),
+            'total_amount' => (string) ($metrics?->total_amount ?? '0.00'),
+            'total_cost' => (string) ($metrics?->total_cost ?? '0.00'),
+            'total_profit' => (string) ($metrics?->total_profit ?? '0.00'),
             'requests_today' => (int) ($metrics?->requests_today ?? 0),
             'amount_today' => (string) ($metrics?->amount_today ?? '0.00'),
+            'cost_today' => (string) ($metrics?->cost_today ?? '0.00'),
+            'profit_today' => (string) ($metrics?->profit_today ?? '0.00'),
             'requests_month' => (int) ($metrics?->requests_month ?? 0),
             'amount_month' => (string) ($metrics?->amount_month ?? '0.00'),
+            'cost_month' => (string) ($metrics?->cost_month ?? '0.00'),
+            'profit_month' => (string) ($metrics?->profit_month ?? '0.00'),
         ];
     }
 
     /**
-     * @return list<array{date: string, label: string, requests: int, amount: string}>
+     * @return list<array{date: string, label: string, requests: int, amount: string, cost: string, profit: string}>
      */
     public function daily(?User $user = null, int $days = 14): array
     {
@@ -59,7 +63,7 @@ class ApiUsageStatisticsService
         $rows = $this->query($user)
             ->where('created_at', '>=', $start->startOfDay())
             ->where('billing_status', 'charged')
-            ->selectRaw('DATE(created_at) as usage_date, COUNT(*) as request_count, SUM(charged_amount) as amount')
+            ->selectRaw('DATE(created_at) as usage_date, COUNT(*) as request_count, SUM(charged_amount) as amount, SUM(provider_cost) as cost, SUM(charged_amount - provider_cost) as profit')
             ->groupByRaw('DATE(created_at)')
             ->get()
             ->keyBy('usage_date');
@@ -74,6 +78,8 @@ class ApiUsageStatisticsService
                     'label' => $date->format('d/m'),
                     'requests' => (int) ($row?->request_count ?? 0),
                     'amount' => (string) ($row?->amount ?? '0.00'),
+                    'cost' => (string) ($row?->cost ?? '0.00'),
+                    'profit' => (string) ($row?->profit ?? '0.00'),
                 ];
             })
             ->all();

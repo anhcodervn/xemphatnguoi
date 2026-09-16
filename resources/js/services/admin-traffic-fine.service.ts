@@ -13,9 +13,27 @@ export type AdminTrafficFineMetrics = {
     api_v2_request_price: number;
     api_requests_today: number;
     api_requests_month: number;
+    api_paid_requests_total: number;
     api_revenue_today: string;
     api_revenue_month: string;
     api_revenue_total: string;
+    api_cost_today: string;
+    api_cost_month: string;
+    api_cost_total: string;
+    api_profit_today: string;
+    api_profit_month: string;
+    api_profit_total: string;
+    package_revenue: {
+        today: string;
+        week: string;
+        month: string;
+        total: string;
+    };
+    wallet_deposits: {
+        today: string;
+        week: string;
+        month: string;
+    };
     api_chart: AdminApiUsageDaily[];
 };
 
@@ -77,11 +95,15 @@ export type AdminApiUsageDaily = {
     label: string;
     requests: number;
     amount: string;
+    cost: string;
+    profit: string;
 };
 
 export type AdminApiBilling = {
     api_request_price: number;
     api_v2_request_price: number;
+    api_request_cost: number;
+    api_v2_request_cost: number;
     api_v1_description: string;
     api_v2_description: string;
     summary: {
@@ -89,10 +111,16 @@ export type AdminApiBilling = {
         charged_requests: number;
         failed_requests: number;
         total_amount: string;
+        total_cost: string;
+        total_profit: string;
         requests_today: number;
         amount_today: string;
+        cost_today: string;
+        profit_today: string;
         requests_month: number;
         amount_month: string;
+        cost_month: string;
+        profit_month: string;
     };
     chart: AdminApiUsageDaily[];
 };
@@ -284,12 +312,16 @@ export const adminTrafficFineService = {
     async updateBilling(
         apiRequestPrice: number,
         apiV2RequestPrice: number,
+        apiRequestCost: number,
+        apiV2RequestCost: number,
         apiV1Description: string,
         apiV2Description: string,
     ): Promise<AdminApiBilling> {
         const response = await api.put('/api/admin-api/traffic-fines/billing', {
             api_request_price: apiRequestPrice,
             api_v2_request_price: apiV2RequestPrice,
+            api_request_cost: apiRequestCost,
+            api_v2_request_cost: apiV2RequestCost,
             api_v1_description: apiV1Description,
             api_v2_description: apiV2Description,
         });

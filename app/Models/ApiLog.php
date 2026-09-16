@@ -31,6 +31,7 @@ class ApiLog extends Model
         'response_time_ms',
         'unit_price',
         'charged_amount',
+        'provider_cost',
         'billing_status',
         'created_at',
     ];
@@ -45,6 +46,7 @@ class ApiLog extends Model
             'response_time_ms' => 'integer',
             'unit_price' => 'decimal:2',
             'charged_amount' => 'decimal:2',
+            'provider_cost' => 'decimal:2',
             'created_at' => 'datetime',
         ];
     }

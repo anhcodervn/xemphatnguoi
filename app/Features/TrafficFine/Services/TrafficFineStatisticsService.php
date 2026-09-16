@@ -2,6 +2,7 @@
 
 namespace App\Features\TrafficFine\Services;
 
+use App\Features\Admin\Analytics\Services\DashboardRevenueStatisticsService;
 use App\Features\TrafficFine\Enums\VehicleType;
 use App\Models\TrafficFineLookupLog;
 use App\Models\User;
@@ -12,6 +13,7 @@ class TrafficFineStatisticsService
     public function __construct(
         private readonly ApiUsageStatisticsService $apiUsageStatistics,
         private readonly ApiLookupBillingService $billingService,
+        private readonly DashboardRevenueStatisticsService $revenueStatistics,
     ) {}
 
     /**
@@ -33,6 +35,7 @@ class TrafficFineStatisticsService
             ->first();
 
         $apiUsage = $this->apiUsageStatistics->summary();
+        $revenue = $this->revenueStatistics->summary();
 
         return [
             'lookup_today' => (int) ($lookupMetrics?->lookup_today ?? 0),
@@ -49,9 +52,18 @@ class TrafficFineStatisticsService
             'api_v2_request_price' => $this->billingService->v2PricePerRequest(),
             'api_requests_today' => $apiUsage['requests_today'],
             'api_requests_month' => $apiUsage['requests_month'],
+            'api_paid_requests_total' => $apiUsage['charged_requests'],
             'api_revenue_today' => $apiUsage['amount_today'],
             'api_revenue_month' => $apiUsage['amount_month'],
             'api_revenue_total' => $apiUsage['total_amount'],
+            'api_cost_today' => $apiUsage['cost_today'],
+            'api_cost_month' => $apiUsage['cost_month'],
+            'api_cost_total' => $apiUsage['total_cost'],
+            'api_profit_today' => $apiUsage['profit_today'],
+            'api_profit_month' => $apiUsage['profit_month'],
+            'api_profit_total' => $apiUsage['total_profit'],
+            'package_revenue' => $revenue['package_revenue'],
+            'wallet_deposits' => $revenue['wallet_deposits'],
             'api_chart' => $this->apiUsageStatistics->daily(days: 14),
         ];
     }

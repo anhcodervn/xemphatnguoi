@@ -23,6 +23,7 @@ beforeEach(function (): void {
         'traffic-fines.cache.ttl' => 86400,
         'traffic-fines.cache.error_ttl' => 60,
         'traffic-fines.billing.api_v2_request_price' => 150,
+        'traffic-fines.billing.api_v2_request_cost' => 90,
         'traffic-fines.sources.xephatnguoi.token' => 'v2-provider-token',
     ]);
 
@@ -107,6 +108,7 @@ it('uses only xephatnguoi v2 and charges 150 dong for each successful request', 
     expect((float) $account['user']->wallet()->firstOrFail()->balance)->toBe(200.0)
         ->and(WalletTransaction::query()->where('reference_type', 'traffic_fine_api_v2_request')->count())->toBe(2)
         ->and(ApiLog::query()->where('endpoint', 'api/v2/lookup')->where('unit_price', 150)->count())->toBe(2)
+        ->and(ApiLog::query()->where('endpoint', 'api/v2/lookup')->where('provider_cost', 90)->count())->toBe(2)
         ->and(TrafficFineResult::query()->where('provider', 'xephatnguoi_v2')->where('api_version', 'v2')->count())->toBe(1)
         ->and(TrafficFineLookupLog::query()->where('provider', 'xephatnguoi_v2')->where('api_version', 'v2')->count())->toBe(2)
         ->and(LookupHistory::query()->whereBelongsTo($account['user'])->where('api_version', 'v2')->count())->toBe(2)
@@ -214,17 +216,22 @@ it('lets admin configure the v2 price used by subsequent requests', function ():
     Sanctum::actingAs($admin);
     $this->getJson('/api/admin-api/traffic-fines/billing')
         ->assertOk()
-        ->assertJsonPath('data.api_v2_request_price', 150);
+        ->assertJsonPath('data.api_v2_request_price', 150)
+        ->assertJsonPath('data.api_v2_request_cost', 90);
 
     $this->putJson('/api/admin-api/traffic-fines/billing', [
         'api_request_price' => 20,
         'api_v2_request_price' => 175,
+        'api_request_cost' => 7,
+        'api_v2_request_cost' => 100,
         'api_v1_description' => 'API tiêu chuẩn cho hệ thống hiện tại.',
         'api_v2_description' => 'API nâng cao dành cho kết nối mới.',
     ])
         ->assertOk()
         ->assertJsonPath('data.api_request_price', 20)
         ->assertJsonPath('data.api_v2_request_price', 175)
+        ->assertJsonPath('data.api_request_cost', 7)
+        ->assertJsonPath('data.api_v2_request_cost', 100)
         ->assertJsonPath('data.api_v1_description', 'API tiêu chuẩn cho hệ thống hiện tại.')
         ->assertJsonPath('data.api_v2_description', 'API nâng cao dành cho kết nối mới.');
 
@@ -245,5 +252,6 @@ it('lets admin configure the v2 price used by subsequent requests', function ():
 
     expect((float) $account['user']->wallet()->firstOrFail()->balance)->toBe(325.0)
         ->and((float) ApiLog::query()->where('endpoint', 'api/v2/lookup')->sole()->unit_price)->toBe(175.0)
+        ->and((float) ApiLog::query()->where('endpoint', 'api/v2/lookup')->sole()->provider_cost)->toBe(100.0)
         ->and((float) WalletTransaction::query()->where('reference_type', 'traffic_fine_api_v2_request')->sole()->amount)->toBe(175.0);
 });
