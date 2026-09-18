@@ -5,6 +5,7 @@ use App\Http\Middleware\AuthenticateApiKey;
 use App\Http\Middleware\EnsureAdminUser;
 use App\Http\Middleware\EnsureApiKeyPermission;
 use App\Http\Middleware\EnsureSiteIsActive;
+use App\Http\Middleware\EnsureTrafficFineApiIsAvailable;
 use App\Http\Middleware\LogApiRequest;
 use App\Support\SettingStore;
 use Illuminate\Foundation\Application;
@@ -43,6 +44,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'api-key.permission' => EnsureApiKeyPermission::class,
             'api-key.log' => LogApiRequest::class,
             'site.active' => EnsureSiteIsActive::class,
+            'traffic-fine-api.available' => EnsureTrafficFineApiIsAvailable::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

@@ -43,5 +43,7 @@ it('connects the public partner navigation to protected api documentation', func
     expect($adminBilling)
         ->toContain('v-model.trim="v1Description"')
         ->toContain('v-model.trim="v2Description"')
+        ->toContain(':aria-checked="v1Enabled"')
+        ->toContain(':aria-checked="v2Enabled"')
         ->toContain('Không nhập tên nguồn, URL hoặc credential');
 });

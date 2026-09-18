@@ -11,17 +11,17 @@ use App\Features\TrafficFine\Controllers\VehicleMonitoringController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/lookup', TrafficFineLookupController::class)
-    ->middleware('throttle:traffic-fine-lookup')
+    ->middleware(['traffic-fine-api.available:v1', 'throttle:traffic-fine-lookup'])
     ->name('traffic-fines.lookup');
 
 Route::prefix('v1')
-    ->middleware(['api-key.auth', 'api-key.permission:traffic-fines.lookup', 'api-key.log', 'throttle:traffic-fine-lookup'])
+    ->middleware(['api-key.auth', 'api-key.permission:traffic-fines.lookup', 'api-key.log', 'traffic-fine-api.available:v1', 'throttle:traffic-fine-lookup'])
     ->group(function (): void {
         Route::get('/lookup', TrafficFineLookupController::class)->name('v1.traffic-fines.lookup');
     });
 
 Route::prefix('v2')
-    ->middleware(['api-key.auth', 'api-key.permission:traffic-fines.lookup', 'api-key.log', 'throttle:traffic-fine-lookup'])
+    ->middleware(['api-key.auth', 'api-key.permission:traffic-fines.lookup', 'api-key.log', 'traffic-fine-api.available:v2', 'throttle:traffic-fine-lookup'])
     ->group(function (): void {
         Route::get('/lookup', TrafficFineLookupV2Controller::class)->name('v2.traffic-fines.lookup');
     });
@@ -35,13 +35,13 @@ Route::prefix('client/traffic-fines')
         Route::get('/api-usage', [TrafficFineDashboardController::class, 'apiUsage'])->name('api-usage');
         Route::get('/monitoring', [VehicleMonitoringController::class, 'index'])->name('monitoring.index');
         Route::post('/lookup', TrafficFineLookupController::class)
-            ->middleware('throttle:traffic-fine-lookup')
+            ->middleware(['traffic-fine-api.available:v1', 'throttle:traffic-fine-lookup'])
             ->name('lookup');
         Route::post('/lookup-v2', TrafficFineWebLookupV2Controller::class)
-            ->middleware('throttle:traffic-fine-lookup')
+            ->middleware(['traffic-fine-api.available:v2', 'throttle:traffic-fine-lookup'])
             ->name('lookup-v2');
         Route::post('/vehicles/{vehicle}/lookup', [UserVehicleController::class, 'lookup'])
-            ->middleware('throttle:traffic-fine-lookup')
+            ->middleware(['traffic-fine-api.available:v1', 'throttle:traffic-fine-lookup'])
             ->name('vehicles.lookup');
         Route::patch('/vehicles/{vehicle}/monitoring', [VehicleMonitoringController::class, 'update'])
             ->name('vehicles.monitoring.update');

@@ -51,6 +51,8 @@ return [
     ],
 
     'public_api' => [
+        'v1_enabled' => env('TRAFFIC_FINE_API_V1_ENABLED', true),
+        'v2_enabled' => env('TRAFFIC_FINE_API_V2_ENABLED', true),
         'v1_description' => 'Phiên bản ổn định, phù hợp với các hệ thống đang tích hợp.',
         'v2_description' => 'Phiên bản mới, tối ưu cho các kết nối và ứng dụng mới.',
     ],

@@ -65,10 +65,14 @@ class TrafficFineLookupService
 
         $cachedPayload = $forceRefresh ? null : $cache->get($cacheKey);
 
-        if (is_array($cachedPayload)) {
+        if (is_array($cachedPayload) && $this->isCachePayloadForCurrentVersion($cachedPayload)) {
             $resolved = $this->resolvedFromCachePayload($cachedPayload);
 
             return $this->completeLookup($resolved, $user, $resolvedVehicleType, $ip);
+        }
+
+        if (is_array($cachedPayload)) {
+            $cache->forget($cacheKey);
         }
 
         $databaseResult = $forceRefresh ? null : $this->freshDatabaseResult($sourceName, $normalizedPlate, $resolvedVehicleType);
@@ -90,8 +94,12 @@ class TrafficFineLookupService
                 ->block((int) config('traffic-fines.cache.lock_wait_seconds', 3), function () use ($cache, $cacheKey, $normalizedPlate, $resolvedVehicleType, $sourceName, $forceRefresh): array {
                     $cachedPayload = $forceRefresh ? null : $cache->get($cacheKey);
 
-                    if (is_array($cachedPayload)) {
+                    if (is_array($cachedPayload) && $this->isCachePayloadForCurrentVersion($cachedPayload)) {
                         return $this->resolvedFromCachePayload($cachedPayload);
+                    }
+
+                    if (is_array($cachedPayload)) {
+                        $cache->forget($cacheKey);
                     }
 
                     $databaseResult = $forceRefresh ? null : $this->freshDatabaseResult($sourceName, $normalizedPlate, $resolvedVehicleType);
@@ -231,10 +239,14 @@ class TrafficFineLookupService
         $cache = $this->cache->store((string) config('traffic-fines.cache.store', 'redis'));
         $cachedPayload = $cache->get($this->cacheKey($sourceName, $resolvedVehicleType, $normalizedPlate));
 
-        if (is_array($cachedPayload)) {
+        if (is_array($cachedPayload) && $this->isCachePayloadForCurrentVersion($cachedPayload)) {
             $resolved = $this->resolvedFromCachePayload($cachedPayload);
 
             return new TrafficFineLookupResponseDto(data: $resolved['data'], cached: true);
+        }
+
+        if (is_array($cachedPayload)) {
+            $cache->forget($this->cacheKey($sourceName, $resolvedVehicleType, $normalizedPlate));
         }
 
         $databaseResult = $this->freshDatabaseResult($sourceName, $normalizedPlate, $resolvedVehicleType);
@@ -319,14 +331,21 @@ class TrafficFineLookupService
     }
 
     /**
-     * @return array{data: array<string, mixed>, result_id: int}
+     * @return array{api_version: string, data: array<string, mixed>, result_id: int}
      */
     private function cachePayload(TrafficFineLookupResultDataDto $data, int $resultId): array
     {
         return [
+            'api_version' => $this->apiVersion,
             'data' => $data->toArray(),
             'result_id' => $resultId,
         ];
+    }
+
+    /** @param array<string, mixed> $payload */
+    private function isCachePayloadForCurrentVersion(array $payload): bool
+    {
+        return ($payload['api_version'] ?? null) === $this->apiVersion;
     }
 
     /**

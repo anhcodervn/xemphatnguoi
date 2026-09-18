@@ -9,6 +9,7 @@ use App\Features\TrafficFine\Requests\StoreTrafficFineProviderRequest;
 use App\Features\TrafficFine\Requests\UpdateApiBillingSettingRequest;
 use App\Features\TrafficFine\Requests\UpdateTrafficFineProviderRequest;
 use App\Features\TrafficFine\Services\ApiDocumentationSettingsService;
+use App\Features\TrafficFine\Services\ApiLookupAvailabilityService;
 use App\Features\TrafficFine\Services\ApiLookupBillingService;
 use App\Features\TrafficFine\Services\ApiUsageStatisticsService;
 use App\Features\TrafficFine\Services\CachedPlateService;
@@ -212,6 +213,7 @@ class TrafficFineAdminController extends Controller
 
     public function billing(
         ApiLookupBillingService $billingService,
+        ApiLookupAvailabilityService $availabilityService,
         ApiDocumentationSettingsService $documentationSettings,
         ApiUsageStatisticsService $statistics,
     ): JsonResponse {
@@ -222,6 +224,8 @@ class TrafficFineAdminController extends Controller
                 'api_v2_request_price' => $billingService->v2PricePerRequest(),
                 'api_request_cost' => $billingService->costPerRequest(),
                 'api_v2_request_cost' => $billingService->v2CostPerRequest(),
+                'api_v1_enabled' => $availabilityService->isEnabled('v1'),
+                'api_v2_enabled' => $availabilityService->isEnabled('v2'),
                 'api_v1_description' => $documentationSettings->v1Description(),
                 'api_v2_description' => $documentationSettings->v2Description(),
                 'summary' => $statistics->summary(),
@@ -234,6 +238,7 @@ class TrafficFineAdminController extends Controller
         UpdateApiBillingSettingRequest $request,
         SettingStore $settingStore,
         ApiLookupBillingService $billingService,
+        ApiLookupAvailabilityService $availabilityService,
         ApiDocumentationSettingsService $documentationSettings,
         ApiUsageStatisticsService $statistics,
     ): JsonResponse {
@@ -255,6 +260,18 @@ class TrafficFineAdminController extends Controller
             ApiLookupBillingService::V2_COST_SETTING_KEY,
             (string) $request->integer('api_v2_request_cost'),
         );
+
+        if ($request->hasAny(['api_v1_enabled', 'api_v2_enabled'])) {
+            $availabilityService->update(
+                $request->has('api_v1_enabled')
+                    ? $request->boolean('api_v1_enabled')
+                    : $availabilityService->isEnabled('v1'),
+                $request->has('api_v2_enabled')
+                    ? $request->boolean('api_v2_enabled')
+                    : $availabilityService->isEnabled('v2'),
+            );
+        }
+
         $documentationSettings->update($validated);
 
         return response()->json([
@@ -265,6 +282,8 @@ class TrafficFineAdminController extends Controller
                 'api_v2_request_price' => $billingService->v2PricePerRequest(),
                 'api_request_cost' => $billingService->costPerRequest(),
                 'api_v2_request_cost' => $billingService->v2CostPerRequest(),
+                'api_v1_enabled' => $availabilityService->isEnabled('v1'),
+                'api_v2_enabled' => $availabilityService->isEnabled('v2'),
                 'api_v1_description' => $documentationSettings->v1Description(),
                 'api_v2_description' => $documentationSettings->v2Description(),
                 'summary' => $statistics->summary(),

@@ -326,6 +326,31 @@ it('restores redis from a fresh database result without calling the provider', f
         ->and(Cache::store('array')->has('traffic_fine:v1:fake_source:car:30A12345'))->toBeTrue();
 });
 
+it('rejects a cache payload belonging to another api version', function (): void {
+    $source = bindTrafficFineSource();
+    Cache::store('array')->put('traffic_fine:v1:fake_source:car:30A12345', [
+        'api_version' => 'v2',
+        'data' => [
+            'plate' => '30A12345',
+            'display_plate' => '30A-123.45',
+            'vehicle_type' => 'car',
+            'status' => 'success',
+            'violation_count' => 99,
+            'violations' => [],
+            'checked_at' => now()->toISOString(),
+        ],
+        'result_id' => 999,
+    ], 86400);
+
+    $this->postJson('/api/lookup', ['plate' => '30A12345', 'vehicle_type' => 'car'])
+        ->assertOk()
+        ->assertJsonPath('cached', false)
+        ->assertJsonPath('data.violation_count', 0);
+
+    expect($source->calls)->toBe(1)
+        ->and(Cache::store('array')->get('traffic_fine:v1:fake_source:car:30A12345')['api_version'] ?? null)->toBe('v1');
+});
+
 it('adds null defaults when restoring the previous normalized violation shape', function (): void {
     $source = bindTrafficFineSource(failure: new RuntimeException('Source must not be called.'));
     $checkedAt = now();

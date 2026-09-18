@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { adminTrafficFineService, type AdminApiBilling } from '@/services/admin-traffic-fine.service';
 import formatCash from '@/utils/helpers/formatCash';
-import { CircleDollarSign, ReceiptText, Save, TrendingDown, TrendingUp } from 'lucide-vue-next';
+import { CircleDollarSign, Power, ReceiptText, Save, TrendingDown, TrendingUp } from 'lucide-vue-next';
 import { computed, onMounted, ref } from 'vue';
 
 const billing = ref<AdminApiBilling | null>(null);
@@ -11,6 +11,8 @@ const v1Cost = ref(0);
 const v2Cost = ref(0);
 const v1Description = ref('');
 const v2Description = ref('');
+const v1Enabled = ref(true);
+const v2Enabled = ref(true);
 const loading = ref(true);
 const saving = ref(false);
 const errorMessage = ref('');
@@ -28,6 +30,8 @@ const load = async (): Promise<void> => {
         v2Cost.value = billing.value.api_v2_request_cost;
         v1Description.value = billing.value.api_v1_description;
         v2Description.value = billing.value.api_v2_description;
+        v1Enabled.value = billing.value.api_v1_enabled;
+        v2Enabled.value = billing.value.api_v2_enabled;
     } catch {
         errorMessage.value = 'Không thể tải cấu hình tính phí API.';
     } finally {
@@ -47,6 +51,8 @@ const save = async (): Promise<void> => {
             v2Cost.value,
             v1Description.value,
             v2Description.value,
+            v1Enabled.value,
+            v2Enabled.value,
         );
         v1Price.value = billing.value.api_request_price;
         v2Price.value = billing.value.api_v2_request_price;
@@ -54,7 +60,9 @@ const save = async (): Promise<void> => {
         v2Cost.value = billing.value.api_v2_request_cost;
         v1Description.value = billing.value.api_v1_description;
         v2Description.value = billing.value.api_v2_description;
-        successMessage.value = 'Đã cập nhật giá bán, giá cost và mô tả công khai của API.';
+        v1Enabled.value = billing.value.api_v1_enabled;
+        v2Enabled.value = billing.value.api_v2_enabled;
+        successMessage.value = 'Đã cập nhật trạng thái vận hành, giá và mô tả API.';
     } catch {
         errorMessage.value = 'Không thể cập nhật giá. Vui lòng kiểm tra dữ liệu.';
     } finally {
@@ -86,8 +94,8 @@ onMounted(load);
                                 <CircleDollarSign class="h-6 w-6" />
                             </span>
                             <div>
-                                <h2 class="font-bold text-slate-950">Giá gói API hiện tại</h2>
-                                <p class="mt-1 text-xs text-slate-500">So sánh và chỉnh giá từng phiên bản.</p>
+                                <h2 class="font-bold text-slate-950">Cấu hình API hiện tại</h2>
+                                <p class="mt-1 text-xs text-slate-500">Điều khiển trạng thái vận hành và giá từng phiên bản.</p>
                             </div>
                         </div>
                         <button
@@ -95,13 +103,26 @@ onMounted(load);
                             :disabled="saving"
                             class="app-focus inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-slate-950 px-5 text-sm font-bold text-white disabled:opacity-60"
                         >
-                            <Save class="h-4 w-4" />{{ saving ? 'Đang lưu...' : 'Lưu bảng giá' }}
+                            <Save class="h-4 w-4" />{{ saving ? 'Đang lưu...' : 'Lưu cấu hình' }}
                         </button>
                     </div>
                     <div class="mt-5 grid gap-4 sm:grid-cols-2">
-                        <label for="api-request-price" class="rounded-xl border border-sky-200 bg-sky-50/60 p-4">
-                            <span class="inline-flex rounded-full bg-sky-100 px-2.5 py-1 text-xs font-black uppercase text-sky-700">API v1</span>
-                            <span class="mt-3 block text-sm font-semibold text-slate-700">VND / request thành công</span>
+                        <div class="rounded-xl border border-sky-200 bg-sky-50/60 p-4">
+                            <div class="flex items-center justify-between gap-3">
+                                <span class="inline-flex rounded-full bg-sky-100 px-2.5 py-1 text-xs font-black uppercase text-sky-700">API v1</span>
+                                <button
+                                    type="button"
+                                    role="switch"
+                                    :aria-checked="v1Enabled"
+                                    aria-label="Bật hoặc bảo trì cổng tra cứu API v1"
+                                    class="app-focus inline-flex min-h-10 items-center gap-2 rounded-full px-3 text-xs font-black transition"
+                                    :class="v1Enabled ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-600'"
+                                    @click="v1Enabled = !v1Enabled"
+                                >
+                                    <Power class="h-4 w-4" />{{ v1Enabled ? 'Đang bật' : 'Bảo trì' }}
+                                </button>
+                            </div>
+                            <label for="api-request-price" class="mt-3 block text-sm font-semibold text-slate-700">VND / request thành công</label>
                             <span class="relative mt-2 block">
                                 <input
                                     id="api-request-price"
@@ -114,7 +135,7 @@ onMounted(load);
                                     class="app-focus h-12 w-full rounded-lg border border-slate-300 bg-white px-4 pr-14 text-lg font-black"
                                 /><span class="absolute inset-y-0 right-4 flex items-center text-sm font-bold text-slate-500">đ</span>
                             </span>
-                            <span class="mt-4 block text-sm font-semibold text-slate-700">Giá cost / request</span>
+                            <label for="api-request-cost" class="mt-4 block text-sm font-semibold text-slate-700">Giá cost / request</label>
                             <span class="relative mt-2 block">
                                 <input
                                     id="api-request-cost"
@@ -130,20 +151,34 @@ onMounted(load);
                             <span class="mt-2 block text-xs font-semibold text-emerald-700">
                                 Lãi dự kiến: {{ formatCash(v1Price - v1Cost) }}đ / request
                             </span>
-                            <span class="mt-4 block text-sm font-semibold text-slate-700">Mô tả công khai</span>
+                            <label for="api-v1-description" class="mt-4 block text-sm font-semibold text-slate-700">Mô tả công khai</label>
                             <textarea
+                                id="api-v1-description"
                                 v-model.trim="v1Description"
                                 required
                                 maxlength="300"
                                 rows="3"
                                 class="app-focus mt-2 w-full resize-none rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-normal leading-6"
                             />
-                        </label>
-                        <label for="api-v2-request-price" class="rounded-xl border border-violet-200 bg-violet-50/60 p-4">
-                            <span class="inline-flex rounded-full bg-violet-100 px-2.5 py-1 text-xs font-black uppercase text-violet-700"
-                                >API v2</span
-                            >
-                            <span class="mt-3 block text-sm font-semibold text-slate-700">VND / request thành công</span>
+                        </div>
+                        <div class="rounded-xl border border-violet-200 bg-violet-50/60 p-4">
+                            <div class="flex items-center justify-between gap-3">
+                                <span class="inline-flex rounded-full bg-violet-100 px-2.5 py-1 text-xs font-black uppercase text-violet-700"
+                                    >API v2</span
+                                >
+                                <button
+                                    type="button"
+                                    role="switch"
+                                    :aria-checked="v2Enabled"
+                                    aria-label="Bật hoặc bảo trì cổng tra cứu API v2"
+                                    class="app-focus inline-flex min-h-10 items-center gap-2 rounded-full px-3 text-xs font-black transition"
+                                    :class="v2Enabled ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-600'"
+                                    @click="v2Enabled = !v2Enabled"
+                                >
+                                    <Power class="h-4 w-4" />{{ v2Enabled ? 'Đang bật' : 'Bảo trì' }}
+                                </button>
+                            </div>
+                            <label for="api-v2-request-price" class="mt-3 block text-sm font-semibold text-slate-700">VND / request thành công</label>
                             <span class="relative mt-2 block">
                                 <input
                                     id="api-v2-request-price"
@@ -156,7 +191,7 @@ onMounted(load);
                                     class="app-focus h-12 w-full rounded-lg border border-slate-300 bg-white px-4 pr-14 text-lg font-black"
                                 /><span class="absolute inset-y-0 right-4 flex items-center text-sm font-bold text-slate-500">đ</span>
                             </span>
-                            <span class="mt-4 block text-sm font-semibold text-slate-700">Giá cost / request</span>
+                            <label for="api-v2-request-cost" class="mt-4 block text-sm font-semibold text-slate-700">Giá cost / request</label>
                             <span class="relative mt-2 block">
                                 <input
                                     id="api-v2-request-cost"
@@ -172,19 +207,20 @@ onMounted(load);
                             <span class="mt-2 block text-xs font-semibold text-emerald-700">
                                 Lãi dự kiến: {{ formatCash(v2Price - v2Cost) }}đ / request
                             </span>
-                            <span class="mt-4 block text-sm font-semibold text-slate-700">Mô tả công khai</span>
+                            <label for="api-v2-description" class="mt-4 block text-sm font-semibold text-slate-700">Mô tả công khai</label>
                             <textarea
+                                id="api-v2-description"
                                 v-model.trim="v2Description"
                                 required
                                 maxlength="300"
                                 rows="3"
                                 class="app-focus mt-2 w-full resize-none rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-normal leading-6"
                             />
-                        </label>
+                        </div>
                     </div>
                     <p class="mt-3 text-xs leading-5 text-slate-500">
-                        Mô tả được hiển thị cho khách hàng. Không nhập tên nguồn, URL hoặc credential. Cost được tính trên mỗi request đã thu phí, kể
-                        cả cache hit; request lỗi không phát sinh doanh thu hoặc cost.
+                        Tắt một phiên bản sẽ trả mã 503 cho toàn bộ cổng tra cứu tương ứng trước khi gọi nhà cung cấp hoặc trừ tiền. Mô tả được hiển
+                        thị cho khách hàng. Không nhập tên nguồn, URL hoặc credential.
                     </p>
                 </form>
                 <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">

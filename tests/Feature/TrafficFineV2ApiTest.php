@@ -138,6 +138,7 @@ it('fetches and caches v2 even when the same plate already has a fresh v1 result
         'expires_at' => $v1CheckedAt->copy()->addDay(),
     ]);
     Cache::store('array')->put('traffic_fine:v1:xephatnguoi_v2:car:30K12345', [
+        'api_version' => 'v1',
         'data' => [
             'plate' => '30K12345',
             'display_plate' => '30K-123.45',
