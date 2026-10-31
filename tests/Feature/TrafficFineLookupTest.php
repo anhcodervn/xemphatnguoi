@@ -12,6 +12,7 @@ use App\Features\TrafficFine\Services\Source\Xephatnguoi\XephatnguoiSource;
 use App\Models\ApiKey;
 use App\Models\TrafficFineResult;
 use App\Models\User;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\Client\Request as ClientRequest;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
@@ -267,6 +268,34 @@ it('protects the v1 lookup with api credentials and the traffic fine permission'
     ]);
 
     $this->postJson('/api/v1/lookup', $payload)->assertMethodNotAllowed();
+});
+
+it('returns the current local time for provider redis and database responses without changing stored timestamps', function (): void {
+    config(['app.timezone' => 'Asia/Ho_Chi_Minh']);
+    $this->travelTo(CarbonImmutable::parse('2026-10-31T03:31:54.803743Z'));
+    $source = bindTrafficFineSource();
+    $payload = ['plate' => '30A12345', 'vehicle_type' => 'car'];
+
+    $this->postJson('/api/lookup', $payload)
+        ->assertOk()
+        ->assertJsonPath('data.checked_at', '2026-10-31T10:31:54.803743+07:00');
+
+    $this->travel(1)->minutes();
+    $this->postJson('/api/lookup', $payload)
+        ->assertOk()
+        ->assertJsonPath('data.checked_at', '2026-10-31T10:32:54.803743+07:00');
+
+    $this->travel(1)->minutes();
+    Cache::store('array')->flush();
+    $this->postJson('/api/lookup', $payload)
+        ->assertOk()
+        ->assertJsonPath('data.checked_at', '2026-10-31T10:33:54.803743+07:00');
+
+    $storedResult = TrafficFineResult::query()->sole();
+
+    expect($source->calls)->toBe(1)
+        ->and($storedResult->response_json['checked_at'])->toBe('2026-10-31T10:31:54.803743+07:00')
+        ->and($storedResult->checked_at->format('H:i:s'))->toBe('10:31:54');
 });
 
 it('uses the redis-compatible cache for repeated lookups', function (): void {
@@ -608,7 +637,7 @@ it('normalizes upstream data without exposing provider details or credentials', 
 
 it('normalizes the actual provider response contract', function (): void {
     $this->freezeTime();
-    $expectedCheckedAt = now()->toImmutable()->toISOString();
+    $expectedCheckedAt = now()->toImmutable()->setTimezone(config('app.timezone'))->toISOString(true);
 
     config([
         'traffic-fines.sources.xephatnguoi.url' => 'https://api.xephatnguoi.com/v1/search',

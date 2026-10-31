@@ -1,7 +1,46 @@
 <?php
 
+use App\Features\TrafficFine\DTOs\TrafficFineLookupResponseDto;
 use App\Features\TrafficFine\DTOs\TrafficFineLookupResultDataDto;
 use Carbon\CarbonImmutable;
+use Tests\TestCase;
+
+pest()->extend(TestCase::class);
+
+it('uses the serialization time for checked_at in every response', function (bool $cached): void {
+    config(['app.timezone' => 'Asia/Ho_Chi_Minh']);
+    $this->travelTo(CarbonImmutable::parse('2026-10-31T03:31:54.803743Z'));
+    $result = TrafficFineLookupResultDataDto::fromArray([
+        'checked_at' => '2026-10-30T03:31:54.803743Z',
+    ]);
+    $response = new TrafficFineLookupResponseDto(data: $result, cached: $cached);
+
+    expect($response->toArray()['data']['checked_at'])->toBe('2026-10-31T10:31:54.803743+07:00');
+
+    $this->travel(1)->minutes();
+
+    expect($response->toArray()['data']['checked_at'])->toBe('2026-10-31T10:32:54.803743+07:00')
+        ->and($result->checkedAt->toISOString())->toBe('2026-10-30T03:31:54.803743Z');
+})->with([false, true]);
+
+it('serializes checked_at in the application timezone without changing the instant', function (string $checkedAt): void {
+    config(['app.timezone' => 'Asia/Ho_Chi_Minh']);
+
+    $result = TrafficFineLookupResultDataDto::fromArray([
+        'checked_at' => $checkedAt,
+    ]);
+
+    $serialized = $result->toArray()['checked_at'];
+
+    expect($serialized)->toBe('2026-10-31T10:31:54.803743+07:00')
+        ->and(CarbonImmutable::parse($serialized)->equalTo($result->checkedAt))->toBeTrue()
+        ->and($result->checkedAt->toISOString())->toBe('2026-10-31T03:31:54.803743Z')
+        ->and(TrafficFineLookupResultDataDto::fromArray($result->toArray())->toArray()['checked_at'])->toBe($serialized);
+})->with([
+    'legacy UTC cache' => '2026-10-31T03:31:54.803743Z',
+    'local timezone' => '2026-10-31T10:31:54.803743+07:00',
+    'other offset' => '2026-10-30T23:31:54.803743-04:00',
+]);
 
 it('publishes canonical resolution counts without treating unknown statuses as pending', function (): void {
     $result = new TrafficFineLookupResultDataDto(

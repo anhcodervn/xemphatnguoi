@@ -73,7 +73,7 @@ final class TrafficFineLookupResultDataDto
                 ],
                 $this->violations,
             ),
-            'checked_at' => $this->checkedAt->toISOString(),
+            'checked_at' => $this->checkedAt->setTimezone(config('app.timezone'))->toISOString(true),
         ];
     }
 
