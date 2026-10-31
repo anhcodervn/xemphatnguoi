@@ -105,7 +105,7 @@ onMounted(loadDashboard);
                         {{ formatCash(dashboard.api_request_price) }}đ <span class="text-sm font-semibold text-slate-300">/ request</span>
                     </p>
                     <p class="mt-3 text-sm leading-6 text-slate-300">
-                        Không cần mua gói. Website tra cứu miễn phí; chỉ API v1 thành công mới trừ tiền, kể cả kết quả lấy từ cache.
+                        Không cần mua gói. Website tra cứu miễn phí; mỗi request API v1 thành công đều trừ tiền.
                     </p>
                     <div class="mt-6 grid grid-cols-2 gap-3 text-sm">
                         <div class="rounded-lg bg-white/10 p-3">

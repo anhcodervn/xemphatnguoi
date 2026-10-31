@@ -10,13 +10,12 @@ final class TrafficFineLookupResponseDto
     ) {}
 
     /**
-     * @return array{success: true, cached: bool, data: array<string, mixed>}
+     * @return array{success: true, data: array<string, mixed>}
      */
     public function toArray(): array
     {
         return [
             'success' => true,
-            'cached' => $this->cached,
             'data' => $this->data->toArray(),
         ];
     }

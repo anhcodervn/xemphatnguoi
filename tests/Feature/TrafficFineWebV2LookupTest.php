@@ -92,10 +92,10 @@ it('charges every successful v2 website lookup including cache hits', function (
 
     $this->postJson('/api/client/traffic-fines/lookup-v2', $payload)
         ->assertOk()
-        ->assertJsonPath('cached', false);
+        ->assertJsonMissingPath('cached');
     $this->postJson('/api/client/traffic-fines/lookup-v2', $payload)
         ->assertOk()
-        ->assertJsonPath('cached', true)
+        ->assertJsonMissingPath('cached')
         ->assertJsonPath('billing.balance', '200.00');
 
     Http::assertSentCount(1);

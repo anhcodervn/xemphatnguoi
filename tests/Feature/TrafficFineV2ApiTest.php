@@ -87,14 +87,14 @@ it('uses only xephatnguoi v2 and charges 150 dong for each successful request', 
     $this->withHeaders($account['headers'])
         ->getJson('/api/v2/lookup?plate=30K12345&vehicle_type=car')
         ->assertOk()
-        ->assertJsonPath('cached', false)
+        ->assertJsonMissingPath('cached')
         ->assertJsonPath('data.plate', '30K12345')
         ->assertJsonPath('data.vehicle_type', 'car');
 
     $this->withHeaders($account['headers'])
         ->getJson('/api/v2/lookup?plate=30K12345&vehicle_type=car')
         ->assertOk()
-        ->assertJsonPath('cached', true);
+        ->assertJsonMissingPath('cached');
 
     Http::assertSentCount(1);
     Http::assertSent(function (Request $request): bool {
@@ -156,7 +156,7 @@ it('fetches and caches v2 even when the same plate already has a fresh v1 result
     $this->withHeaders($account['headers'])
         ->getJson('/api/v2/lookup?plate=30K12345&vehicle_type=car')
         ->assertOk()
-        ->assertJsonPath('cached', false)
+        ->assertJsonMissingPath('cached')
         ->assertJsonPath('data.violation_count', 0);
 
     Http::assertSentCount(1);

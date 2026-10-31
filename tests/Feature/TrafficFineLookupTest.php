@@ -173,7 +173,7 @@ it('stores the normalized result returned by the active source', function (): vo
         'vehicle_type' => 'car',
     ])->assertOk()
         ->assertJsonPath('success', true)
-        ->assertJsonPath('cached', false)
+        ->assertJsonMissingPath('cached')
         ->assertJsonMissingPath('source')
         ->assertJsonPath('data.plate', '30A12345')
         ->assertJsonPath('data.display_plate', '30A-123.45')
@@ -273,10 +273,10 @@ it('uses the redis-compatible cache for repeated lookups', function (): void {
     $source = bindTrafficFineSource();
     $payload = ['plate' => '30A12345', 'vehicle_type' => 'car'];
 
-    $this->postJson('/api/lookup', $payload)->assertOk()->assertJsonPath('cached', false);
+    $this->postJson('/api/lookup', $payload)->assertOk()->assertJsonMissingPath('cached');
     $this->postJson('/api/lookup', $payload)
         ->assertOk()
-        ->assertJsonPath('cached', true)
+        ->assertJsonMissingPath('cached')
         ->assertJsonMissingPath('source');
 
     expect($source->calls)->toBe(1);
@@ -288,13 +288,13 @@ it('isolates cached and stored results by active source', function (): void {
 
     $this->postJson('/api/lookup', $payload)
         ->assertOk()
-        ->assertJsonPath('cached', false);
+        ->assertJsonMissingPath('cached');
 
     $secondSource = bindTrafficFineSource(sourceName: 'source_b');
 
     $this->postJson('/api/lookup', $payload)
         ->assertOk()
-        ->assertJsonPath('cached', false);
+        ->assertJsonMissingPath('cached');
 
     expect($firstSource->calls)->toBe(1)
         ->and($secondSource->calls)->toBe(1)
@@ -319,7 +319,7 @@ it('restores redis from a fresh database result without calling the provider', f
 
     $this->postJson('/api/lookup', ['plate' => '30A12345', 'vehicle_type' => 'car'])
         ->assertOk()
-        ->assertJsonPath('cached', true)
+        ->assertJsonMissingPath('cached')
         ->assertJsonMissingPath('source');
 
     expect($source->calls)->toBe(0)
@@ -344,7 +344,7 @@ it('rejects a cache payload belonging to another api version', function (): void
 
     $this->postJson('/api/lookup', ['plate' => '30A12345', 'vehicle_type' => 'car'])
         ->assertOk()
-        ->assertJsonPath('cached', false)
+        ->assertJsonMissingPath('cached')
         ->assertJsonPath('data.violation_count', 0);
 
     expect($source->calls)->toBe(1)
@@ -401,13 +401,13 @@ it('does not extend a database result beyond its original expiry when restoring 
 
     $this->postJson('/api/lookup', ['plate' => '30A12345', 'vehicle_type' => 'car'])
         ->assertOk()
-        ->assertJsonPath('cached', true);
+        ->assertJsonMissingPath('cached');
 
     $this->travel(6)->minutes();
 
     $this->postJson('/api/lookup', ['plate' => '30A12345', 'vehicle_type' => 'car'])
         ->assertOk()
-        ->assertJsonPath('cached', false)
+        ->assertJsonMissingPath('cached')
         ->assertJsonMissingPath('source');
 
     expect($source->calls)->toBe(1);

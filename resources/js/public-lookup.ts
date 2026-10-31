@@ -30,7 +30,6 @@ type LookupData = {
 
 type LookupResponse = {
     success: boolean;
-    cached?: boolean;
     status?: string;
     message?: string;
     data?: unknown;

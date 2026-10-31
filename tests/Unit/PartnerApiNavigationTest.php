@@ -38,6 +38,8 @@ it('connects the public partner navigation to protected api documentation', func
         ->not->toContain('type=1')
         ->not->toContain('api.xephatnguoi.com')
         ->not->toContain('XePhatNguoi')
+        ->not->toContain('cache')
+        ->not->toContain('Cache')
         ->not->toMatch('/xp_[A-Za-z0-9]{16,}/');
 
     expect($adminBilling)
@@ -46,4 +48,16 @@ it('connects the public partner navigation to protected api documentation', func
         ->toContain(':aria-checked="v1Enabled"')
         ->toContain(':aria-checked="v2Enabled"')
         ->toContain('Không nhập tên nguồn, URL hoặc credential');
+});
+
+it('keeps cache details out of client lookup types and billing copy', function (): void {
+    $projectRoot = dirname(__DIR__, 2);
+
+    foreach ([
+        '/resources/js/types/traffic-fine.type.ts',
+        '/resources/js/public-lookup.ts',
+        '/resources/js/pages/client/home/index.vue',
+    ] as $path) {
+        expect(file_get_contents($projectRoot.$path))->not->toMatch('/cache/i');
+    }
 });

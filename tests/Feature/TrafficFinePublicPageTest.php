@@ -162,6 +162,7 @@ it('introduces the partner api publicly before requiring login for documentation
         ->assertOk()
         ->assertSee('API dành cho đối tác')
         ->assertSee('35đ')
+        ->assertDontSee('cache')
         ->assertSee('Xem tài liệu và thuê API')
         ->assertSee('href="'.route('dashboard', ['any' => 'api']).'"', false)
         ->assertSee('<link rel="canonical" href="'.route('partners.api').'">', false)

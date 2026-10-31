@@ -139,8 +139,8 @@ it('charges every successful request while the provider result remains cached', 
     $source = bindBillingTrafficFineSource();
     $account = billingApiAccount();
 
-    $this->withHeaders($account['headers'])->getJson(billingLookupUrl())->assertOk()->assertJsonPath('cached', false);
-    $this->withHeaders($account['headers'])->getJson(billingLookupUrl())->assertOk()->assertJsonPath('cached', true);
+    $this->withHeaders($account['headers'])->getJson(billingLookupUrl())->assertOk()->assertJsonMissingPath('cached');
+    $this->withHeaders($account['headers'])->getJson(billingLookupUrl())->assertOk()->assertJsonMissingPath('cached');
 
     expect($source->calls)->toBe(1)
         ->and((float) $account['user']->wallet()->firstOrFail()->balance)->toBe(60.0)

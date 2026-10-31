@@ -54,7 +54,6 @@ const requestExample = computed(() => {
 
 const responseExample = `{
   "success": true,
-  "cached": false,
   "data": {
     "plate": "30A12345",
     "vehicle_type": "car",
@@ -335,14 +334,6 @@ onMounted(async () => {
                         <li><strong>503:</strong> nguồn dữ liệu đang gián đoạn.</li>
                     </ul>
                 </div>
-            </details>
-            <details class="group rounded-xl border border-slate-200 bg-white p-5">
-                <summary class="cursor-pointer list-none font-bold text-slate-950">Lưu ý trước khi đưa lên production</summary>
-                <ul class="mt-4 grid gap-2 text-sm leading-6 text-slate-600">
-                    <li>• Chỉ gọi API từ backend, không đặt secret trong frontend hoặc ứng dụng mobile.</li>
-                    <li>• Lưu secret trong biến môi trường và cấu hình IP whitelist.</li>
-                    <li>• Cache hit vẫn tính phí; lỗi xác thực, validation, thiếu số dư và lỗi nguồn không tính phí.</li>
-                </ul>
             </details>
         </section>
     </div>

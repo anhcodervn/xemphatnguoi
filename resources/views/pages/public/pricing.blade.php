@@ -15,7 +15,7 @@
                 <ul class="mt-5 grid gap-2 text-xs leading-5 text-slate-600">
                     <li>✓ Tra cứu trực tiếp theo biển số</li>
                     <li>✓ Không cần cài ứng dụng</li>
-                    <li>✓ Kết quả được cache trong 24 giờ</li>
+                    <li>✓ Xem chi tiết kết quả tra cứu</li>
                 </ul>
                 <a href="{{ route('traffic-fines.lookup-page') }}" class="app-focus mt-5 inline-flex min-h-11 items-center justify-center rounded-lg border border-slate-300 px-4 text-xs font-bold text-slate-800 hover:bg-slate-50">Tra cứu ngay</a>
             </article>

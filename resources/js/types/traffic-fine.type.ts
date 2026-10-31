@@ -28,7 +28,6 @@ export type TrafficFineResult = {
 
 export type TrafficFineLookupResponse = {
     success: true;
-    cached: boolean;
     data: TrafficFineResult;
 };
 
