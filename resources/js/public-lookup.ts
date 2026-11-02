@@ -274,35 +274,6 @@ const setResultShell = (container: HTMLElement): void => {
         'overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm outline-none focus:ring-2 focus:ring-sky-600 focus:ring-offset-2';
 };
 
-let resultAdvertisement = document.querySelector<HTMLElement>('[data-lookup-result-ad]');
-
-if (resultAdvertisement && !resultAdvertisement.querySelector('[data-ad-slot]')) {
-    resultAdvertisement.remove();
-    resultAdvertisement = null;
-}
-
-const detachResultAdvertisement = (): void => {
-    resultAdvertisement?.remove();
-};
-
-const attachResultAdvertisement = (target: HTMLElement): void => {
-    if (!resultAdvertisement) {
-        return;
-    }
-
-    resultAdvertisement.className = 'border-y border-slate-200 bg-slate-50 p-1';
-    target.append(resultAdvertisement);
-};
-
-const restoreResultAdvertisement = (container: HTMLElement): void => {
-    if (!resultAdvertisement) {
-        return;
-    }
-
-    resultAdvertisement.className = 'mt-3';
-    container.insertAdjacentElement('afterend', resultAdvertisement);
-};
-
 const renderMessage = (container: HTMLElement, title: string, message: string, tone: 'error' | 'warning' = 'warning'): void => {
     setResultShell(container);
     const wrapper = element(
@@ -328,7 +299,6 @@ const renderMessage = (container: HTMLElement, title: string, message: string, t
     );
     wrapper.append(layout);
     container.replaceChildren(wrapper);
-    restoreResultAdvertisement(container);
 };
 
 const metricItem = (label: string, value: number, tone: 'total' | 'danger' | 'success' | 'neutral'): HTMLDivElement => {
@@ -453,7 +423,6 @@ const violationCard = (violation: LookupViolation, index: number, displayPlate: 
 };
 
 const renderResult = (container: HTMLElement, data: LookupData, resultUrlTemplate: string, apiVersion: 'v1' | 'v2'): void => {
-    detachResultAdvertisement();
     setResultShell(container);
     const hasViolations = data.violation_count > 0;
     const vehicleLabels: Record<string, string> = {
@@ -525,10 +494,6 @@ const renderResult = (container: HTMLElement, data: LookupData, resultUrlTemplat
     }
     header.append(metrics);
 
-    const advertisementTarget = element('div');
-    advertisementTarget.dataset.resultAdTarget = '';
-    advertisementTarget.setAttribute('aria-live', 'off');
-
     let details: HTMLElement;
     if (data.violations.length === 0) {
         details = element('div', 'border-t border-slate-200 bg-slate-50 px-3 py-4 text-center');
@@ -562,15 +527,8 @@ const renderResult = (container: HTMLElement, data: LookupData, resultUrlTemplat
         element('p', '', 'Kết quả không thay thế xác nhận từ cơ quan có thẩm quyền.'),
     );
 
-    container.replaceChildren(header, advertisementTarget, details, disclaimer);
-    attachResultAdvertisement(advertisementTarget);
+    container.replaceChildren(header, details, disclaimer);
 };
-
-const serverAdvertisementTarget = document.querySelector<HTMLElement>('[data-result-ad-target]');
-if (serverAdvertisementTarget) {
-    detachResultAdvertisement();
-    attachResultAdvertisement(serverAdvertisementTarget);
-}
 
 void initializeTurnstileWidgets();
 
@@ -639,7 +597,6 @@ document.querySelectorAll<HTMLFormElement>('[data-lookup-form]').forEach((form) 
         }
         setTurnstileError(form);
         result.setAttribute('aria-busy', 'true');
-        detachResultAdvertisement();
         setResultShell(result);
         const loading = element('div', 'm-3 rounded-xl border border-slate-200 bg-white p-4 text-slate-950 sm:m-7 sm:p-6');
         loading.setAttribute('role', 'status');

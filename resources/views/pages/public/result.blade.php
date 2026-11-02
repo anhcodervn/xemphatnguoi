@@ -12,7 +12,6 @@
         </header>
 
         <div class="mt-3 sm:mt-4"><x-lookup-result :lookup="$lookup" :error-message="$errorMessage" /></div>
-        <div class="mt-3" data-lookup-result-ad><x-ad-slot name="lookup_result_bottom" /></div>
 
         <section id="tra-cuu" class="mt-5 scroll-mt-24 rounded-lg border border-slate-200 bg-slate-50 p-3 sm:mt-6 sm:p-4">
             <div class="flex items-center gap-2.5">

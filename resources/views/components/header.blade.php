@@ -6,7 +6,7 @@
     $navigation = [
         ['label' => 'Trang chủ', 'href' => route('traffic-fines.home'), 'active' => request()->routeIs('traffic-fines.home')],
         ['label' => 'Tra cứu phạt nguội', 'href' => route('traffic-fines.home').'#tra-cuu', 'active' => request()->routeIs('traffic-fines.lookup*')],
-        ['label' => 'Mức phạt', 'href' => route('traffic-fines.penalties.index'), 'active' => request()->routeIs('traffic-fines.penalties.*')],
+        ['label' => 'Lỗi giao thông', 'href' => route('traffic-fines.penalties.index'), 'active' => request()->routeIs('traffic-fines.penalties.*')],
         ['label' => 'Kiến thức', 'href' => route('traffic-fines.knowledge.what-is'), 'active' => request()->routeIs('traffic-fines.knowledge.*')],
         ['label' => 'Blog', 'href' => route('seo.index'), 'active' => request()->routeIs('seo.*')],
         ['label' => 'API', 'href' => route('partners.api'), 'active' => request()->routeIs('partners.api*')],
@@ -18,18 +18,18 @@
     <div class="site-container flex h-[58px] items-center justify-between gap-3">
         <a href="{{ route('traffic-fines.home') }}" class="site-focus flex min-h-11 shrink-0 items-center gap-2 rounded-lg text-sm font-extrabold tracking-tight text-navy" aria-label="{{ $siteName }} - Trang chủ">
             @if ($logo)
-                <img src="{{ $logo }}" alt="{{ $siteName }}" width="100" height="64" class="h-[4rem] w-[100px] object-contain">
+                <img src="{{ $logo }}" alt="{{ $siteName }}" width="100" height="40" class="h-10 w-[100px] object-contain">
             @else
                 <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-brand text-white" aria-hidden="true">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" class="h-[18px] w-[18px]"><path d="M4 7.5h16v10H4zM8 7.5l1.3-3h5.4l1.3 3M8 20h.01M16 20h.01"/><circle cx="12" cy="12.5" r="2.5"/></svg>
                 </span>
-                <span>{{ $siteName }}</span>
+                <span>XemPhatNguoi.vn</span>
             @endif
         </a>
 
         <nav aria-label="Điều hướng chính" class="hidden items-center xl:flex">
             @foreach ($navigation as $item)
-                <a href="{{ $item['href'] }}" @class([
+                <a href="{{ $item['href'] }}" @if ($item['active']) aria-current="page" @endif @class([
                     'site-focus inline-flex h-[58px] items-center border-b-2 px-2 text-[13px] font-semibold transition-colors',
                     'border-brand text-brand' => $item['active'],
                     'border-transparent text-slate-600 hover:border-slate-300 hover:text-navy' => ! $item['active'],
@@ -52,7 +52,7 @@
             </summary>
             <nav aria-label="Điều hướng di động" class="absolute right-0 top-12 grid w-64 gap-1 rounded-lg border border-slate-200 bg-white p-2 shadow-[0_14px_35px_-18px_rgba(7,26,51,0.35)]">
                 @foreach ($navigation as $item)
-                    <a href="{{ $item['href'] }}" @class([
+                    <a href="{{ $item['href'] }}" @if ($item['active']) aria-current="page" @endif @class([
                         'site-focus flex min-h-11 items-center rounded-lg px-3 text-sm font-semibold',
                         'bg-sky-50 text-brand' => $item['active'],
                         'text-slate-700 hover:bg-page hover:text-brand' => ! $item['active'],

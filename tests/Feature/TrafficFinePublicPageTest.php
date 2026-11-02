@@ -409,6 +409,15 @@ it('serves the configured ads file with plain text security headers by default',
         ->assertContent("google.com, pub-4352299256001618, DIRECT, f08c47fec0942fa0\n");
 });
 
+it('serves crawler file headers for head requests', function (string $path): void {
+    $this->head($path)
+        ->assertOk()
+        ->assertHeader('Content-Type', 'text/plain; charset=UTF-8')
+        ->assertHeader('Cache-Control', 'no-cache, public')
+        ->assertHeader('X-Content-Type-Options', 'nosniff')
+        ->assertContent('');
+})->with(['/ads.txt', '/robots.txt']);
+
 it('uses the default meta robots setting on public pages', function (): void {
     app(SettingStore::class)->putString('robots', 'noindex,nofollow');
 

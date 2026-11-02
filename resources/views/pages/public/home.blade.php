@@ -32,18 +32,20 @@
                 <a href="{{ route('traffic-fines.knowledge.guide') }}" class="site-focus hidden min-h-11 items-center text-sm font-bold text-brand hover:text-sky-800 sm:inline-flex">Cách đọc kết quả <span aria-hidden="true">→</span></a>
             </div>
             <x-lookup-result />
-            <div class="mt-3" data-lookup-result-ad><x-ad-slot name="lookup_result_bottom" /></div>
         </div>
     </section>
 
     <x-home.trust />
-    <x-home.seo-content />
+    <x-home.how-it-works />
+    <x-home.latest-posts :posts="$latestPosts" />
     <x-home.vehicle-links />
     <x-home.common-violations />
-    <x-home.how-it-works />
+    <x-home.seo-content />
     <x-home.faq :faqs="$faqs" />
-    <x-home.latest-posts :posts="$latestPosts" />
-    <x-home.cta />
+    @if (! $lookupMode && ! str_contains(strtolower($pageMetaRobots ?? ''), 'noindex'))
+        <div class="site-container py-8" data-editorial-ad><x-ad-slot name="lookup_result_bottom" /></div>
+    @endif
+    <x-site-information />
 @endsection
 
 @push('scripts')

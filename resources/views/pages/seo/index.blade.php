@@ -34,7 +34,14 @@
                 </div>
             </section>
             <aside class="space-y-5">
-                <x-ad-slot name="article_top" />
+                <div class="rounded-xl border border-slate-200 bg-slate-50 p-5">
+                    <h2 class="font-bold text-slate-950">Bạn cần bắt đầu từ đâu?</h2>
+                    <nav aria-label="Hướng dẫn cơ bản" class="mt-3 grid text-sm text-slate-700">
+                        <a href="{{ route('traffic-fines.knowledge.guide') }}" class="site-focus flex min-h-11 items-center rounded hover:text-brand">Cách tra cứu và đọc kết quả →</a>
+                        <a href="{{ route('traffic-fines.knowledge.what-is') }}" class="site-focus flex min-h-11 items-center rounded hover:text-brand">Hiểu đúng về phạt nguội →</a>
+                        <a href="{{ route('content.contact') }}" class="site-focus flex min-h-11 items-center rounded hover:text-brand">Góp ý về nội dung →</a>
+                    </nav>
+                </div>
                 @if ($popularTags->isNotEmpty())
                     <div><h2 class="font-bold text-slate-950">Chủ đề</h2><div class="mt-4 flex flex-wrap gap-2">@foreach($popularTags as $tag)<a href="{{ route('seo.index', ['tag' => $tag->slug]) }}" class="app-focus rounded-full px-3 py-1.5 text-xs font-semibold {{ ($activeTagSlug ?? '') === $tag->slug ? 'bg-sky-700 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' }}">{{ $tag->name }}</a>@endforeach</div></div>
                 @endif

@@ -9,7 +9,7 @@ it('keeps the Blade and instant lookup result designs visually aligned', functio
         ->toContain('data-result-tone="{{ $hasViolations ? \'violation\' : \'clear\' }}"')
         ->toContain('data-result-header')
         ->toContain('data-result-toolbar')
-        ->toContain('data-result-ad-target')
+        ->not->toContain('data-result-ad-target')
         ->toContain('data-result-metrics')
         ->toContain('data-result-count-pill')
         ->toContain('data-result-empty')
@@ -37,7 +37,7 @@ it('keeps the Blade and instant lookup result designs visually aligned', functio
         ->toContain("header.dataset.resultHeader = ''")
         ->toContain("header.dataset.resultToolbar = ''")
         ->toContain("header.dataset.resultTone = hasViolations ? 'violation' : 'clear'")
-        ->toContain("advertisementTarget.dataset.resultAdTarget = ''")
+        ->not->toContain('attachResultAdvertisement')
         ->toContain("metrics.dataset.resultMetrics = ''")
         ->toContain("item.dataset.resultCountPill = ''")
         ->toContain("details.dataset.resultEmpty = ''")
@@ -72,11 +72,12 @@ it('keeps the public result page focused on the response instead of technical cr
         ->toContain('Tra cứu biển số mới')
         ->toContain('max-w-4xl px-4 py-4 sm:px-5 sm:py-6')
         ->toContain('mt-1 text-xl font-black tracking-tight text-slate-950 sm:text-2xl')
-        ->toContain('data-lookup-result-ad')
+        ->not->toContain('data-lookup-result-ad')
         ->toContain('id="tra-cuu"')
         ->not->toContain('Trang này được đặt noindex')
         ->and($home)
-        ->toContain('data-lookup-result-ad')
+        ->not->toContain('data-lookup-result-ad')
+        ->toContain('data-editorial-ad')
         ->toContain('<x-ad-slot name="lookup_result_bottom" />');
 });
 

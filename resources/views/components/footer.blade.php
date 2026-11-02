@@ -9,9 +9,14 @@
         <div class="max-w-sm">
             <a href="{{ route('traffic-fines.home') }}" class="site-focus inline-flex min-h-11 items-center gap-2.5 rounded-lg text-base font-extrabold text-white">
                 <span class="flex h-9 w-9 items-center justify-center rounded-[10px] bg-brand" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" class="h-5 w-5"><path d="M4 7.5h16v10H4zM8 7.5l1.3-3h5.4l1.3 3M8 20h.01M16 20h.01"/><circle cx="12" cy="12.5" r="2.5"/></svg></span>
-                {{ $siteName }}
+                XemPhatNguoi.vn
             </a>
             <p class="mt-1.5 text-xs leading-5 text-slate-300">Công cụ hỗ trợ kiểm tra dữ liệu phạt nguội theo biển số. Kết quả cần được đối chiếu với cơ quan có thẩm quyền khi xác nhận chính thức.</p>
+            <p class="mt-3 text-sm leading-6 text-slate-300">Nền tảng độc lập, không phải website của cơ quan nhà nước hoặc Cảnh sát giao thông.</p>
+            <p class="mt-2 text-sm leading-6 text-slate-300">Đơn vị vận hành: Xem Phạt Nguội.vn.</p>
+            @if (filter_var($settings['support_email'] ?? '', FILTER_VALIDATE_EMAIL))
+                <a href="mailto:{{ $settings['support_email'] }}" class="site-focus mt-2 inline-flex min-h-11 items-center break-all rounded text-sm text-white underline underline-offset-4">{{ $settings['support_email'] }}</a>
+            @endif
         </div>
 
         <nav aria-label="Liên kết tra cứu">
@@ -40,6 +45,8 @@
             <div class="mt-1 grid text-xs text-slate-300 [&>a]:flex [&>a]:min-h-11 [&>a]:items-center">
                 <a href="{{ route('content.about') }}" class="site-focus rounded hover:text-white">Giới thiệu</a>
                 <a href="{{ route('content.contact') }}" class="site-focus rounded hover:text-white">Liên hệ</a>
+                <a href="{{ route('content.faq') }}" class="site-focus rounded hover:text-white">Câu hỏi thường gặp</a>
+                <a href="{{ route('content.disclaimer') }}" class="site-focus rounded hover:text-white">Nguồn dữ liệu &amp; miễn trừ trách nhiệm</a>
                 <a href="{{ route('content.privacy') }}" class="site-focus rounded hover:text-white">Chính sách bảo mật</a>
                 <a href="{{ route('content.terms') }}" class="site-focus rounded hover:text-white">Điều khoản sử dụng</a>
             </div>

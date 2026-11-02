@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\SeoCategory;
 use App\Models\SeoPost;
+use App\Models\SeoPostSource;
 use App\Models\SeoTag;
 use App\Support\EditorContentRenderer;
 use App\Support\SettingStore;
@@ -14,6 +15,8 @@ use Illuminate\Support\Carbon;
 
 class PublicSeoPageController extends Controller
 {
+    private const MINIMUM_AD_ARTICLE_CHARACTERS = 1500;
+
     public function __construct(
         protected EditorContentRenderer $contentRenderer,
     ) {}
@@ -112,7 +115,7 @@ class PublicSeoPageController extends Controller
     public function show(string $slug, Request $request, SettingStore $settingStore): View
     {
         $post = SeoPost::query()
-            ->with('category:id,name,slug')
+            ->with(['category:id,name,slug', 'sources'])
             ->where('slug', $slug)
             ->where('status', 'published')
             ->whereNotNull('published_at')
@@ -145,6 +148,16 @@ class PublicSeoPageController extends Controller
         $systemSettings = $this->systemSettings($settingStore);
         $content = is_array($post->content) ? $post->content : [];
         $contentHtml = $this->contentRenderer->renderNodes($content);
+        $articleSources = $post->sources
+            ->filter(fn (SeoPostSource $source): bool => filter_var($source->url, FILTER_VALIDATE_URL) !== false
+                && in_array(strtolower((string) parse_url($source->url, PHP_URL_SCHEME)), ['http', 'https'], true))
+            ->map(fn (SeoPostSource $source): array => ['title' => $source->title ?: $source->domain, 'url' => $source->url])
+            ->values();
+
+        if ($articleSources->isEmpty() && filter_var($post->source_url, FILTER_VALIDATE_URL) !== false
+            && in_array(strtolower((string) parse_url($post->source_url, PHP_URL_SCHEME)), ['http', 'https'], true)) {
+            $articleSources->push(['title' => $post->source_title ?: 'Nguồn bài viết', 'url' => $post->source_url]);
+        }
         $coverImage = $post->thumbnail ?: $this->contentRenderer->firstImage($content);
         $headingIndex = $this->contentRenderer->headingIndex($content);
         $faq = is_array($post->faq) ? $post->faq : [];
@@ -200,6 +213,10 @@ class PublicSeoPageController extends Controller
             'systemSettings' => $systemSettings,
             'post' => $post,
             'contentHtml' => $contentHtml,
+            'articleSources' => $articleSources,
+            'canShowArticleAd' => mb_strlen($this->contentRenderer->extractText($content)) >= self::MINIMUM_AD_ARTICLE_CHARACTERS
+                && ! str_contains(strtolower((string) $post->robots), 'noindex')
+                && ! str_contains(strtolower((string) $systemSettings['robots']), 'noindex'),
             'coverImage' => $coverImage,
             'readingMinutes' => $this->contentRenderer->estimateReadingMinutes($content),
             'headingIndex' => $headingIndex,

@@ -179,6 +179,9 @@ class PublicContentPageController extends Controller
             'pageDescription' => $pageDescription,
             'pageMetaTitle' => $pageMetaTitle,
             'pageMetaDescription' => $pageMetaDescription,
+            'pageMetaRobots' => $content === [] && $slug !== 'lien-he'
+                ? 'noindex,follow'
+                : (($systemSettings['robots'] ?? '') ?: 'index,follow'),
             'contentBlocks' => $content,
             'contentHtml' => $this->contentRenderer->renderNodes($content),
             'contentLinks' => collect($this->pageMap())

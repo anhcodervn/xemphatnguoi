@@ -16,7 +16,7 @@
                 <p class="site-eyebrow">Các lỗi giao thông thường bị phạt nguội</p>
                 <h2 id="common-violations-title" class="site-section-title">Những lỗi phổ biến</h2>
             </div>
-            <a href="{{ route('traffic-fines.penalties.index') }}" class="site-focus inline-flex min-h-11 items-center text-sm font-bold text-brand hover:text-sky-800">Xem tất cả mức phạt <span aria-hidden="true">→</span></a>
+            <a href="{{ route('traffic-fines.penalties.index') }}" class="site-focus inline-flex min-h-11 items-center text-sm font-bold text-brand hover:text-sky-800">Tìm hiểu các nhóm lỗi <span aria-hidden="true">→</span></a>
         </div>
 
         <div class="mt-5 grid grid-cols-2 gap-2.5 md:grid-cols-3 lg:grid-cols-6">
@@ -34,7 +34,7 @@
                     </span>
                     <h3 class="mt-2.5 text-xs font-bold leading-5 text-navy group-hover:text-brand sm:text-sm">{{ $violation['title'] }}</h3>
                     <p class="mt-1 text-[11px] leading-4 text-slate-500 sm:text-xs">{{ $violation['description'] }}</p>
-                    <span class="mt-auto inline-flex min-h-11 items-end justify-center gap-1 pt-1.5 text-[11px] font-bold text-brand sm:text-xs">Xem mức phạt <span aria-hidden="true">→</span></span>
+                    <span class="mt-auto inline-flex min-h-11 items-end justify-center gap-1 pt-1.5 text-[11px] font-bold text-brand sm:text-xs">Cách đối chiếu <span aria-hidden="true">→</span></span>
                 </a>
             @endforeach
         </div>

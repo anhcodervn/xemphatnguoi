@@ -67,7 +67,6 @@
             </dl>
         </div>
 
-        <div data-result-ad-target aria-live="off"></div>
 
         @if ($lookup->data->violations === [])
             <div class="border-t border-slate-200 bg-slate-50 px-3 py-4 text-center" data-result-empty>
