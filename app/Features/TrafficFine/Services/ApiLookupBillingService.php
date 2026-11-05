@@ -176,15 +176,16 @@ class ApiLookupBillingService
         $this->setAttribute($request, self::ATTRIBUTE_STATUS, 'charged');
     }
 
-    public function chargeWebV2(Request $request, User $user): WalletTransaction
+    public function chargeWeb(Request $request, User $user, string $apiVersion): WalletTransaction
     {
-        $price = (int) $request->attributes->get(self::ATTRIBUTE_UNIT_PRICE, $this->v2PricePerRequest());
+        $defaultPrice = $apiVersion === 'v2' ? $this->v2PricePerRequest() : $this->pricePerRequest();
+        $price = (int) $request->attributes->get(self::ATTRIBUTE_UNIT_PRICE, $defaultPrice);
 
         try {
             $transaction = $this->walletService->debitWithTransaction(
                 user: $user,
                 amount: $price,
-                referenceType: 'traffic_fine_web_v2_request',
+                referenceType: "traffic_fine_web_{$apiVersion}_request",
                 referenceId: $user->id,
                 description: sprintf(
                     'Phí tra cứu nâng cao biển số %s',

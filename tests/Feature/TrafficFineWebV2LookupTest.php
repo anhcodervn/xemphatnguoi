@@ -163,6 +163,7 @@ it('requires the configured turnstile challenge before a paid v2 website lookup'
 });
 
 it('keeps v1 and v2 tabs for guests and members alongside the latest result checkbox', function (): void {
+    app(SettingStore::class)->putString('traffic_fine_api_request_price', '35');
     app(SettingStore::class)->putString('traffic_fine_api_v2_request_price', '175');
 
     $response = $this->get('/')
@@ -174,7 +175,8 @@ it('keeps v1 and v2 tabs for guests and members alongside the latest result chec
         ->assertSee('175đ/lượt')
         ->assertSee('Cần đăng nhập')
         ->assertSee('Để lấy kết quả mới nhất vui lòng')
-        ->assertDontSee('name="latest_result"', false)
+        ->assertSee('name="latest_result"', false)
+        ->assertSee('data-v1-price="35"', false)
         ->assertSee('data-v2-endpoint', false)
         ->assertSee('data-v2-price="175"', false);
 
@@ -190,7 +192,93 @@ it('keeps v1 and v2 tabs for guests and members alongside the latest result chec
         ->assertSee('name="lookup_version" value="v2"', false)
         ->assertSee('Trừ từ ví')
         ->assertSee('name="latest_result"', false)
-        ->assertSee('Lấy kết quả mới nhất 175đ/lượt');
+        ->assertSee('Lấy kết quả mới nhất')
+        ->assertSee('data-latest-price>35đ/lượt', false);
+});
+
+function fakeSuccessfulWebV1Lookup(): void
+{
+    config(['traffic-fines.sources.xephatnguoi.url' => 'https://api.xephatnguoi.com/v1/search']);
+    Http::fake(['https://api.xephatnguoi.com/v1/search*' => Http::response([
+        'status' => 'success', 'plate' => '30K12345', 'type' => 1, 'data' => [], 'total' => 0,
+    ])]);
+}
+
+it('requires login before requesting the latest v1 result and never calls the provider for guests', function (): void {
+    $this->postJson('/api/lookup', [
+        'plate' => '30K12345', 'vehicle_type' => 'car', 'latest_result' => true,
+    ])->assertUnauthorized();
+    Http::assertNothingSent();
+    expect(WalletTransaction::query()->exists())->toBeFalse();
+});
+
+it('charges the configured v1 price for latest v1 lookups and refreshes its paid cache after sixty minutes', function (): void {
+    $this->freezeTime();
+    fakeSuccessfulWebV1Lookup();
+    app(SettingStore::class)->putString('traffic_fine_api_request_price', '35');
+    app(SettingStore::class)->putString('traffic_fine_api_v2_request_price', '175');
+    $user = webV2User();
+    $this->actingAs($user);
+    $payload = ['plate' => '30K12345', 'vehicle_type' => 'car'];
+
+    $this->postJson('/api/lookup', $payload)->assertOk()->assertJsonPath('data.is_latest', false);
+    $paidPayload = [...$payload, 'latest_result' => true];
+    $this->postJson('/api/lookup', $paidPayload)
+        ->assertOk()->assertHeader('Cache-Control', 'no-store, private')
+        ->assertJsonPath('billing.charged_amount', '35.00')
+        ->assertJsonPath('billing.balance', '465.00')
+        ->assertJsonPath('data.is_latest', true);
+    Http::assertSentCount(2);
+
+    $this->get('/tra-cuu/30K12345?vehicle_type=car&latest_result=1')
+        ->assertOk()->assertSee('Thông tin mới nhất');
+    $this->travel(59)->minutes();
+    Cache::store('array')->flush();
+    $this->postJson('/api/lookup', $paidPayload)
+        ->assertOk()->assertJsonPath('billing.charged_amount', '35.00')->assertJsonPath('data.is_latest', true);
+    Http::assertSentCount(2);
+    $this->travel(1)->minutes();
+    $this->postJson('/api/lookup', $paidPayload)->assertOk()->assertJsonPath('data.is_latest', true);
+    Http::assertSentCount(3);
+    expect(WalletTransaction::query()->where('reference_type', 'traffic_fine_web_v1_request')->count())->toBe(3)
+        ->and((float) $user->wallet()->firstOrFail()->balance)->toBe(395.0);
+});
+
+it('keeps normal v1 lookups free for authenticated users with no balance and caches them for a day', function (): void {
+    $this->freezeTime();
+    fakeSuccessfulWebV1Lookup();
+    $user = webV2User(balance: 0);
+    $this->actingAs($user);
+    $this->postJson('/api/lookup', [
+        'plate' => '30K12345', 'vehicle_type' => 'car', 'latest_result' => false,
+    ])->assertOk()->assertJsonPath('data.is_latest', false)->assertJsonMissingPath('billing');
+
+    expect(TrafficFineResult::query()->sole()->expires_at->timestamp - now()->timestamp)->toBe(86400)
+        ->and(WalletTransaction::query()->exists())->toBeFalse();
+});
+
+it('checks the v1 price before calling the provider for a paid latest lookup', function (): void {
+    app(SettingStore::class)->putString('traffic_fine_api_request_price', '35');
+    $this->actingAs(webV2User(balance: 34))->postJson('/api/lookup', [
+        'plate' => '30K12345', 'vehicle_type' => 'car', 'latest_result' => true,
+    ])->assertStatus(402)->assertJsonPath('required_amount', 35);
+    Http::assertNothingSent();
+    expect(WalletTransaction::query()->exists())->toBeFalse();
+});
+
+it('does not charge a latest v1 lookup when the provider fails', function (): void {
+    config(['traffic-fines.sources.xephatnguoi.url' => 'https://api.xephatnguoi.com/v1/search']);
+    Http::fake(['https://api.xephatnguoi.com/v1/search*' => Http::response(['status' => 'error'], 503)]);
+    $user = webV2User();
+    $this->actingAs($user)->postJson('/api/lookup', [
+        'plate' => '30K12345', 'vehicle_type' => 'car', 'latest_result' => true,
+    ])->assertServiceUnavailable()->assertJsonPath('status', 'provider_error');
+    expect(WalletTransaction::query()->exists())->toBeFalse()
+        ->and((float) $user->wallet()->firstOrFail()->balance)->toBe(500.0);
+});
+
+it('requires login to view the cached paid v1 result', function (): void {
+    $this->get('/tra-cuu/30K12345?vehicle_type=car&latest_result=1')->assertRedirectToRoute('auth.login');
 });
 
 it('reads a paid v2 cached result only for an authenticated user', function (): void {

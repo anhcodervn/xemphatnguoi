@@ -20,7 +20,7 @@
 @extends('layouts.public')
 
 @section('content')
-    <x-home.hero :vehicle-types="$vehicleTypes" :lookup-mode="$lookupMode" :turnstile="$turnstile" :v2-lookup-price="$v2LookupPrice" :is-authenticated="$isAuthenticated" />
+    <x-home.hero :vehicle-types="$vehicleTypes" :lookup-mode="$lookupMode" :turnstile="$turnstile" :v1-lookup-price="$v1LookupPrice" :v2-lookup-price="$v2LookupPrice" :is-authenticated="$isAuthenticated" />
 
     <section id="ket-qua" class="scroll-mt-24 border-b border-slate-200 bg-white" aria-labelledby="lookup-result-title">
         <div class="site-container py-7 sm:py-8">

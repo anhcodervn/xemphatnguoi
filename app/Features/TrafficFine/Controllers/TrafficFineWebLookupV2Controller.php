@@ -47,7 +47,7 @@ class TrafficFineWebLookupV2Controller extends Controller
             );
 
             $payload = $result->toArray();
-            $transaction = $billingService->chargeWebV2($request, $user);
+            $transaction = $billingService->chargeWeb($request, $user, 'v2');
             $payload['billing'] = [
                 'charged_amount' => (string) $transaction->amount,
                 'balance' => (string) $transaction->balance_after,

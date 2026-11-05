@@ -1,4 +1,4 @@
-@props(['vehicleTypes' => [], 'lookupMode' => false, 'turnstile' => [], 'v2LookupPrice' => 150, 'isAuthenticated' => false])
+@props(['vehicleTypes' => [], 'lookupMode' => false, 'turnstile' => [], 'v1LookupPrice' => 20, 'v2LookupPrice' => 150, 'isAuthenticated' => false])
 
 <section id="tra-cuu" class="relative scroll-mt-20 overflow-hidden border-b border-slate-200 bg-sky-50/50" data-home-layout="vertical-centered">
     <svg aria-hidden="true" viewBox="0 0 220 360" fill="none" class="pointer-events-none absolute -left-6 top-16 hidden h-[310px] w-[190px] text-brand opacity-[0.045] md:block">
@@ -24,7 +24,7 @@
 
         <div data-mobile-priority-lookup class="relative mx-auto mt-4 w-full max-w-[720px] overflow-hidden rounded-xl border border-slate-200 bg-white p-3 text-left shadow-[0_18px_42px_-34px_rgba(7,26,51,0.38)] sm:p-4">
             <span aria-hidden="true" class="absolute inset-x-0 top-0 h-1 bg-brand"></span>
-            <x-lookup-form :vehicle-types="$vehicleTypes" :turnstile="$turnstile" :v2-lookup-price="$v2LookupPrice" :is-authenticated="$isAuthenticated" />
+            <x-lookup-form :vehicle-types="$vehicleTypes" :turnstile="$turnstile" :v1-lookup-price="$v1LookupPrice" :v2-lookup-price="$v2LookupPrice" :is-authenticated="$isAuthenticated" />
             <p class="mt-2 flex items-start justify-center gap-1.5 text-center text-[11px] leading-5 text-slate-500">
                 <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" class="mt-0.5 h-4 w-4 shrink-0 text-sky-600"><circle cx="10" cy="10" r="7"/><path d="M10 9v4m0-7h.01"/></svg>
                 <span>Tra cứu miễn phí sử dụng kết quả được lưu tối đa 24 giờ. Đăng nhập và chọn “Lấy kết quả mới nhất” để tra cứu có tính phí, kết quả được lưu 60 phút.</span>

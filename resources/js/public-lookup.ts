@@ -479,6 +479,8 @@ const renderResult = (container: HTMLElement, data: LookupData, resultUrlTemplat
     const resultQuery = new URLSearchParams({ vehicle_type: data.vehicle_type });
     if (apiVersion === 'v2') {
         resultQuery.set('api_version', 'v2');
+    } else if (data.is_latest) {
+        resultQuery.set('latest_result', '1');
     }
     permalink.href = `${resultUrlTemplate.replace('__PLATE__', encodeURIComponent(data.plate))}?${resultQuery.toString()}`;
     updatedRow.append(updatedAt, lookupAgain, permalink);
@@ -551,23 +553,44 @@ void initializeTurnstileWidgets();
 document.querySelectorAll<HTMLFormElement>('[data-lookup-form]').forEach((form) => {
     const latestInput = form.elements.namedItem('latest_result');
     const versionInputs = form.querySelectorAll<HTMLInputElement>('input[name="lookup_version"]');
+    const selectedVersion = (): string => form.querySelector<HTMLInputElement>('input[name="lookup_version"]:checked')?.value ?? 'v1';
+    const lookupPrice = (): string => new Intl.NumberFormat('vi-VN').format(Number(form.dataset[`${selectedVersion()}Price`] ?? 0));
+    const updateLatestPrice = (): void => {
+        const label = form.querySelector<HTMLElement>('[data-latest-price]');
+        if (label) {
+            label.textContent = `${lookupPrice()}đ/lượt`;
+        }
+    };
+    const requestLogin = async (): Promise<void> => {
+        const confirmation = await Swal.fire({
+            icon: 'info',
+            title: 'Vui lòng đăng nhập',
+            text: `Đăng nhập để lấy kết quả mới nhất qua API ${selectedVersion().toUpperCase()}, phí ${lookupPrice()}đ cho mỗi lượt thành công từ số dư ví.`,
+            confirmButtonText: 'Đăng nhập để tiếp tục',
+            cancelButtonText: 'Để sau',
+            showCancelButton: true,
+            reverseButtons: true,
+            confirmButtonColor: '#0875be',
+        });
+
+        if (confirmation.isConfirmed) {
+            window.location.assign(form.dataset.loginUrl ?? '/auth/login');
+        }
+    };
 
     versionInputs.forEach((input) => {
-        input.addEventListener('change', () => {
-            if (latestInput instanceof HTMLInputElement && input.checked) {
-                latestInput.checked = input.value === 'v2';
-            }
-        });
+        input.addEventListener('change', updateLatestPrice);
     });
 
     if (latestInput instanceof HTMLInputElement) {
-        latestInput.addEventListener('change', () => {
-            const selectedVersion = latestInput.checked ? 'v2' : 'v1';
-            versionInputs.forEach((input) => {
-                input.checked = input.value === selectedVersion;
-            });
+        latestInput.addEventListener('click', (event) => {
+            if (form.dataset.authenticated !== 'true') {
+                event.preventDefault();
+                void requestLogin();
+            }
         });
     }
+    updateLatestPrice();
 
     form.addEventListener('submit', async (event) => {
         event.preventDefault();
@@ -577,6 +600,7 @@ document.querySelectorAll<HTMLFormElement>('[data-lookup-form]').forEach((form) 
         const submitLabel = form.querySelector<HTMLElement>('[data-submit-label]');
         const versionInput = form.elements.namedItem('lookup_version');
         const apiVersion = versionInput instanceof RadioNodeList && versionInput.value === 'v2' ? 'v2' : 'v1';
+        const latestRequested = latestInput instanceof HTMLInputElement && latestInput.checked;
         const endpoint =
             apiVersion === 'v2' ? (form.dataset.v2Endpoint ?? '/api/client/traffic-fines/lookup-v2') : (form.dataset.v1Endpoint ?? '/api/lookup');
         const resultUrl = form.dataset.resultUrl ?? '/tra-cuu/__PLATE__';
@@ -598,23 +622,8 @@ document.querySelectorAll<HTMLFormElement>('[data-lookup-form]').forEach((form) 
             return;
         }
 
-        if (apiVersion === 'v2' && form.dataset.authenticated !== 'true') {
-            const formattedPrice = new Intl.NumberFormat('vi-VN').format(Number(form.dataset.v2Price ?? 0));
-            const confirmation = await Swal.fire({
-                icon: 'info',
-                title: 'Đăng nhập để tra cứu V2',
-                text: `Tra cứu V2 tính phí ${formattedPrice}đ cho mỗi lượt thành công và được trừ trực tiếp từ số dư ví.`,
-                confirmButtonText: 'Đăng nhập để tiếp tục',
-                cancelButtonText: 'Để sau',
-                showCancelButton: true,
-                reverseButtons: true,
-                confirmButtonColor: '#0875be',
-            });
-
-            if (confirmation.isConfirmed) {
-                window.location.assign(form.dataset.loginUrl ?? '/auth/login');
-            }
-
+        if ((apiVersion === 'v2' || latestRequested) && form.dataset.authenticated !== 'true') {
+            await requestLogin();
             return;
         }
 
@@ -657,6 +666,7 @@ document.querySelectorAll<HTMLFormElement>('[data-lookup-form]').forEach((form) 
                 body: JSON.stringify({
                     plate: plateInput.value,
                     vehicle_type: vehicleInput.value,
+                    latest_result: latestRequested,
                     ...(turnstileRequired ? { 'cf-turnstile-response': turnstileToken } : {}),
                 }),
             });

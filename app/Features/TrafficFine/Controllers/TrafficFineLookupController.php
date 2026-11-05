@@ -21,6 +21,14 @@ class TrafficFineLookupController extends Controller
         ApiLookupBillingService $billingService,
         CloudflareTurnstileService $turnstile,
     ): JsonResponse {
+        $apiKey = $request->attributes->get('apiKey');
+        $paidWebLookup = ! $apiKey instanceof ApiKey && $request->boolean('latest_result');
+        $user = $request->user();
+
+        if ($paidWebLookup && ! $user instanceof User) {
+            abort(401, 'Vui lòng đăng nhập để lấy kết quả mới nhất.');
+        }
+
         try {
             if ($request->routeIs('traffic-fines.lookup')) {
                 $turnstileResponse = $this->verifyTurnstile($turnstile, $request);
@@ -30,12 +38,13 @@ class TrafficFineLookupController extends Controller
                 }
             }
 
-            $apiKey = $request->attributes->get('apiKey');
-
             if ($apiKey instanceof ApiKey) {
                 /** @var User $user */
                 $user = $apiKey->user;
                 $billingService->ensureSufficientBalance($request, $user);
+                $lookupService = $lookupService->forPaidLookups();
+            } elseif ($paidWebLookup) {
+                $billingService->ensureSufficientBalance($request, $user, $billingService->pricePerRequest());
                 $lookupService = $lookupService->forPaidLookups();
             }
 
@@ -52,11 +61,17 @@ class TrafficFineLookupController extends Controller
 
             if ($apiKey instanceof ApiKey) {
                 $billingService->charge($request, $user, $apiKey);
+            } elseif ($paidWebLookup) {
+                $transaction = $billingService->chargeWeb($request, $user, 'v1');
+                $payload['billing'] = [
+                    'charged_amount' => (string) $transaction->amount,
+                    'balance' => (string) $transaction->balance_after,
+                ];
             }
 
             $response = response()->json($payload);
 
-            if ($apiKey instanceof ApiKey) {
+            if ($apiKey instanceof ApiKey || $paidWebLookup) {
                 $response->headers->set('Cache-Control', 'private, no-store');
             }
 

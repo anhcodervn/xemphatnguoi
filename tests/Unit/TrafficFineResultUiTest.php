@@ -120,7 +120,7 @@ it('confirms the v2 fee before sending a guest to login', function (): void {
 
     expect($script)
         ->toContain("import Swal from 'sweetalert2'")
-        ->toContain("title: 'Đăng nhập để tra cứu V2'")
+        ->toContain("title: 'Vui lòng đăng nhập'")
         ->toContain("confirmButtonText: 'Đăng nhập để tiếp tục'")
         ->toContain('showCancelButton: true')
         ->toContain('if (confirmation.isConfirmed)')
@@ -129,13 +129,18 @@ it('confirms the v2 fee before sending a guest to login', function (): void {
         ->toContain('data-v2-price="{{ (int) $v2LookupPrice }}"');
 });
 
-it('uses the selected v1 or v2 tab for lookups and synchronizes the latest checkbox', function (): void {
+it('keeps the selected api independent of the latest checkbox and requests login on guest clicks', function (): void {
     $script = file_get_contents(dirname(__DIR__, 2).'/resources/js/public-lookup.ts');
 
     expect($script)
         ->toContain("form.elements.namedItem('lookup_version')")
         ->toContain("versionInput instanceof RadioNodeList && versionInput.value === 'v2' ? 'v2' : 'v1'")
-        ->toContain("latestInput.checked = input.value === 'v2'")
-        ->toContain("const selectedVersion = latestInput.checked ? 'v2' : 'v1'")
-        ->toContain('input.checked = input.value === selectedVersion');
+        ->not->toContain("latestInput.checked = input.value === 'v2'")
+        ->not->toContain('input.checked = input.value === selectedVersion')
+        ->toContain("latestInput.addEventListener('click'")
+        ->toContain("form.dataset.authenticated !== 'true'")
+        ->toContain('event.preventDefault()')
+        ->toContain('void requestLogin()')
+        ->toContain('latest_result: latestRequested')
+        ->toContain('form.dataset[`${selectedVersion()}Price`]');
 });

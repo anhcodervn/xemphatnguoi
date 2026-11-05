@@ -68,7 +68,9 @@ class PublicTrafficFineController extends Controller
         $vehicleType = $request->string('vehicle_type', VehicleType::Car->value)->toString();
         $apiVersion = $request->string('api_version', 'v1')->toString();
 
-        if ($apiVersion === 'v2' && ! $request->user() instanceof User) {
+        $paidV1Lookup = $request->boolean('latest_result');
+
+        if (($apiVersion === 'v2' || $paidV1Lookup) && ! $request->user() instanceof User) {
             return redirect()->guest(route('auth.login'));
         }
 
@@ -83,6 +85,10 @@ class PublicTrafficFineController extends Controller
             if (! $turnstile->mayViewResult($request, $plate, $vehicleType)) {
                 $errorMessage = 'Vui lòng hoàn tất xác minh bảo mật và tra cứu lại biển số này.';
             } else {
+                if ($paidV1Lookup) {
+                    $lookupService = $lookupService->forPaidLookups();
+                }
+
                 $lookup = $apiVersion === 'v2'
                     ? $v2LookupService->findCachedResult($plate, $vehicleType)
                     : $lookupService->findCachedResult($plate, $vehicleType);
@@ -219,6 +225,7 @@ class PublicTrafficFineController extends Controller
                 ->all(),
             'turnstile' => $this->turnstileSettings->publicConfiguration($request->user() instanceof User ? $request->user() : null),
             'v2LookupPrice' => $this->billingService->v2PricePerRequest(),
+            'v1LookupPrice' => $this->billingService->pricePerRequest(),
             'isAuthenticated' => $request->user() instanceof User,
         ];
     }

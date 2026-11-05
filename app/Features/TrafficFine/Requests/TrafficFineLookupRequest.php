@@ -37,6 +37,7 @@ class TrafficFineLookupRequest extends FormRequest
                 },
             ],
             'vehicle_type' => ['required', Rule::in(VehicleType::enabledValues())],
+            'latest_result' => ['sometimes', 'boolean'],
         ];
     }
 
