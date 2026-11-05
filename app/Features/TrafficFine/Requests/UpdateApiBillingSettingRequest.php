@@ -26,6 +26,7 @@ class UpdateApiBillingSettingRequest extends FormRequest
             'api_v2_request_cost' => ['required', 'integer', 'min:0', 'max:1000000'],
             'api_v1_enabled' => ['sometimes', 'required', 'boolean'],
             'api_v2_enabled' => ['sometimes', 'required', 'boolean'],
+            'api_v2_provider_version' => ['sometimes', 'required', 'string', 'in:v1,v2'],
             'api_v1_description' => ['sometimes', 'required', 'string', 'max:300'],
             'api_v2_description' => ['sometimes', 'required', 'string', 'max:300'],
         ];
@@ -52,6 +53,7 @@ class UpdateApiBillingSettingRequest extends FormRequest
             'api_v2_request_cost.max' => 'Giá cost API v2 không được vượt quá 1.000.000 đồng.',
             'api_v1_enabled.boolean' => 'Trạng thái API v1 không hợp lệ.',
             'api_v2_enabled.boolean' => 'Trạng thái API v2 không hợp lệ.',
+            'api_v2_provider_version.in' => 'Phiên bản API provider phải là v1 hoặc v2.',
             'api_v1_description.required' => 'Vui lòng nhập mô tả API v1.',
             'api_v1_description.max' => 'Mô tả API v1 không được vượt quá 300 ký tự.',
             'api_v2_description.required' => 'Vui lòng nhập mô tả API v2.',
@@ -68,6 +70,7 @@ class UpdateApiBillingSettingRequest extends FormRequest
             'api_v2_request_cost' => 'giá cost API v2',
             'api_v1_enabled' => 'trạng thái API v1',
             'api_v2_enabled' => 'trạng thái API v2',
+            'api_v2_provider_version' => 'phiên bản API provider cho cổng v2',
             'api_v1_description' => 'mô tả API v1',
             'api_v2_description' => 'mô tả API v2',
         ];

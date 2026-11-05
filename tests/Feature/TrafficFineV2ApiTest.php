@@ -32,13 +32,14 @@ beforeEach(function (): void {
     Http::preventStrayRequests();
 });
 
-it('falls back to v1 while preserving v2 API billing and using the actual v1 cost', function (): void {
+it('routes v2 to provider v1 with v2 billing independently of the public v1 gateway', function (bool $v1Enabled): void {
     $this->freezeTime();
     config([
         'traffic-fines.sources.xephatnguoi.url' => 'https://api.xephatnguoi.com/v1/search',
         'traffic-fines.billing.api_request_cost' => 7,
     ]);
-    app(ApiLookupAvailabilityService::class)->update(v1Enabled: true, v2Enabled: false);
+    app(ApiLookupAvailabilityService::class)->update(v1Enabled: $v1Enabled, v2Enabled: true);
+    app(SettingStore::class)->putString(TrafficFineProviderSettingsService::V2_API_VERSION_KEY, 'v1');
     Http::fake(['https://api.xephatnguoi.com/v1/search*' => Http::response([
         'status' => 'success', 'plate' => '30K12345', 'type' => 1, 'data' => [], 'total' => 0,
     ])]);
@@ -52,7 +53,7 @@ it('falls back to v1 while preserving v2 API billing and using the actual v1 cos
         ->and(TrafficFineResult::query()->sole()->api_version)->toBe('v2')
         ->and(TrafficFineResult::query()->sole()->expires_at->timestamp - now()->timestamp)->toBe(3600);
     Http::assertSentCount(1);
-});
+})->with([true, false]);
 
 /**
  * @return array{user: User, api_key: ApiKey, headers: array{X-API-KEY: string, X-API-SECRET: string}}

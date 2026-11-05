@@ -214,6 +214,7 @@ class TrafficFineAdminController extends Controller
     public function billing(
         ApiLookupBillingService $billingService,
         ApiLookupAvailabilityService $availabilityService,
+        TrafficFineProviderSettingsService $providerSettings,
         ApiDocumentationSettingsService $documentationSettings,
         ApiUsageStatisticsService $statistics,
     ): JsonResponse {
@@ -226,6 +227,7 @@ class TrafficFineAdminController extends Controller
                 'api_v2_request_cost' => $billingService->v2CostPerRequest(),
                 'api_v1_enabled' => $availabilityService->isEnabled('v1'),
                 'api_v2_enabled' => $availabilityService->isEnabled('v2'),
+                'api_v2_provider_version' => $providerSettings->v2ApiVersion(),
                 'api_v1_description' => $documentationSettings->v1Description(),
                 'api_v2_description' => $documentationSettings->v2Description(),
                 'summary' => $statistics->summary(),
@@ -239,6 +241,7 @@ class TrafficFineAdminController extends Controller
         SettingStore $settingStore,
         ApiLookupBillingService $billingService,
         ApiLookupAvailabilityService $availabilityService,
+        TrafficFineProviderSettingsService $providerSettings,
         ApiDocumentationSettingsService $documentationSettings,
         ApiUsageStatisticsService $statistics,
     ): JsonResponse {
@@ -274,6 +277,10 @@ class TrafficFineAdminController extends Controller
 
         $documentationSettings->update($validated);
 
+        if (isset($validated['api_v2_provider_version'])) {
+            $settingStore->putString(TrafficFineProviderSettingsService::V2_API_VERSION_KEY, $validated['api_v2_provider_version']);
+        }
+
         return response()->json([
             'status' => true,
             'message' => 'Đã cập nhật giá bán, giá cost và mô tả API.',
@@ -284,6 +291,7 @@ class TrafficFineAdminController extends Controller
                 'api_v2_request_cost' => $billingService->v2CostPerRequest(),
                 'api_v1_enabled' => $availabilityService->isEnabled('v1'),
                 'api_v2_enabled' => $availabilityService->isEnabled('v2'),
+                'api_v2_provider_version' => $providerSettings->v2ApiVersion(),
                 'api_v1_description' => $documentationSettings->v1Description(),
                 'api_v2_description' => $documentationSettings->v2Description(),
                 'summary' => $statistics->summary(),

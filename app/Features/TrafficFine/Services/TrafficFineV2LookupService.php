@@ -17,12 +17,12 @@ class TrafficFineV2LookupService
         LicensePlateNormalizer $normalizer,
         XephatnguoiV2Source $source,
         CacheFactory $cache,
-        ApiLookupAvailabilityService $availability,
+        TrafficFineProviderSettingsService $providerSettings,
         Container $container,
     ) {
         $this->lookupService = new TrafficFineLookupService(
             $normalizer,
-            $availability->isEnabled('v2') ? $source : $container->make(TrafficFineSourceInterface::class),
+            $providerSettings->v2ApiVersion() === 'v2' ? $source : $container->make(TrafficFineSourceInterface::class),
             $cache,
             'v2',
             true,

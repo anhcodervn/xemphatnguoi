@@ -13,6 +13,7 @@ const v1Description = ref('');
 const v2Description = ref('');
 const v1Enabled = ref(true);
 const v2Enabled = ref(true);
+const v2ProviderVersion = ref<'v1' | 'v2'>('v2');
 const loading = ref(true);
 const saving = ref(false);
 const errorMessage = ref('');
@@ -32,6 +33,7 @@ const load = async (): Promise<void> => {
         v2Description.value = billing.value.api_v2_description;
         v1Enabled.value = billing.value.api_v1_enabled;
         v2Enabled.value = billing.value.api_v2_enabled;
+        v2ProviderVersion.value = billing.value.api_v2_provider_version;
     } catch {
         errorMessage.value = 'Không thể tải cấu hình tính phí API.';
     } finally {
@@ -53,6 +55,7 @@ const save = async (): Promise<void> => {
             v2Description.value,
             v1Enabled.value,
             v2Enabled.value,
+            v2ProviderVersion.value,
         );
         v1Price.value = billing.value.api_request_price;
         v2Price.value = billing.value.api_v2_request_price;
@@ -62,6 +65,7 @@ const save = async (): Promise<void> => {
         v2Description.value = billing.value.api_v2_description;
         v1Enabled.value = billing.value.api_v1_enabled;
         v2Enabled.value = billing.value.api_v2_enabled;
+        v2ProviderVersion.value = billing.value.api_v2_provider_version;
         successMessage.value = 'Đã cập nhật trạng thái vận hành, giá và mô tả API.';
     } catch {
         errorMessage.value = 'Không thể cập nhật giá. Vui lòng kiểm tra dữ liệu.';
@@ -170,16 +174,31 @@ onMounted(load);
                                     type="button"
                                     role="switch"
                                     :aria-checked="v2Enabled"
-                                    aria-label="Bật hoặc tắt nguồn tra cứu API v2"
+                                    aria-label="Bật hoặc bảo trì cổng tra cứu API v2"
                                     class="app-focus inline-flex min-h-10 items-center gap-2 rounded-full px-3 text-xs font-black transition"
                                     :class="v2Enabled ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-600'"
                                     @click="v2Enabled = !v2Enabled"
                                 >
-                                    <Power class="h-4 w-4" />{{ v2Enabled ? 'Đang bật' : 'Đã tắt · Dùng v1' }}
+                                    <Power class="h-4 w-4" />{{ v2Enabled ? 'Đang bật' : 'Bảo trì' }}
                                 </button>
                             </div>
                             <p class="mt-3 text-xs leading-5 text-slate-600">
-                                Khi tắt v2, tra cứu trả phí sẽ dùng API v1 và vẫn tính giá v2. Cache tra cứu trả phí/API: 60 phút; miễn phí: 24 giờ.
+                                Công tắc chỉ bật/tắt cổng v2 cho khách hàng. Nguồn API provider được chọn riêng bên dưới.
+                            </p>
+                            <label for="api-v2-provider-version" class="mt-3 block text-sm font-semibold text-slate-700"
+                                >API provider dùng cho cổng v2</label
+                            >
+                            <select
+                                id="api-v2-provider-version"
+                                v-model="v2ProviderVersion"
+                                class="app-focus mt-2 h-12 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm font-semibold"
+                            >
+                                <option value="v1">Gọi API v1 của provider</option>
+                                <option value="v2">Gọi API v2 của provider</option>
+                            </select>
+                            <p class="mt-2 text-xs leading-5 text-slate-600">
+                                Khách vẫn tra cứu qua cổng v2, trả giá v2 và dùng cache 60 phút dù chọn API provider v1. Giá cost được ghi nhận theo
+                                nguồn provider thực gọi.
                             </p>
                             <label for="api-v2-request-price" class="mt-3 block text-sm font-semibold text-slate-700">VND / request thành công</label>
                             <span class="relative mt-2 block">

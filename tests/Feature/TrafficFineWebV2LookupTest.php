@@ -2,6 +2,7 @@
 
 use App\Events\WalletBalanceChanged;
 use App\Features\TrafficFine\Services\ApiLookupAvailabilityService;
+use App\Features\TrafficFine\Services\TrafficFineProviderSettingsService;
 use App\Features\TrafficFine\Services\TrafficFineTurnstileSettingsService;
 use App\Models\TrafficFineResult;
 use App\Models\User;
@@ -224,9 +225,10 @@ it('expires paid website results after sixty minutes in both cache and database'
     Http::assertSentCount(2);
 })->with([false, true]);
 
-it('uses v1 with the v2 price and a separate paid cache when v2 is disabled', function (): void {
+it('keeps both public gateways enabled and uses provider v1 with the v2 price and paid cache', function (): void {
     config(['traffic-fines.sources.xephatnguoi.url' => 'https://api.xephatnguoi.com/v1/search']);
-    app(ApiLookupAvailabilityService::class)->update(v1Enabled: true, v2Enabled: false);
+    app(ApiLookupAvailabilityService::class)->update(v1Enabled: true, v2Enabled: true);
+    app(SettingStore::class)->putString(TrafficFineProviderSettingsService::V2_API_VERSION_KEY, 'v1');
     app(SettingStore::class)->putString('traffic_fine_api_v2_request_price', '175');
     Http::fake(['https://api.xephatnguoi.com/v1/search*' => Http::response([
         'status' => 'success', 'plate' => '30K12345', 'type' => 1, 'data' => [], 'total' => 0,

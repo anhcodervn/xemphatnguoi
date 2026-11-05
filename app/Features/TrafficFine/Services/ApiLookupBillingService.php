@@ -37,7 +37,7 @@ class ApiLookupBillingService
     public function __construct(
         private readonly SettingStore $settingStore,
         private readonly WalletService $walletService,
-        private readonly ApiLookupAvailabilityService $availability,
+        private readonly TrafficFineProviderSettingsService $providerSettings,
     ) {}
 
     public function pricePerRequest(): int
@@ -114,7 +114,7 @@ class ApiLookupBillingService
     {
         $price = (int) $request->attributes->get(self::ATTRIBUTE_UNIT_PRICE, $this->pricePerRequest());
         $isV2 = $request->routeIs('v2.traffic-fines.lookup');
-        $cost = $isV2 && $this->availability->isEnabled('v2') ? $this->v2CostPerRequest() : $this->costPerRequest();
+        $cost = $isV2 && $this->providerSettings->v2ApiVersion() === 'v2' ? $this->v2CostPerRequest() : $this->costPerRequest();
         $referenceType = $isV2 ? 'traffic_fine_api_v2_request' : 'traffic_fine_api_request';
         $descriptionVersion = $isV2 ? ' API v2' : ' API';
 

@@ -18,10 +18,7 @@ class EnsureTrafficFineApiIsAvailable
      */
     public function handle(Request $request, Closure $next, string $apiVersion): Response
     {
-        $enabled = $this->availability->isEnabled($apiVersion)
-            || ($apiVersion === 'v2' && $this->availability->isEnabled('v1'));
-
-        if (! $enabled) {
+        if (! $this->availability->isEnabled($apiVersion)) {
             return response()->json([
                 'success' => false,
                 'status' => 'api_maintenance',

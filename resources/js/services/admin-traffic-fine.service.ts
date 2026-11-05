@@ -106,6 +106,7 @@ export type AdminApiBilling = {
     api_v2_request_cost: number;
     api_v1_enabled: boolean;
     api_v2_enabled: boolean;
+    api_v2_provider_version: 'v1' | 'v2';
     api_v1_description: string;
     api_v2_description: string;
     summary: {
@@ -320,6 +321,7 @@ export const adminTrafficFineService = {
         apiV2Description: string,
         apiV1Enabled: boolean,
         apiV2Enabled: boolean,
+        apiV2ProviderVersion: 'v1' | 'v2',
     ): Promise<AdminApiBilling> {
         const response = await api.put('/api/admin-api/traffic-fines/billing', {
             api_request_price: apiRequestPrice,
@@ -330,6 +332,7 @@ export const adminTrafficFineService = {
             api_v2_description: apiV2Description,
             api_v1_enabled: apiV1Enabled,
             api_v2_enabled: apiV2Enabled,
+            api_v2_provider_version: apiV2ProviderVersion,
         });
         return response.data.data as AdminApiBilling;
     },

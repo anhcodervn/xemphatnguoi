@@ -12,6 +12,8 @@ class TrafficFineProviderSettingsService
 {
     public const ACTIVE_PROVIDER_KEY = 'traffic_fine_active_provider';
 
+    public const V2_API_VERSION_KEY = 'traffic_fine_v2_provider_api_version';
+
     /** @var list<string> */
     private const EDITABLE_FIELDS = [
         'url',
@@ -29,6 +31,11 @@ class TrafficFineProviderSettingsService
     private string $resolvedActiveProvider = '';
 
     public function __construct(private readonly SettingStore $settingStore) {}
+
+    public function v2ApiVersion(): string
+    {
+        return $this->settingStore->getString(self::V2_API_VERSION_KEY, 'v2') === 'v1' ? 'v1' : 'v2';
+    }
 
     /** @return list<string> */
     public function providerNames(): array
