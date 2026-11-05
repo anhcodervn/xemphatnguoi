@@ -185,20 +185,23 @@ onMounted(load);
                             <p class="mt-3 text-xs leading-5 text-slate-600">
                                 Công tắc chỉ bật/tắt cổng v2 cho khách hàng. Nguồn API provider được chọn riêng bên dưới.
                             </p>
-                            <label for="api-v2-provider-version" class="mt-3 block text-sm font-semibold text-slate-700"
-                                >API provider dùng cho cổng v2</label
-                            >
-                            <select
-                                id="api-v2-provider-version"
-                                v-model="v2ProviderVersion"
-                                class="app-focus mt-2 h-12 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm font-semibold"
-                            >
-                                <option value="v1">Gọi API v1 của provider</option>
-                                <option value="v2">Gọi API v2 của provider</option>
-                            </select>
+                            <div class="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-violet-200 bg-white p-3">
+                                <span class="text-sm font-semibold text-slate-700">Dùng provider V1 cho cổng V2</span>
+                                <button
+                                    type="button"
+                                    role="switch"
+                                    :aria-checked="v2ProviderVersion === 'v1'"
+                                    aria-label="Dùng provider V1 cho cổng V2"
+                                    class="app-focus inline-flex min-h-11 items-center gap-2 rounded-full px-3 text-xs font-black transition"
+                                    :class="v2ProviderVersion === 'v1' ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-600'"
+                                    @click="v2ProviderVersion = v2ProviderVersion === 'v1' ? 'v2' : 'v1'"
+                                >
+                                    <Power class="h-4 w-4" />{{ v2ProviderVersion === 'v1' ? 'Đang bật · Provider V1' : 'Đang tắt · Provider V2' }}
+                                </button>
+                            </div>
                             <p class="mt-2 text-xs leading-5 text-slate-600">
-                                Khách vẫn tra cứu qua cổng v2, trả giá v2 và dùng cache 60 phút dù chọn API provider v1. Giá cost được ghi nhận theo
-                                nguồn provider thực gọi.
+                                Bật: khách gọi cổng V2, trả giá V2 nhưng backend gọi API V1 của provider. Tắt: backend gọi API V2 của provider. Cổng
+                                V1 giữ nguyên. Nhấn “Lưu cấu hình” để áp dụng.
                             </p>
                             <label for="api-v2-request-price" class="mt-3 block text-sm font-semibold text-slate-700">VND / request thành công</label>
                             <span class="relative mt-2 block">

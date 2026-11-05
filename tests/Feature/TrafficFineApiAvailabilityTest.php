@@ -71,6 +71,13 @@ it('lets admins select provider v1 for v2 while both public gateways remain enab
         ->assertOk()->assertJsonPath('data.api_v2_provider_version', 'v1');
 
     $this->putJson('/api/admin-api/traffic-fines/billing', [...$payload, 'api_v2_provider_version' => 'v2'])
+        ->assertOk()
+        ->assertJsonPath('data.api_v2_provider_version', 'v2')
+        ->assertJsonPath('data.api_v1_enabled', true)
+        ->assertJsonPath('data.api_v2_enabled', true)
+        ->assertJsonPath('data.api_request_price', 20)
+        ->assertJsonPath('data.api_v2_request_price', 150);
+    $this->getJson('/api/admin-api/traffic-fines/billing')
         ->assertOk()->assertJsonPath('data.api_v2_provider_version', 'v2');
 });
 
