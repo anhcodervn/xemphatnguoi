@@ -36,6 +36,7 @@ class TrafficFineLookupController extends Controller
                 /** @var User $user */
                 $user = $apiKey->user;
                 $billingService->ensureSufficientBalance($request, $user);
+                $lookupService = $lookupService->forPaidLookups();
             }
 
             $result = $lookupService->lookup(

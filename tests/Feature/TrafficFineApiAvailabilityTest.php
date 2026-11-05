@@ -43,8 +43,8 @@ it('blocks v1 lookup before calling the lookup controller while v1 is in mainten
         ->assertJsonPath('message', 'Cổng tra cứu API v1 đang bảo trì. Vui lòng thử lại sau.');
 });
 
-it('blocks v2 web lookup while v2 is in maintenance', function (): void {
-    app(ApiLookupAvailabilityService::class)->update(v1Enabled: true, v2Enabled: false);
+it('blocks v2 web lookup when both v2 and its v1 fallback are disabled', function (): void {
+    app(ApiLookupAvailabilityService::class)->update(v1Enabled: false, v2Enabled: false);
     Sanctum::actingAs(User::factory()->create());
 
     $this->postJson('/api/client/traffic-fines/lookup-v2', ['plate' => '30A12345', 'vehicle_type' => 'car'])

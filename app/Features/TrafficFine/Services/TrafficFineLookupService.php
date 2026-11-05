@@ -16,6 +16,7 @@ use App\Utils\SendMessage;
 use Illuminate\Contracts\Cache\Factory as CacheFactory;
 use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Contracts\Cache\Repository;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Throwable;
 
@@ -26,7 +27,20 @@ class TrafficFineLookupService
         private readonly TrafficFineSourceInterface $source,
         private readonly CacheFactory $cache,
         private readonly string $apiVersion = 'v1',
+        private readonly bool $paid = false,
     ) {}
+
+    public function forPaidLookups(): self
+    {
+        return new self($this->normalizer, $this->source, $this->cache, $this->apiVersion, true);
+    }
+
+    private function cacheTtl(): int
+    {
+        return $this->paid
+            ? (int) config('traffic-fines.cache.paid_ttl', 3600)
+            : (int) config('traffic-fines.cache.ttl', 86400);
+    }
 
     public function lookup(
         string $plate,
@@ -117,8 +131,13 @@ class TrafficFineLookupService
 
                     $providerStartedAt = hrtime(true);
                     $data = $this->source->lookup($normalizedPlate, $resolvedVehicleType);
+                    $data = TrafficFineLookupResultDataDto::fromArray([
+                        ...$data->toArray(),
+                        'created_cache' => now()->toISOString(),
+                        'is_latest' => $this->paid,
+                    ]);
                     $providerLatency = (int) round((hrtime(true) - $providerStartedAt) / 1_000_000);
-                    $expiresAt = now()->addSeconds((int) config('traffic-fines.cache.ttl', 86400));
+                    $expiresAt = now()->addSeconds($this->cacheTtl());
 
                     $storedResult = TrafficFineResult::query()->updateOrCreate(
                         [
@@ -136,7 +155,7 @@ class TrafficFineLookupService
                         ],
                     );
 
-                    $cache->put($cacheKey, $this->cachePayload($data, $storedResult->id), (int) config('traffic-fines.cache.ttl', 86400));
+                    $cache->put($cacheKey, $this->cachePayload($data, $storedResult->id), $this->cacheTtl());
 
                     return [
                         'data' => $data,
@@ -267,7 +286,9 @@ class TrafficFineLookupService
 
     private function cacheKey(string $sourceName, VehicleType $vehicleType, string $plate): string
     {
-        return "traffic_fine:{$this->apiVersion}:{$sourceName}:{$vehicleType->value}:{$plate}";
+        $suffix = $this->paid && $this->apiVersion === 'v1' ? ':paid' : '';
+
+        return "traffic_fine:{$this->apiVersion}:{$sourceName}:{$vehicleType->value}:{$plate}{$suffix}";
     }
 
     private function errorCacheKey(string $sourceName, VehicleType $vehicleType, string $plate): string
@@ -286,6 +307,9 @@ class TrafficFineLookupService
             ->where('provider', $sourceName)
             ->where('api_version', $this->apiVersion)
             ->where('expires_at', '>', now())
+            ->when($this->paid, fn (Builder $query): Builder => $query
+                ->where('response_json->is_latest', true)
+                ->where('updated_at', '>', now()->subSeconds($this->cacheTtl())))
             ->first();
     }
 
@@ -345,7 +369,15 @@ class TrafficFineLookupService
     /** @param array<string, mixed> $payload */
     private function isCachePayloadForCurrentVersion(array $payload): bool
     {
-        return ($payload['api_version'] ?? null) === $this->apiVersion;
+        if (($payload['api_version'] ?? null) !== $this->apiVersion) {
+            return false;
+        }
+
+        $data = $payload['data'] ?? $payload;
+
+        return ! $this->paid || (($data['is_latest'] ?? false)
+            && isset($data['created_cache'])
+            && Carbon::parse($data['created_cache'])->greaterThan(now()->subSeconds($this->cacheTtl())));
     }
 
     /**

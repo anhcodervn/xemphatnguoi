@@ -34,6 +34,7 @@ return [
     'cache' => [
         'store' => env('TRAFFIC_FINE_CACHE_STORE', 'redis'),
         'ttl' => (int) env('TRAFFIC_FINE_CACHE_TTL', 86400),
+        'paid_ttl' => 3600,
         'error_ttl' => (int) env('TRAFFIC_FINE_ERROR_CACHE_TTL', 60),
         'lock_seconds' => (int) env('TRAFFIC_FINE_LOCK_SECONDS', 15),
         'lock_wait_seconds' => (int) env('TRAFFIC_FINE_LOCK_WAIT_SECONDS', 3),

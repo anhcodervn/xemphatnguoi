@@ -24,6 +24,8 @@ export type TrafficFineResult = {
     unknown_status_count: number;
     violations: TrafficFineViolation[];
     checked_at: string;
+    created_cache: string;
+    is_latest: boolean;
 };
 
 export type TrafficFineLookupResponse = {

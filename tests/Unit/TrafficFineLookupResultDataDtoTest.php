@@ -7,7 +7,7 @@ use Tests\TestCase;
 
 pest()->extend(TestCase::class);
 
-it('uses the serialization time for checked_at in every response', function (bool $cached): void {
+it('preserves checked_at and cache time in every response', function (bool $cached): void {
     config(['app.timezone' => 'Asia/Ho_Chi_Minh']);
     $this->travelTo(CarbonImmutable::parse('2026-10-31T03:31:54.803743Z'));
     $result = TrafficFineLookupResultDataDto::fromArray([
@@ -15,11 +15,13 @@ it('uses the serialization time for checked_at in every response', function (boo
     ]);
     $response = new TrafficFineLookupResponseDto(data: $result, cached: $cached);
 
-    expect($response->toArray()['data']['checked_at'])->toBe('2026-10-31T10:31:54.803743+07:00');
+    expect($response->toArray()['data']['checked_at'])->toBe('2026-10-30T10:31:54.803743+07:00');
 
     $this->travel(1)->minutes();
 
-    expect($response->toArray()['data']['checked_at'])->toBe('2026-10-31T10:32:54.803743+07:00')
+    expect($response->toArray()['data']['checked_at'])->toBe('2026-10-30T10:31:54.803743+07:00')
+        ->and($response->toArray()['data']['created_cache'])->toBe('2026-10-30T10:31:54.803743+07:00')
+        ->and($response->toArray()['data']['is_latest'])->toBeFalse()
         ->and($result->checkedAt->toISOString())->toBe('2026-10-30T03:31:54.803743Z');
 })->with([false, true]);
 

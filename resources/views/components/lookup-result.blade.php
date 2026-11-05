@@ -49,11 +49,25 @@
             <div class="mt-3 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-sm text-slate-500">
                 <span class="inline-flex items-center gap-1.5">
                     <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" class="h-4 w-4 text-slate-400"><circle cx="10" cy="10" r="7"/><path d="M10 6v4l3 2"/></svg>
-                    Cập nhật: <time class="font-bold tabular-nums text-slate-700">{{ $lookup->data->checkedAt->setTimezone(config('app.timezone'))->format('H:i, d/m/Y') }}</time>
+                    @if ($lookup->data->isLatest)
+                        <span class="font-bold text-slate-700">Thông tin mới nhất</span>
+                    @else
+                        Kết quả tra cứu lúc: <time class="font-bold tabular-nums text-slate-700">{{ ($lookup->data->createdCache ?? $lookup->data->checkedAt)->setTimezone(config('app.timezone'))->format('H:i, d/m/Y') }}</time>
+                    @endif
                 </span>
                 <span class="hidden text-slate-300 sm:inline" aria-hidden="true">|</span>
                 <a href="#tra-cuu" class="site-focus inline-flex min-h-11 touch-manipulation items-center font-bold text-indigo-600 underline decoration-indigo-200 underline-offset-4 hover:text-indigo-800">Tra cứu lại</a>
             </div>
+
+            @unless ($lookup->data->isLatest)
+                <p class="mt-2 text-xs text-slate-500">
+                    @auth
+                        Chọn “Lấy kết quả mới nhất” để tra cứu có tính phí.
+                    @else
+                        Để lấy kết quả mới nhất vui lòng <a href="{{ route('auth.login') }}" class="site-focus font-bold text-brand underline">đăng nhập</a>.
+                    @endauth
+                </p>
+            @endunless
 
             <p class="mt-1 text-xs font-semibold text-slate-500"><span class="font-mono text-slate-700">{{ $lookup->data->displayPlate }}</span> · {{ $vehicleLabel }}</p>
 

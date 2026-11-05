@@ -19,22 +19,6 @@
     data-turnstile-required="{{ $turnstileRequired ? 'true' : 'false' }}"
 >
     <fieldset>
-        <legend class="mb-1.5 block text-xs font-bold text-navy">Nguồn tra cứu</legend>
-        <div class="grid grid-cols-2 gap-1 rounded-lg border border-slate-200 bg-slate-50 p-1">
-            <label class="site-focus cursor-pointer rounded-md px-2 py-2 text-left transition-colors hover:bg-white has-[:checked]:bg-white has-[:checked]:shadow-sm has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand has-[:focus-visible]:ring-offset-2">
-                <input type="radio" name="lookup_version" value="v1" class="sr-only" checked>
-                <span class="block text-xs font-extrabold text-navy">Tra cứu V1</span>
-                <span class="mt-0.5 block text-[10px] font-semibold text-emerald-700">Miễn phí</span>
-            </label>
-            <label class="site-focus cursor-pointer rounded-md px-2 py-2 text-left transition-colors hover:bg-white has-[:checked]:bg-white has-[:checked]:shadow-sm has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand has-[:focus-visible]:ring-offset-2">
-                <input type="radio" name="lookup_version" value="v2" class="sr-only">
-                <span class="block text-xs font-extrabold text-navy">Tra cứu V2</span>
-                <span class="mt-0.5 block text-[10px] font-semibold text-amber-700">{{ number_format((int) $v2LookupPrice, 0, ',', '.') }}đ/lượt · {{ $isAuthenticated ? 'Trừ từ ví' : 'Cần đăng nhập' }}</span>
-            </label>
-        </div>
-    </fieldset>
-
-    <fieldset>
         <legend class="sr-only">Loại phương tiện</legend>
         <div class="grid grid-cols-3 gap-1 rounded-lg border border-slate-200 bg-slate-50 p-1">
             @foreach ($vehicleTypes as $value => $label)
@@ -81,6 +65,15 @@
         </div>
         <p id="lookup-plate-help" class="mt-1 text-[11px] leading-5 text-slate-500">Nhập có hoặc không có dấu phân cách, ví dụ: <strong class="font-semibold text-slate-700">30A12345</strong> hoặc <strong class="font-semibold text-slate-700">30A-123.45</strong></p>
         <p id="lookup-plate-error" class="mt-2 hidden text-sm font-semibold text-danger" data-lookup-error role="alert"></p>
+        @if ($isAuthenticated)
+            <label class="mt-2 flex min-h-11 cursor-pointer items-center gap-2 text-sm font-semibold text-slate-700">
+                <input type="checkbox" name="latest_result" class="site-focus h-4 w-4 rounded border-slate-300 text-brand">
+                <span>Lấy kết quả mới nhất {{ number_format((int) $v2LookupPrice, 0, ',', '.') }}đ/lượt</span>
+            </label>
+            <p class="text-xs text-slate-500">Trừ từ ví cho mỗi lượt tra cứu thành công. Kết quả được lưu trong 60 phút.</p>
+        @else
+            <p class="mt-2 text-xs text-slate-500">Để lấy kết quả mới nhất vui lòng <a href="{{ route('auth.login') }}" class="site-focus font-bold text-brand underline">đăng nhập</a>.</p>
+        @endif
     </div>
 
     @if ($turnstileRequired)

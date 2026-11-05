@@ -3,9 +3,11 @@
 namespace App\Features\TrafficFine\Services;
 
 use App\Features\TrafficFine\DTOs\TrafficFineLookupResponseDto;
+use App\Features\TrafficFine\Services\Source\TrafficFineSourceInterface;
 use App\Features\TrafficFine\Services\Source\Xephatnguoi\XephatnguoiV2Source;
 use App\Models\User;
 use Illuminate\Contracts\Cache\Factory as CacheFactory;
+use Illuminate\Contracts\Container\Container;
 
 class TrafficFineV2LookupService
 {
@@ -15,8 +17,16 @@ class TrafficFineV2LookupService
         LicensePlateNormalizer $normalizer,
         XephatnguoiV2Source $source,
         CacheFactory $cache,
+        ApiLookupAvailabilityService $availability,
+        Container $container,
     ) {
-        $this->lookupService = new TrafficFineLookupService($normalizer, $source, $cache, 'v2');
+        $this->lookupService = new TrafficFineLookupService(
+            $normalizer,
+            $availability->isEnabled('v2') ? $source : $container->make(TrafficFineSourceInterface::class),
+            $cache,
+            'v2',
+            true,
+        );
     }
 
     public function lookup(

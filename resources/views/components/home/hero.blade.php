@@ -27,7 +27,7 @@
             <x-lookup-form :vehicle-types="$vehicleTypes" :turnstile="$turnstile" :v2-lookup-price="$v2LookupPrice" :is-authenticated="$isAuthenticated" />
             <p class="mt-2 flex items-start justify-center gap-1.5 text-center text-[11px] leading-5 text-slate-500">
                 <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" class="mt-0.5 h-4 w-4 shrink-0 text-sky-600"><circle cx="10" cy="10" r="7"/><path d="M10 9v4m0-7h.01"/></svg>
-                <span>V1 sử dụng nguồn dữ liệu cũ nên kết quả có thể chưa chính xác. V2 sử dụng nguồn dữ liệu mới được lấy trực tiếp từ VNeTraffic.</span>
+                <span>Tra cứu miễn phí sử dụng kết quả được lưu tối đa 24 giờ. Đăng nhập và chọn “Lấy kết quả mới nhất” để tra cứu có tính phí, kết quả được lưu 60 phút.</span>
             </p>
         </div>
 

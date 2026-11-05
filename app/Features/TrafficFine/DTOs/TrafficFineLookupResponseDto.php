@@ -16,10 +16,7 @@ final class TrafficFineLookupResponseDto
     {
         return [
             'success' => true,
-            'data' => [
-                ...$this->data->toArray(),
-                'checked_at' => now(config('app.timezone'))->toISOString(true),
-            ],
+            'data' => $this->data->toArray(),
         ];
     }
 }

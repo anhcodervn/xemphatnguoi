@@ -1,5 +1,6 @@
 <?php
 
+use App\Features\TrafficFine\Services\ApiLookupAvailabilityService;
 use App\Features\TrafficFine\Services\TrafficFineProviderSettingsService;
 use App\Models\ApiKey;
 use App\Models\ApiLog;
@@ -29,6 +30,28 @@ beforeEach(function (): void {
 
     Cache::store('array')->flush();
     Http::preventStrayRequests();
+});
+
+it('falls back to v1 while preserving v2 API billing and using the actual v1 cost', function (): void {
+    $this->freezeTime();
+    config([
+        'traffic-fines.sources.xephatnguoi.url' => 'https://api.xephatnguoi.com/v1/search',
+        'traffic-fines.billing.api_request_cost' => 7,
+    ]);
+    app(ApiLookupAvailabilityService::class)->update(v1Enabled: true, v2Enabled: false);
+    Http::fake(['https://api.xephatnguoi.com/v1/search*' => Http::response([
+        'status' => 'success', 'plate' => '30K12345', 'type' => 1, 'data' => [], 'total' => 0,
+    ])]);
+    $account = trafficFineV2Account();
+    $this->withHeaders($account['headers'])->getJson('/api/v2/lookup?plate=30K12345&vehicle_type=car')
+        ->assertOk()->assertJsonPath('data.is_latest', true);
+
+    expect((float) $account['user']->wallet()->firstOrFail()->balance)->toBe(350.0)
+        ->and((float) ApiLog::query()->sole()->unit_price)->toBe(150.0)
+        ->and((float) ApiLog::query()->sole()->provider_cost)->toBe(7.0)
+        ->and(TrafficFineResult::query()->sole()->api_version)->toBe('v2')
+        ->and(TrafficFineResult::query()->sole()->expires_at->timestamp - now()->timestamp)->toBe(3600);
+    Http::assertSentCount(1);
 });
 
 /**

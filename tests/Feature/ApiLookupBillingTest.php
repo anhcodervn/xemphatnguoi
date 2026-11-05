@@ -27,6 +27,27 @@ beforeEach(function (): void {
     Cache::store('array')->flush();
 });
 
+it('refreshes v1 API results after sixty minutes without reusing a free lookup cache', function (): void {
+    $source = bindBillingTrafficFineSource();
+    $account = billingApiAccount(balance: 500);
+    $this->postJson('/api/lookup', ['plate' => '30A12345', 'vehicle_type' => 'car'])
+        ->assertOk()->assertJsonPath('data.is_latest', false);
+    $this->withHeaders($account['headers'])->getJson(billingLookupUrl())
+        ->assertOk()->assertJsonPath('data.is_latest', true);
+    expect($source->calls)->toBe(2);
+
+    $this->travel(59)->minutes();
+    Cache::store('array')->flush();
+    $this->withHeaders($account['headers'])->getJson(billingLookupUrl())
+        ->assertOk()->assertJsonPath('data.is_latest', true);
+    expect($source->calls)->toBe(2);
+
+    $this->travel(1)->minutes();
+    $this->withHeaders($account['headers'])->getJson(billingLookupUrl())
+        ->assertOk()->assertJsonPath('data.is_latest', true);
+    expect($source->calls)->toBe(3);
+});
+
 function bindBillingTrafficFineSource(?Throwable $failure = null): object
 {
     $source = new class($failure) implements TrafficFineSourceInterface

@@ -26,6 +26,8 @@ type LookupData = {
     unknown_status_count: number;
     violations: LookupViolation[];
     checked_at: string;
+    created_cache: string;
+    is_latest: boolean;
 };
 
 type LookupResponse = {
@@ -461,7 +463,7 @@ const renderResult = (container: HTMLElement, data: LookupData, resultUrlTemplat
     const updatedAt = element('span', 'inline-flex items-center gap-1.5');
     updatedAt.append(
         svgIcon('M12 3a9 9 0 1 0 9 9 9 9 0 0 0-9-9Zm0 4v5l3 2', 'shrink-0 text-slate-400', 'h-4 w-4'),
-        element('span', '', `Cập nhật: ${formatDateTime(data.checked_at)}`),
+        element('span', '', data.is_latest ? 'Thông tin mới nhất' : `Kết quả tra cứu lúc: ${formatDateTime(data.created_cache ?? data.checked_at)}`),
     );
     const lookupAgain = element(
         'a',
@@ -481,6 +483,20 @@ const renderResult = (container: HTMLElement, data: LookupData, resultUrlTemplat
     permalink.href = `${resultUrlTemplate.replace('__PLATE__', encodeURIComponent(data.plate))}?${resultQuery.toString()}`;
     updatedRow.append(updatedAt, lookupAgain, permalink);
     header.append(updatedRow, element('p', 'mt-1 text-xs font-semibold text-slate-500', `${data.display_plate} · ${vehicleLabel}`));
+
+    if (!data.is_latest) {
+        const note = element('p', 'mt-2 text-xs text-slate-500');
+        const authenticated = document.querySelector<HTMLFormElement>('[data-lookup-form]')?.dataset.authenticated === 'true';
+        if (authenticated) {
+            note.textContent = 'Chọn “Lấy kết quả mới nhất” để tra cứu có tính phí.';
+        } else {
+            note.append('Để lấy kết quả mới nhất vui lòng ');
+            const login = element('a', 'site-focus font-bold text-brand underline', 'đăng nhập');
+            login.href = document.querySelector<HTMLFormElement>('[data-lookup-form]')?.dataset.loginUrl ?? '/auth/login';
+            note.append(login, '.');
+        }
+        header.append(note);
+    }
 
     const metrics = element('dl', 'mt-3 flex flex-wrap items-center justify-center gap-2 text-xs font-bold');
     metrics.dataset.resultMetrics = '';
@@ -539,8 +555,8 @@ document.querySelectorAll<HTMLFormElement>('[data-lookup-form]').forEach((form) 
         const result = document.querySelector<HTMLElement>('[data-lookup-result]');
         const button = form.querySelector<HTMLButtonElement>('button[type="submit"]');
         const submitLabel = form.querySelector<HTMLElement>('[data-submit-label]');
-        const versionInput = form.elements.namedItem('lookup_version');
-        const apiVersion = versionInput instanceof RadioNodeList && versionInput.value === 'v2' ? 'v2' : 'v1';
+        const latestInput = form.elements.namedItem('latest_result');
+        const apiVersion = latestInput instanceof HTMLInputElement && latestInput.checked ? 'v2' : 'v1';
         const endpoint =
             apiVersion === 'v2' ? (form.dataset.v2Endpoint ?? '/api/client/traffic-fines/lookup-v2') : (form.dataset.v1Endpoint ?? '/api/lookup');
         const resultUrl = form.dataset.resultUrl ?? '/tra-cuu/__PLATE__';

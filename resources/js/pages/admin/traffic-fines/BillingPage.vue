@@ -170,14 +170,17 @@ onMounted(load);
                                     type="button"
                                     role="switch"
                                     :aria-checked="v2Enabled"
-                                    aria-label="Bật hoặc bảo trì cổng tra cứu API v2"
+                                    aria-label="Bật hoặc tắt nguồn tra cứu API v2"
                                     class="app-focus inline-flex min-h-10 items-center gap-2 rounded-full px-3 text-xs font-black transition"
                                     :class="v2Enabled ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-600'"
                                     @click="v2Enabled = !v2Enabled"
                                 >
-                                    <Power class="h-4 w-4" />{{ v2Enabled ? 'Đang bật' : 'Bảo trì' }}
+                                    <Power class="h-4 w-4" />{{ v2Enabled ? 'Đang bật' : 'Đã tắt · Dùng v1' }}
                                 </button>
                             </div>
+                            <p class="mt-3 text-xs leading-5 text-slate-600">
+                                Khi tắt v2, tra cứu trả phí sẽ dùng API v1 và vẫn tính giá v2. Cache tra cứu trả phí/API: 60 phút; miễn phí: 24 giờ.
+                            </p>
                             <label for="api-v2-request-price" class="mt-3 block text-sm font-semibold text-slate-700">VND / request thành công</label>
                             <span class="relative mt-2 block">
                                 <input

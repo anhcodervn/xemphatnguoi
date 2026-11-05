@@ -18,6 +18,8 @@ final class TrafficFineLookupResultDataDto
         public readonly int $violationCount,
         public readonly array $violations,
         public readonly CarbonImmutable $checkedAt,
+        public readonly ?CarbonImmutable $createdCache = null,
+        public readonly bool $isLatest = false,
     ) {}
 
     /**
@@ -49,11 +51,13 @@ final class TrafficFineLookupResultDataDto
             violationCount: (int) ($data['violation_count'] ?? count($violations)),
             violations: $violations,
             checkedAt: CarbonImmutable::parse((string) ($data['checked_at'] ?? 'now')),
+            createdCache: isset($data['created_cache']) ? CarbonImmutable::parse($data['created_cache']) : null,
+            isLatest: (bool) ($data['is_latest'] ?? false),
         );
     }
 
     /**
-     * @return array{plate: string, display_plate: string, vehicle_type: string, status: string, violation_count: int, processed_count: int, unprocessed_count: int, unknown_status_count: int, violations: list<array{plate_color: ?string, time: ?string, location: ?string, behavior: ?string, status: ?string, resolution_status: string, agency: ?string, resolution_agency: ?string, resolution_address: ?string, resolution_phone: ?string}>, checked_at: string}
+     * @return array{plate: string, display_plate: string, vehicle_type: string, status: string, violation_count: int, processed_count: int, unprocessed_count: int, unknown_status_count: int, violations: list<array{plate_color: ?string, time: ?string, location: ?string, behavior: ?string, status: ?string, resolution_status: string, agency: ?string, resolution_agency: ?string, resolution_address: ?string, resolution_phone: ?string}>, checked_at: string, created_cache: string, is_latest: bool}
      */
     public function toArray(): array
     {
@@ -74,6 +78,8 @@ final class TrafficFineLookupResultDataDto
                 $this->violations,
             ),
             'checked_at' => $this->checkedAt->setTimezone(config('app.timezone'))->toISOString(true),
+            'created_cache' => ($this->createdCache ?? $this->checkedAt)->setTimezone(config('app.timezone'))->toISOString(true),
+            'is_latest' => $this->isLatest,
         ];
     }
 

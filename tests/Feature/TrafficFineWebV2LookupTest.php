@@ -1,6 +1,7 @@
 <?php
 
 use App\Events\WalletBalanceChanged;
+use App\Features\TrafficFine\Services\ApiLookupAvailabilityService;
 use App\Features\TrafficFine\Services\TrafficFineTurnstileSettingsService;
 use App\Models\TrafficFineResult;
 use App\Models\User;
@@ -160,23 +161,24 @@ it('requires the configured turnstile challenge before a paid v2 website lookup'
         ->and(WalletTransaction::query()->exists())->toBeFalse();
 });
 
-it('shows both lookup versions on the home page without exposing provider details', function (): void {
+it('shows a login note for guests and a priced latest result checkbox for members', function (): void {
     app(SettingStore::class)->putString('traffic_fine_api_v2_request_price', '175');
 
     $response = $this->get('/')
         ->assertOk()
-        ->assertSee('Tra cứu V1')
-        ->assertSee('Tra cứu V2')
-        ->assertSee('175đ/lượt')
-        ->assertSee('Cần đăng nhập')
-        ->assertSee('V1 sử dụng nguồn dữ liệu cũ nên kết quả có thể chưa chính xác.')
-        ->assertSee('V2 sử dụng nguồn dữ liệu mới được lấy trực tiếp từ VNeTraffic.')
+        ->assertSee('Để lấy kết quả mới nhất vui lòng')
+        ->assertDontSee('name="latest_result"', false)
         ->assertSee('data-v2-endpoint', false)
         ->assertSee('data-v2-price="175"', false);
 
     expect(mb_strtolower($response->getContent()))
         ->not->toContain('xephatnguoi')
         ->not->toContain('web-v2-provider-token');
+
+    $this->actingAs(webV2User())->get('/')
+        ->assertOk()
+        ->assertSee('name="latest_result"', false)
+        ->assertSee('Lấy kết quả mới nhất 175đ/lượt');
 });
 
 it('reads a paid v2 cached result only for an authenticated user', function (): void {
@@ -197,4 +199,48 @@ it('reads a paid v2 cached result only for an authenticated user', function (): 
 
     $this->get('/tra-cuu/30K12345?vehicle_type=car&api_version=v2')
         ->assertRedirectToRoute('auth.login');
+});
+
+it('expires paid website results after sixty minutes in both cache and database', function (bool $flushCache): void {
+    $this->freezeTime();
+    fakeSuccessfulWebV2Lookup();
+    Sanctum::actingAs(webV2User(balance: 1000));
+    $payload = ['plate' => '30K12345', 'vehicle_type' => 'car'];
+    $first = $this->postJson('/api/client/traffic-fines/lookup-v2', $payload)
+        ->assertOk()->assertJsonPath('data.is_latest', true)->json('data.created_cache');
+
+    expect(TrafficFineResult::query()->sole()->expires_at->timestamp - now()->timestamp)->toBe(3600);
+    $this->travel(59)->minutes();
+    if ($flushCache) {
+        Cache::store('array')->flush();
+    }
+    $this->postJson('/api/client/traffic-fines/lookup-v2', $payload)
+        ->assertOk()->assertJsonPath('data.is_latest', true)->assertJsonPath('data.created_cache', $first);
+    Http::assertSentCount(1);
+
+    $this->travel(1)->minutes();
+    $this->postJson('/api/client/traffic-fines/lookup-v2', $payload)
+        ->assertOk()->assertJsonPath('data.is_latest', true);
+    Http::assertSentCount(2);
+})->with([false, true]);
+
+it('uses v1 with the v2 price and a separate paid cache when v2 is disabled', function (): void {
+    config(['traffic-fines.sources.xephatnguoi.url' => 'https://api.xephatnguoi.com/v1/search']);
+    app(ApiLookupAvailabilityService::class)->update(v1Enabled: true, v2Enabled: false);
+    app(SettingStore::class)->putString('traffic_fine_api_v2_request_price', '175');
+    Http::fake(['https://api.xephatnguoi.com/v1/search*' => Http::response([
+        'status' => 'success', 'plate' => '30K12345', 'type' => 1, 'data' => [], 'total' => 0,
+    ])]);
+    $payload = ['plate' => '30K12345', 'vehicle_type' => 'car'];
+    $this->postJson('/api/lookup', $payload)->assertOk()->assertJsonPath('data.is_latest', false);
+
+    Sanctum::actingAs(webV2User());
+    $this->postJson('/api/client/traffic-fines/lookup-v2', $payload)
+        ->assertOk()->assertJsonPath('data.is_latest', true)->assertJsonPath('billing.charged_amount', '175.00');
+    $this->postJson('/api/client/traffic-fines/lookup-v2', $payload)
+        ->assertOk()->assertJsonPath('data.is_latest', true)->assertJsonPath('billing.balance', '150.00');
+    Http::assertSentCount(2);
+    expect(TrafficFineResult::query()->where('api_version', 'v2')->sole()->provider)->toBe('xephatnguoi');
+    $this->get('/tra-cuu/30K12345?vehicle_type=car&api_version=v2')
+        ->assertOk()->assertSee('Thông tin mới nhất');
 });

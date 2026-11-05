@@ -1,6 +1,6 @@
 @php
     $faqs = [
-        ['question' => 'Tra cứu phạt nguội có mất phí không?', 'answer' => 'Tra cứu V1 được sử dụng miễn phí và không cần đăng nhập. Tra cứu V2 yêu cầu đăng nhập, đồng thời tính phí theo mỗi lượt thành công từ số dư ví.'],
+        ['question' => 'Tra cứu phạt nguội có mất phí không?', 'answer' => 'Tra cứu miễn phí không cần đăng nhập và sử dụng kết quả được lưu tối đa 24 giờ. Sau khi đăng nhập, bạn có thể chọn “Lấy kết quả mới nhất” và trả phí cho mỗi lượt thành công từ số dư ví. Kết quả trả phí được lưu 60 phút.'],
         ['question' => 'Bao lâu dữ liệu phạt nguội được cập nhật?', 'answer' => 'Không có một khoảng thời gian cố định cho mọi trường hợp. Thời điểm dữ liệu xuất hiện phụ thuộc thời gian ghi nhận, quy trình xác minh, khả năng đồng bộ và đơn vị xử lý.'],
         ['question' => 'Xe máy có tra cứu phạt nguội được không?', 'answer' => 'Có thể chọn xe máy hoặc xe máy điện trên biểu mẫu. Phạm vi kết quả phụ thuộc dữ liệu mà nguồn tra cứu cung cấp tại từng thời điểm.'],
         ['question' => 'Không tìm thấy vi phạm có nghĩa là không bị phạt không?', 'answer' => 'Không. Thông báo chưa ghi nhận chỉ phản ánh dữ liệu hiện có tại thời điểm tra cứu. Dữ liệu có thể được bổ sung sau quá trình xác minh và cập nhật.'],
