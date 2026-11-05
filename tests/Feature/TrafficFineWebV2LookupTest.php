@@ -162,11 +162,17 @@ it('requires the configured turnstile challenge before a paid v2 website lookup'
         ->and(WalletTransaction::query()->exists())->toBeFalse();
 });
 
-it('shows a login note for guests and a priced latest result checkbox for members', function (): void {
+it('keeps v1 and v2 tabs for guests and members alongside the latest result checkbox', function (): void {
     app(SettingStore::class)->putString('traffic_fine_api_v2_request_price', '175');
 
     $response = $this->get('/')
         ->assertOk()
+        ->assertSee('Tra cứu V1')
+        ->assertSee('Tra cứu V2')
+        ->assertSee('name="lookup_version" value="v1"', false)
+        ->assertSee('name="lookup_version" value="v2"', false)
+        ->assertSee('175đ/lượt')
+        ->assertSee('Cần đăng nhập')
         ->assertSee('Để lấy kết quả mới nhất vui lòng')
         ->assertDontSee('name="latest_result"', false)
         ->assertSee('data-v2-endpoint', false)
@@ -178,6 +184,11 @@ it('shows a login note for guests and a priced latest result checkbox for member
 
     $this->actingAs(webV2User())->get('/')
         ->assertOk()
+        ->assertSee('Tra cứu V1')
+        ->assertSee('Tra cứu V2')
+        ->assertSee('name="lookup_version" value="v1"', false)
+        ->assertSee('name="lookup_version" value="v2"', false)
+        ->assertSee('Trừ từ ví')
         ->assertSee('name="latest_result"', false)
         ->assertSee('Lấy kết quả mới nhất 175đ/lượt');
 });

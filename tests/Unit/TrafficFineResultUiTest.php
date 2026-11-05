@@ -128,3 +128,14 @@ it('confirms the v2 fee before sending a guest to login', function (): void {
         ->and($form)
         ->toContain('data-v2-price="{{ (int) $v2LookupPrice }}"');
 });
+
+it('uses the selected v1 or v2 tab for lookups and synchronizes the latest checkbox', function (): void {
+    $script = file_get_contents(dirname(__DIR__, 2).'/resources/js/public-lookup.ts');
+
+    expect($script)
+        ->toContain("form.elements.namedItem('lookup_version')")
+        ->toContain("versionInput instanceof RadioNodeList && versionInput.value === 'v2' ? 'v2' : 'v1'")
+        ->toContain("latestInput.checked = input.value === 'v2'")
+        ->toContain("const selectedVersion = latestInput.checked ? 'v2' : 'v1'")
+        ->toContain('input.checked = input.value === selectedVersion');
+});

@@ -549,14 +549,34 @@ const renderResult = (container: HTMLElement, data: LookupData, resultUrlTemplat
 void initializeTurnstileWidgets();
 
 document.querySelectorAll<HTMLFormElement>('[data-lookup-form]').forEach((form) => {
+    const latestInput = form.elements.namedItem('latest_result');
+    const versionInputs = form.querySelectorAll<HTMLInputElement>('input[name="lookup_version"]');
+
+    versionInputs.forEach((input) => {
+        input.addEventListener('change', () => {
+            if (latestInput instanceof HTMLInputElement && input.checked) {
+                latestInput.checked = input.value === 'v2';
+            }
+        });
+    });
+
+    if (latestInput instanceof HTMLInputElement) {
+        latestInput.addEventListener('change', () => {
+            const selectedVersion = latestInput.checked ? 'v2' : 'v1';
+            versionInputs.forEach((input) => {
+                input.checked = input.value === selectedVersion;
+            });
+        });
+    }
+
     form.addEventListener('submit', async (event) => {
         event.preventDefault();
 
         const result = document.querySelector<HTMLElement>('[data-lookup-result]');
         const button = form.querySelector<HTMLButtonElement>('button[type="submit"]');
         const submitLabel = form.querySelector<HTMLElement>('[data-submit-label]');
-        const latestInput = form.elements.namedItem('latest_result');
-        const apiVersion = latestInput instanceof HTMLInputElement && latestInput.checked ? 'v2' : 'v1';
+        const versionInput = form.elements.namedItem('lookup_version');
+        const apiVersion = versionInput instanceof RadioNodeList && versionInput.value === 'v2' ? 'v2' : 'v1';
         const endpoint =
             apiVersion === 'v2' ? (form.dataset.v2Endpoint ?? '/api/client/traffic-fines/lookup-v2') : (form.dataset.v1Endpoint ?? '/api/lookup');
         const resultUrl = form.dataset.resultUrl ?? '/tra-cuu/__PLATE__';
