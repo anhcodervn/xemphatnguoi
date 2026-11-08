@@ -114,7 +114,7 @@ class ApiLookupBillingService
     {
         $price = (int) $request->attributes->get(self::ATTRIBUTE_UNIT_PRICE, $this->pricePerRequest());
         $isV2 = $request->routeIs('v2.traffic-fines.lookup');
-        $cost = $isV2 && $this->providerSettings->v2ApiVersion() === 'v2' ? $this->v2CostPerRequest() : $this->costPerRequest();
+        $cost = $isV2 && $this->providerSettings->effectiveV2ApiVersion() === 'v2' ? $this->v2CostPerRequest() : $this->costPerRequest();
         $referenceType = $isV2 ? 'traffic_fine_api_v2_request' : 'traffic_fine_api_request';
         $descriptionVersion = $isV2 ? ' API v2' : ' API';
 

@@ -55,6 +55,44 @@ it('routes v2 to provider v1 with v2 billing independently of the public v1 gate
     Http::assertSentCount(1);
 })->with([true, false]);
 
+it('returns provider v1 results when v2 is disabled even with a cached v2 provider error', function (bool $storedSetting): void {
+    config([
+        'traffic-fines.sources.xephatnguoi.url' => 'https://api.xephatnguoi.com/v1/search',
+        'traffic-fines.billing.api_request_cost' => 7,
+    ]);
+    if ($storedSetting) {
+        app(ApiLookupAvailabilityService::class)->update(v1Enabled: true, v2Enabled: false);
+    } else {
+        config(['traffic-fines.public_api.v2_enabled' => false]);
+    }
+    Cache::store('array')->put('traffic_fine_error:v2:xephatnguoi_v2:car:30K12345', ['status' => 'provider_error'], 60);
+    Http::fake(['https://api.xephatnguoi.com/v1/search*' => Http::response([
+        'status' => 'success', 'plate' => '30K12345', 'type' => 1, 'data' => [], 'total' => 0,
+    ])]);
+    $account = trafficFineV2Account();
+
+    $this->withHeaders($account['headers'])->getJson('/api/v2/lookup?plate=30K12345&vehicle_type=car')
+        ->assertOk()->assertJsonPath('success', true)->assertJsonPath('data.plate', '30K12345');
+
+    Http::assertSentCount(1);
+    Http::assertSent(fn (Request $request): bool => str_starts_with($request->url(), 'https://api.xephatnguoi.com/v1/search'));
+    expect(TrafficFineResult::query()->sole()->provider)->toBe('xephatnguoi')
+        ->and(TrafficFineLookupLog::query()->sole()->api_version)->toBe('v2')
+        ->and((float) ApiLog::query()->sole()->provider_cost)->toBe(7.0)
+        ->and((float) $account['user']->wallet()->firstOrFail()->balance)->toBe(350.0);
+})->with(['stored setting' => true, 'configuration default' => false]);
+
+it('keeps v2 api in maintenance when both versions are disabled', function (): void {
+    app(ApiLookupAvailabilityService::class)->update(v1Enabled: false, v2Enabled: false);
+    $account = trafficFineV2Account();
+
+    $this->withHeaders($account['headers'])->getJson('/api/v2/lookup?plate=30K12345&vehicle_type=car')
+        ->assertServiceUnavailable()->assertJsonPath('status', 'api_maintenance');
+
+    Http::assertNothingSent();
+    expect((float) $account['user']->wallet()->firstOrFail()->balance)->toBe(500.0);
+});
+
 /**
  * @return array{user: User, api_key: ApiKey, headers: array{X-API-KEY: string, X-API-SECRET: string}}
  */

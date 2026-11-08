@@ -54,6 +54,23 @@ function webV2User(float $balance = 500): User
     return $user;
 }
 
+it('uses provider v1 for web v2 lookups when v2 is disabled', function (): void {
+    config(['traffic-fines.sources.xephatnguoi.url' => 'https://api.xephatnguoi.com/v1/search']);
+    app(ApiLookupAvailabilityService::class)->update(v1Enabled: true, v2Enabled: false);
+    Http::fake(['https://api.xephatnguoi.com/v1/search*' => Http::response([
+        'status' => 'success', 'plate' => '30K12345', 'type' => 1, 'data' => [], 'total' => 0,
+    ])]);
+    $user = webV2User();
+    Sanctum::actingAs($user);
+
+    $this->postJson('/api/client/traffic-fines/lookup-v2', ['plate' => '30K12345', 'vehicle_type' => 'car'])
+        ->assertOk()->assertJsonPath('success', true)->assertJsonPath('billing.charged_amount', '150.00');
+
+    Http::assertSentCount(1);
+    expect(TrafficFineResult::query()->sole()->provider)->toBe('xephatnguoi')
+        ->and((float) $user->wallet()->firstOrFail()->balance)->toBe(350.0);
+});
+
 it('requires login before using v2 lookup from the public website', function (): void {
     $this->postJson('/api/client/traffic-fines/lookup-v2', [
         'plate' => '30K12345',

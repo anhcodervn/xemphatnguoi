@@ -30,11 +30,19 @@ class TrafficFineProviderSettingsService
 
     private string $resolvedActiveProvider = '';
 
-    public function __construct(private readonly SettingStore $settingStore) {}
+    public function __construct(
+        private readonly SettingStore $settingStore,
+        private readonly ApiLookupAvailabilityService $availability,
+    ) {}
 
     public function v2ApiVersion(): string
     {
         return $this->settingStore->getString(self::V2_API_VERSION_KEY, 'v2') === 'v1' ? 'v1' : 'v2';
+    }
+
+    public function effectiveV2ApiVersion(): string
+    {
+        return $this->availability->isEnabled('v2') ? $this->v2ApiVersion() : 'v1';
     }
 
     /** @return list<string> */

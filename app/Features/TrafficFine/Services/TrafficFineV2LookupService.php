@@ -22,7 +22,7 @@ class TrafficFineV2LookupService
     ) {
         $this->lookupService = new TrafficFineLookupService(
             $normalizer,
-            $providerSettings->v2ApiVersion() === 'v2' ? $source : $container->make(TrafficFineSourceInterface::class),
+            $providerSettings->effectiveV2ApiVersion() === 'v2' ? $source : $container->make(TrafficFineSourceInterface::class),
             $cache,
             'v2',
             true,
