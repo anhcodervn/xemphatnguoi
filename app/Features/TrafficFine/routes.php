@@ -15,13 +15,13 @@ Route::post('/lookup', TrafficFineLookupController::class)
     ->name('traffic-fines.lookup');
 
 Route::prefix('v1')
-    ->middleware(['api-key.auth', 'api-key.permission:traffic-fines.lookup', 'api-key.log', 'traffic-fine-api.available:v1', 'throttle:traffic-fine-lookup'])
+    ->middleware(['api-key.auth', 'api-key.permission:traffic-fines.lookup', 'api-key.log', 'traffic-fine-api.available:v1'])
     ->group(function (): void {
         Route::get('/lookup', TrafficFineLookupController::class)->name('v1.traffic-fines.lookup');
     });
 
 Route::prefix('v2')
-    ->middleware(['api-key.auth', 'api-key.permission:traffic-fines.lookup', 'api-key.log', 'traffic-fine-api.available:v2', 'throttle:traffic-fine-lookup'])
+    ->middleware(['api-key.auth', 'api-key.permission:traffic-fines.lookup', 'api-key.log', 'traffic-fine-api.available:v2'])
     ->group(function (): void {
         Route::get('/lookup', TrafficFineLookupV2Controller::class)->name('v2.traffic-fines.lookup');
     });
