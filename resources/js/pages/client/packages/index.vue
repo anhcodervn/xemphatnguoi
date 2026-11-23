@@ -91,7 +91,9 @@ const updateAutoRenew = async (): Promise<void> => {
         void Swal.fire({
             icon: 'success',
             title: enabled ? 'Đã bật tự gia hạn' : 'Đã tắt tự gia hạn',
-            text: enabled ? 'Gói sẽ tự động gia hạn khi hết hạn nếu số dư ví đủ.' : 'Gói sẽ không tự động trừ tiền khi hết hạn.',
+            text: enabled
+                ? 'Gói sẽ tự động gia hạn theo giá hiện hành tại thời điểm gia hạn nếu số dư ví đủ.'
+                : 'Gói sẽ không tự động trừ tiền khi hết hạn.',
             timer: 2200,
             showConfirmButton: false,
         });
@@ -131,7 +133,7 @@ onMounted(load);
                         Đang theo dõi {{ subscription.enabled_vehicle_count }}/{{ subscription.vehicle_limit }} xe · hết hạn {{ expiresAt }}
                     </p>
                     <p v-if="!subscription.is_active" class="mt-2 text-xs font-semibold text-amber-700">
-                        Hệ thống sẽ gia hạn sau khi số dư ví đủ {{ formatMoney(subscription.total_price) }}.
+                        Hệ thống sẽ gia hạn khi số dư ví đủ thanh toán theo giá hiện hành của gói tại thời điểm gia hạn.
                     </p>
                 </div>
                 <div class="flex flex-col gap-3 sm:items-end">
@@ -154,7 +156,8 @@ onMounted(load);
                         </button>
                     </div>
                     <p class="max-w-xs text-xs leading-5 text-slate-500 sm:text-right">
-                        Khi bật, hệ thống tự trừ {{ formatMoney(subscription.total_price) }} từ ví và giữ nguyên số lượng xe của gói.
+                        Khi bật, hệ thống tự trừ tiền từ ví theo giá hiện hành tại thời điểm gia hạn, giữ nguyên số lượng xe và thời hạn của gói đang
+                        dùng. Gói tùy chỉnh được tính bằng đơn giá mới nhân với số xe đã đăng ký.
                     </p>
                     <RouterLink
                         v-if="subscription.is_active"

@@ -49,13 +49,19 @@ class RenewMonitoringSubscriptionAction
                     return self::RESULT_SKIPPED;
                 }
 
+                $totalPrice = $plan->is_custom
+                    ? (float) $plan->unit_price * $subscription->vehicle_limit
+                    : (float) $plan->price;
+                $unitPrice = $plan->is_custom
+                    ? (float) $plan->unit_price
+                    : $totalPrice / $subscription->vehicle_limit;
                 $startedAt = now();
                 $renewedSubscription = $user->monitoringSubscriptions()->create([
                     'monitoring_plan_id' => $subscription->monitoring_plan_id,
                     'plan_name' => $subscription->plan_name,
                     'vehicle_limit' => $subscription->vehicle_limit,
-                    'unit_price' => $subscription->unit_price,
-                    'total_price' => $subscription->total_price,
+                    'unit_price' => $unitPrice,
+                    'total_price' => $totalPrice,
                     'duration_days' => $subscription->duration_days,
                     'status' => MonitoringSubscription::STATUS_ACTIVE,
                     'auto_renew' => true,
@@ -68,7 +74,7 @@ class RenewMonitoringSubscriptionAction
 
                 $this->walletService->debitWithTransaction(
                     user: $user,
-                    amount: (float) $subscription->total_price,
+                    amount: $totalPrice,
                     referenceType: 'monitoring_subscription_renewal',
                     referenceId: $renewedSubscription->id,
                     description: "Tự gia hạn gói theo dõi {$subscription->plan_name} ({$subscription->vehicle_limit} xe)",

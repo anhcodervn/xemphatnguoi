@@ -379,6 +379,74 @@ it('automatically renews an expired package once and debits the wallet once', fu
         ->and(WalletTransaction::query()->where('reference_type', 'monitoring_subscription_renewal')->count())->toBe(1);
 });
 
+it('renews fixed packages at the current price without changing the previous purchase', function (int $newPrice): void {
+    $this->freezeTime();
+    $user = User::factory()->create();
+    $wallet = walletForMonitoring($user, 200000);
+    $plan = MonitoringPlan::factory()->create(['price' => 65000, 'vehicle_limit' => 5]);
+    $subscription = MonitoringSubscription::factory()->for($user)->for($plan, 'plan')->create([
+        'auto_renew' => true, 'vehicle_limit' => 5, 'unit_price' => 13000, 'total_price' => 65000,
+        'started_at' => now()->subDays(29), 'expires_at' => now()->addDay(),
+    ]);
+    $plan->update(['price' => $newPrice]);
+    $this->artisan('monitoring-subscriptions:renew')->assertSuccessful();
+    expect($wallet->refresh()->balance)->toBe('200000.00')
+        ->and($user->monitoringSubscriptions()->count())->toBe(1);
+
+    $this->travel(1)->days();
+    $this->artisan('monitoring-subscriptions:renew')->assertSuccessful();
+    $this->artisan('monitoring-subscriptions:renew')->assertSuccessful();
+    $renewed = MonitoringSubscription::query()->where('renewed_from_subscription_id', $subscription->id)->sole();
+    expect($renewed->total_price)->toBe(number_format($newPrice, 2, '.', ''))
+        ->and($renewed->unit_price)->toBe(number_format($newPrice / 5, 2, '.', ''))
+        ->and($renewed->vehicle_limit)->toBe(5)
+        ->and($renewed->duration_days)->toBe(30)
+        ->and($subscription->refresh()->total_price)->toBe('65000.00')
+        ->and($wallet->refresh()->balance)->toBe(number_format(200000 - $newPrice, 2, '.', ''))
+        ->and(WalletTransaction::query()->where('reference_type', 'monitoring_subscription_renewal')->count())->toBe(1);
+})->with(['price increase' => 80000, 'price decrease' => 50000, 'unchanged price' => 65000]);
+
+it('renews custom packages using the current unit price and the subscribed vehicle quantity', function (): void {
+    $user = User::factory()->create();
+    $wallet = walletForMonitoring($user, 200000);
+    $plan = MonitoringPlan::factory()->create([
+        'is_custom' => true, 'price' => null, 'vehicle_limit' => null, 'unit_price' => 4000,
+    ]);
+    $subscription = MonitoringSubscription::factory()->for($user)->for($plan, 'plan')->create([
+        'auto_renew' => true, 'vehicle_limit' => 25, 'unit_price' => 3000, 'total_price' => 75000,
+        'started_at' => now()->subDays(31), 'expires_at' => now()->subMinute(),
+    ]);
+    $this->artisan('monitoring-subscriptions:renew')->assertSuccessful();
+    $renewed = MonitoringSubscription::query()->where('renewed_from_subscription_id', $subscription->id)->sole();
+    expect($renewed->unit_price)->toBe('4000.00')
+        ->and($renewed->total_price)->toBe('100000.00')
+        ->and($renewed->vehicle_limit)->toBe(25)
+        ->and($subscription->refresh()->total_price)->toBe('75000.00')
+        ->and($wallet->refresh()->balance)->toBe('100000.00');
+});
+
+it('waits when the wallet covers the old price but not the new renewal price', function (): void {
+    $user = User::factory()->create();
+    $wallet = walletForMonitoring($user, 70000);
+    $plan = MonitoringPlan::factory()->create(['price' => 80000]);
+    $subscription = MonitoringSubscription::factory()->for($user)->for($plan, 'plan')->create([
+        'auto_renew' => true, 'total_price' => 65000,
+        'started_at' => now()->subDays(31), 'expires_at' => now()->subMinute(),
+    ]);
+    $this->artisan('monitoring-subscriptions:renew')->assertSuccessful();
+    expect($user->monitoringSubscriptions()->count())->toBe(1)
+        ->and($wallet->refresh()->balance)->toBe('70000.00')
+        ->and($subscription->refresh()->status)->toBe(MonitoringSubscription::STATUS_ACTIVE)
+        ->and($subscription->auto_renew)->toBeTrue()
+        ->and(WalletTransaction::query()->where('reference_type', 'monitoring_subscription_renewal')->count())->toBe(0);
+
+    $wallet->update(['balance' => 100000]);
+    $plan->update(['price' => 85000]);
+    $this->artisan('monitoring-subscriptions:renew')->assertSuccessful();
+    expect($wallet->refresh()->balance)->toBe('15000.00')
+        ->and(MonitoringSubscription::query()->where('renewed_from_subscription_id', $subscription->id)->sole()->total_price)->toBe('85000.00');
+});
+
 it('waits for enough wallet balance before automatically renewing', function (): void {
     $user = User::factory()->create();
     $wallet = walletForMonitoring($user, 1000);

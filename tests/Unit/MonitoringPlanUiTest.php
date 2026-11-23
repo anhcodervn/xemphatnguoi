@@ -89,6 +89,8 @@ it('lets clients manage automatic package renewal', function (): void {
         ->toContain('clientMonitoringPlanService.updateAutoRenew')
         ->toContain(':aria-checked="subscription.auto_renew"')
         ->toContain('Đang chờ tự gia hạn')
+        ->toContain('theo giá hiện hành tại thời điểm gia hạn')
+        ->not->toContain('tự trừ {{ formatMoney(subscription.total_price) }}')
         ->and($service)
         ->toContain('/api/client/monitoring-plans/subscription/auto-renew');
 });
