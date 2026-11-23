@@ -44,6 +44,7 @@ export const adminMenuGroups: AdminMenuGroup[] = [
         children: [
             { label: 'Quản lý gói', href: '/admin/monitoring' },
             { label: 'Gói đã cho thuê', href: '/admin/subscriptions' },
+            { label: 'Xe đang theo dõi', href: '/admin/monitoring-vehicles' },
         ],
     },
     {

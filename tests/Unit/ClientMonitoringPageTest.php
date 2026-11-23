@@ -3,17 +3,20 @@
 test('client monitoring page exposes interval monitoring and change-only email controls', function () {
     $projectRoot = dirname(__DIR__, 2);
     $page = file_get_contents($projectRoot.'/resources/js/pages/client/monitoring/index.vue');
+    $controls = file_get_contents($projectRoot.'/resources/js/pages/client/monitoring/VehicleMonitoringControls.vue');
     $service = file_get_contents($projectRoot.'/resources/js/services/traffic-fine.service.ts');
     $schedule = file_get_contents($projectRoot.'/routes/console.php');
 
     expect($page)
-        ->toContain('Theo dõi định kỳ')
-        ->toContain('Gửi thông báo về email')
-        ->toContain('Chỉ gửi khi số lỗi thay đổi')
         ->toContain('trafficFineService.monitoring')
         ->toContain('trafficFineService.updateVehicleMonitoring')
         ->toContain("import Swal from 'sweetalert2'")
         ->toContain('toast: true')
+        ->and($controls)
+        ->toContain('Theo dõi định kỳ')
+        ->toContain('Gửi thông báo về email')
+        ->toContain('Khi phát hiện hoặc thay đổi số vi phạm')
+        ->toContain('subscription.remaining_vehicle_count <= 0')
         ->and($service)
         ->toContain("api.get('/api/client/traffic-fines/monitoring')")
         ->toContain('/api/client/traffic-fines/vehicles/${id}/monitoring')

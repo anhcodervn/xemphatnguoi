@@ -2,7 +2,12 @@
 
 use App\Features\Admin\MonitoringPlan\Controllers\MonitoringPlanController;
 use App\Features\Admin\MonitoringPlan\Controllers\MonitoringSubscriptionController;
+use App\Features\Admin\MonitoringPlan\Controllers\MonitoringVehicleController;
 use Illuminate\Support\Facades\Route;
+
+Route::middleware(['auth:sanctum', 'admin'])
+    ->get('admin-api/monitoring/vehicles', [MonitoringVehicleController::class, 'index'])
+    ->name('admin.monitoring-vehicles.index');
 
 Route::middleware(['auth:sanctum', 'admin'])
     ->prefix('admin-api/monitoring/plans')

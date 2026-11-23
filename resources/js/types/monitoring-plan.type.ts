@@ -75,3 +75,19 @@ export type MonitoringSubscriptionList = {
         to: number | null;
     };
 };
+
+export type AdminMonitoringVehicle = {
+    id: number;
+    vehicle: { id: number; name: string | null; plate: string; vehicle_type: string };
+    user: NonNullable<AdminMonitoringSubscription['user']>;
+    subscription: { id: number; plan_name: string; expires_at: string } | null;
+    enabled: boolean;
+    email_notifications: boolean;
+    last_checked_at: string | null;
+    last_violation_count: number | null;
+};
+
+export type MonitoringVehicleList = {
+    vehicles: AdminMonitoringVehicle[];
+    meta: MonitoringSubscriptionList['meta'];
+};

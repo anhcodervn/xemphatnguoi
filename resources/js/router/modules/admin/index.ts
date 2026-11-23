@@ -9,6 +9,11 @@ export default {
         { path: 'providers', name: 'admin.providers', component: () => import('@/pages/admin/traffic-fines/ProviderPage.vue') },
         { path: 'packages', redirect: { name: 'admin.monitoring' } },
         {
+            path: 'monitoring-vehicles',
+            name: 'admin.monitoring-vehicles',
+            component: () => import('@/pages/admin/monitoring-vehicles/index.vue'),
+        },
+        {
             path: 'subscriptions',
             name: 'admin.monitoring-subscriptions',
             component: () => import('@/pages/admin/monitoring-subscriptions/index.vue'),

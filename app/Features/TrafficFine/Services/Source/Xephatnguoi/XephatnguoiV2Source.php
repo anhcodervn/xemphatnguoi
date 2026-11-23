@@ -9,7 +9,6 @@ use App\Features\TrafficFine\Exceptions\TrafficFineProviderException;
 use App\Features\TrafficFine\Services\Source\TrafficFineSourceInterface;
 use App\Features\TrafficFine\Services\TrafficFineProviderSettingsService;
 use Illuminate\Http\Client\ConnectionException;
-use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
 use Throwable;
 
@@ -22,6 +21,7 @@ final class XephatnguoiV2Source implements TrafficFineSourceInterface
     public function __construct(
         private readonly XephatnguoiResponseMapper $responseMapper,
         private readonly TrafficFineProviderSettingsService $providerSettings,
+        private readonly XephatnguoiSource $fallbackSource,
     ) {}
 
     public function name(): string
@@ -30,6 +30,15 @@ final class XephatnguoiV2Source implements TrafficFineSourceInterface
     }
 
     public function lookup(string $normalizedPlate, VehicleType $vehicleType): TrafficFineLookupResultDataDto
+    {
+        try {
+            return $this->lookupV2($normalizedPlate, $vehicleType);
+        } catch (TrafficFineProviderException) {
+            return $this->fallbackSource->lookup($normalizedPlate, $vehicleType);
+        }
+    }
+
+    private function lookupV2(string $normalizedPlate, VehicleType $vehicleType): TrafficFineLookupResultDataDto
     {
         $configuration = $this->providerSettings->configuration('xephatnguoi');
         $url = trim((string) config('traffic-fines.api_v2.url', ''));
@@ -50,16 +59,6 @@ final class XephatnguoiV2Source implements TrafficFineSourceInterface
                 ->withOptions(['allow_redirects' => false])
                 ->connectTimeout($this->configurationInteger($configuration, 'connect_timeout', 3, 1, 5))
                 ->timeout($this->configurationInteger($configuration, 'timeout', 10, 1, 15))
-                ->retry(
-                    times: $this->configurationInteger($configuration, 'retry_times', 2, 1, 2),
-                    sleepMilliseconds: $this->configurationInteger($configuration, 'retry_sleep_ms', 200, 0, 2000),
-                    when: static function (Throwable $exception): bool {
-                        return $exception instanceof ConnectionException
-                            || ($exception instanceof RequestException
-                                && ($exception->response->status() === 429 || $exception->response->serverError()));
-                    },
-                    throw: false,
-                )
                 ->get($url, [
                     'plate' => $normalizedPlate,
                     'type' => $sourceVehicleType,

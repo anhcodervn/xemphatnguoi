@@ -1,7 +1,17 @@
 import api from '@/config/axios';
-import type { MonitoringPlan, MonitoringPlanPayload, MonitoringSubscriptionList } from '@/types/monitoring-plan.type';
+import type { MonitoringPlan, MonitoringPlanPayload, MonitoringSubscriptionList, MonitoringVehicleList } from '@/types/monitoring-plan.type';
 
 export const adminMonitoringPlanService = {
+    async vehicles(params: {
+        page?: number;
+        per_page?: number;
+        search?: string;
+        status?: string;
+        vehicle_type?: string;
+    }): Promise<MonitoringVehicleList> {
+        const response = await api.get('/api/admin-api/monitoring/vehicles', { params });
+        return response.data.data as MonitoringVehicleList;
+    },
     async index(): Promise<MonitoringPlan[]> {
         const response = await api.get('/api/admin-api/monitoring/plans');
         return response.data.data.plans as MonitoringPlan[];

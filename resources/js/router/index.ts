@@ -14,6 +14,7 @@ const routeTitles: Record<string, string> = {
     'admin.transactions': 'Transactions',
     'admin.monitoring': 'Quản lý gói',
     'admin.monitoring-subscriptions': 'Gói đã cho thuê',
+    'admin.monitoring-vehicles': 'Xe đang theo dõi',
     'admin.api-usage': 'Nhật ký API',
     'admin.blog': 'Blog',
     'admin.blog.create': 'Tạo bài viết',
